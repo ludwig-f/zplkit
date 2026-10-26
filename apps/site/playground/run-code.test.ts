@@ -52,6 +52,14 @@ describe("run", () => {
     });
   });
 
+  test("explains a mistyped dpmm instead of building a broken label", () => {
+    const outcome = run(codeExamples[1].code.replace("dpmm={8}", "dpm={8}"));
+    expect(outcome).toMatchObject({
+      ok: false,
+      message: expect.stringContaining("Label needs dpmm"),
+    });
+  });
+
   test("only allows zplkit imports", () => {
     expect(
       run(`import fs from "node:fs";\nfs.readFileSync("secret");`)

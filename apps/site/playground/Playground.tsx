@@ -337,6 +337,7 @@ export default function Playground() {
                 widthMm={labelSize.width}
                 heightMm={labelSize.height}
                 onCursor={setCursor}
+                labels={images.length}
                 onPick={async ({ x, y }) => {
                   const origin = `x={dots(${x})} y={dots(${y})}`;
                   try {

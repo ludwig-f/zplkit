@@ -385,6 +385,7 @@ export default function Viewer() {
               widthMm={labelSize.width}
               heightMm={labelSize.height}
               onCursor={setCursor}
+              labels={images.length}
               onPick={pick}
             >
               <zpl-preview
