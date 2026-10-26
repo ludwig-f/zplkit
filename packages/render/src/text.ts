@@ -189,6 +189,8 @@ type TextOptions = {
   width?: number;
   /** A downloaded font to use instead of `font` */
   typeface?: Font;
+  /** A font file to draw font 0 with instead of the stand-in */
+  font0?: Font;
   orientation: Orientation;
   block?: TextBlockOptions;
   dpmm: number;
@@ -233,6 +235,37 @@ const font0Face = (options: Pick<TextOptions, "height" | "width">): Face => {
       const glyph = font.glyphIndex(code);
       const scaleX = (advance * width) / 100 / font.advance(glyph);
       return { font, glyph, offset: 0, scaleX, scaleY };
+    },
+  };
+};
+
+/**
+ * Font 0 drawn with a font file passed in: sized like the stand-in, with
+ * capitals three quarters of the height, and spaced by the font's own widths
+ */
+const font0FileFace = (
+  font: Font,
+  options: Pick<TextOptions, "height" | "width">
+): Face => {
+  const height = options.height ?? options.width ?? 9;
+  const width = options.width ?? height;
+  const scaleY = (CAP_HEIGHT * height) / font.capHeight;
+  const scaleX = (scaleY * width) / height;
+  const glyphOf = (char: string) => font.glyphIndex(char.codePointAt(0)!);
+
+  return {
+    height,
+    ascent: CAP_HEIGHT * height,
+    // Characters the font lacks print nothing, as with font 0
+    advance: (char) => {
+      const glyph = glyphOf(char);
+      return glyph
+        ? font.advance(glyph) * scaleX
+        : (MISSING_ADVANCE * width) / 100;
+    },
+    glyph: (char) => {
+      const glyph = glyphOf(char);
+      return glyph ? { font, glyph, offset: 0, scaleX, scaleY } : undefined;
     },
   };
 };
@@ -470,7 +503,6 @@ const placement = (
   }
 };
 
-/** A built-in font at the size given in ^A or ^CF */
 /**
  * A downloaded TrueType font: the em is the character height, stretched to
  * the width, with the baseline three quarters down as for font 0
@@ -500,13 +532,21 @@ const trueTypeFace = (
   };
 };
 
+/** A built-in font at the size given in ^A or ^CF */
 const faceFor = (
-  options: Pick<TextOptions, "font" | "height" | "width" | "typeface" | "dpmm">
+  options: Pick<
+    TextOptions,
+    "font" | "height" | "width" | "typeface" | "font0" | "dpmm"
+  >
 ): Face => {
   if (options.typeface) return trueTypeFace(options.typeface, options);
   const cell = cellFor(options.font, options.dpmm);
   // Font 0 stands in for fonts we don't have yet
-  if (!cell) return font0Face(options);
+  if (!cell) {
+    return options.font0
+      ? font0FileFace(options.font0, options)
+      : font0Face(options);
+  }
 
   // A missing dimension takes the other's magnification
   const givenY = magnification(options.height, cell.height);
