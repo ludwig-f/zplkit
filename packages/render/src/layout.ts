@@ -5,7 +5,7 @@
  * that produced it, so a drawn element can be traced back to its source.
  */
 import { decodeObjectData } from "./data.js";
-import { FontFiles } from "./font-files.js";
+import { FontFiles, parseFontFile } from "./font-files.js";
 import { expandFormats } from "./formats.js";
 import { decodeGraphicData } from "./graphics.js";
 import type { Command } from "@zplkit/core";
@@ -51,6 +51,8 @@ type Element = Common &
         width?: number;
         /** A font file, from ^A@ or a font letter named with ^CW */
         typeface?: Font;
+        /** The font file passed in to draw font 0 with, if any */
+        font0?: Font;
         orientation: Orientation;
         /** ^FT positions the baseline instead of the top */
         fromBottom: boolean;
@@ -281,6 +283,11 @@ type LayoutOptions = {
    * device ("ARIAL.TTF"), a font matches references to any device.
    */
   fonts?: Record<string, Uint8Array>;
+  /**
+   * A TrueType or OpenType font to draw font 0 with, instead of the
+   * open-licensed stand-in, like the printer's own if you have a license
+   */
+  font0?: Uint8Array;
 };
 
 const layout = (
@@ -290,6 +297,10 @@ const layout = (
   const labels: LabelLayout[] = [];
   const stored = new Map<string, StoredGraphic>();
   const fontFiles = new FontFiles(options.fonts);
+  const font0 = options.font0 && parseFontFile(options.font0);
+  if (font0 === null) {
+    throw new TypeError("font0 isn't a TrueType or OpenType font");
+  }
   /** ^CW: font letters that call font files, kept between labels */
   const identifiers = new Map<string, FontPath>();
   let label: LabelLayout | undefined;
@@ -591,6 +602,7 @@ const layout = (
           height: font.height,
           width: font.width,
           typeface: font.typeface,
+          font0,
           orientation: font.orientation ?? orientation,
           fromBottom: field.fromBottom,
           block: field.block,

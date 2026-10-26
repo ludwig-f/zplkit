@@ -91,16 +91,16 @@ export default function CodePanel({
   return (
     <dialog
       ref={dialog}
-      className="code-panel"
-      aria-labelledby="code-panel-title"
+      className="dialog"
+      aria-labelledby="code-dialog-title"
       onClose={onClose}
       // A click on the backdrop lands on the dialog itself
       onClick={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
     >
-      <div className="code-panel-header">
-        <h2 id="code-panel-title">Label as code</h2>
+      <div className="dialog-header">
+        <h2 id="code-dialog-title">Label as code</h2>
         <div role="radiogroup" aria-label="Code style" className="segmented">
           {styles.map((option) => (
             <button
@@ -140,9 +140,9 @@ export default function CodePanel({
           Close
         </button>
       </div>
-      <div className="code-panel-body">
+      <div className="dialog-body">
         {error ? (
-          <p className="code-panel-error">
+          <p className="dialog-error">
             This ZPL couldn&apos;t be converted: {error}
           </p>
         ) : html ? (
@@ -153,7 +153,7 @@ export default function CodePanel({
           </pre>
         )}
       </div>
-      <p className="code-panel-note">
+      <p className="dialog-note">
         Fields without a matching element are kept as raw ZPL.{" "}
         <a href="/docs/converting">How converting works</a>
       </p>

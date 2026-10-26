@@ -3,14 +3,15 @@ import { describe, test, expect } from "vitest";
 import { renderLabels } from "./render.js";
 import { layout } from "./layout.js";
 import { parse } from "@zplkit/core";
+import { readFileSync } from "node:fs";
 
 const size = { widthMm: 101.6, heightMm: 101.6, dpmm: 8 };
-const render = (body: string) =>
-  renderLabels(`^XA^CI28^PW812${body}^XZ`, size)[0];
+const render = (body: string, font0?: Uint8Array) =>
+  renderLabels(`^XA^CI28^PW812${body}^XZ`, { ...size, font0 })[0];
 
 /** Bounds of the printed dots */
-const inkBounds = (body: string) => {
-  const raster = render(body);
+const inkBounds = (body: string, font0?: Uint8Array) => {
+  const raster = render(body, font0);
   let minX = Infinity;
   let minY = Infinity;
   let maxX = -1;
@@ -106,5 +107,49 @@ describe("text layout", () => {
       text: "Hi",
       commands: [1, 2, 3, 4],
     });
+  });
+});
+
+describe("font 0 from a font file", () => {
+  // A monospaced font, so every character advances the same
+  const mono = new Uint8Array(
+    readFileSync(new URL("../fonts/DejaVuSansMono.ttf", import.meta.url))
+  );
+
+  test("capitals are still three quarters of the height", () => {
+    expect(inkBounds("^FO100,100^A0N,100,100^FDH^FS", mono).y).toStrictEqual([
+      100, 174,
+    ]);
+  });
+
+  test("characters advance by the font's own widths", () => {
+    // "i" is narrow in font 0, so this fails with the stand-in
+    const one = inkBounds("^FO100,100^A0N,100,100^FDi^FS", mono);
+    const two = inkBounds("^FO100,100^A0N,100,100^FDii^FS", mono);
+    // DejaVu Sans Mono advances 1233 of 2048 units, and its capitals are
+    // 1493 units tall, so at 100 dots high a character advances 61.9 dots
+    expect(two.x[1] - one.x[1]).toBeGreaterThanOrEqual(61);
+    expect(two.x[1] - one.x[1]).toBeLessThanOrEqual(63);
+  });
+
+  test("fonts that aren't on the printer print in it, like font 0", () => {
+    const zero = render("^FO100,100^A0N,60,60^FDHello^FS", mono);
+    const missing = render(
+      "^FO100,100^A@N,60,60,E:MISSING.TTF^FDHello^FS",
+      mono
+    );
+    expect(missing.ink).toStrictEqual(zero.ink);
+  });
+
+  test("changes how font 0 looks", () => {
+    expect(
+      render("^FO100,100^A0N,60,60^FDHello^FS", mono).ink
+    ).not.toStrictEqual(render("^FO100,100^A0N,60,60^FDHello^FS").ink);
+  });
+
+  test("a file that isn't a font is an error", () => {
+    expect(() =>
+      render("^FO100,100^A0N,60^FDHi^FS", new Uint8Array(8))
+    ).toThrow(/font0/);
   });
 });

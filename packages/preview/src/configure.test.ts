@@ -69,6 +69,31 @@ suite("configure({ render })", () => {
     ]);
   });
 
+  test("passes fonts to the renderer", async () => {
+    const element = create();
+    const arial = new Uint8Array([1]);
+    const font0 = new Uint8Array([2]);
+    element.fonts = { "E:ARIAL.TTF": arial };
+    element.font0 = font0;
+    element.zpl = "^XA^XZ";
+    await tick();
+
+    expect(calls[0].options.fonts).toStrictEqual({ "E:ARIAL.TTF": arial });
+    expect(calls[0].options.font0).toBe(font0);
+  });
+
+  test("renders again when fonts change", async () => {
+    const element = create();
+    element.zpl = "^XA^XZ";
+    await tick();
+    element.font0 = new Uint8Array([2]);
+    await tick();
+    element.fonts = undefined;
+    await tick();
+
+    expect(calls).toHaveLength(3);
+  });
+
   test("ignores a result that arrives after a newer render started", async () => {
     const element = create();
     element.zpl = "^XA^FDold^FS^XZ";

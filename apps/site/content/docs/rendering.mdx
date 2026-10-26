@@ -56,19 +56,19 @@ const fonts = { "E:ARIAL.TTF": new Uint8Array(await (await fetch("/arial.ttf")).
 const pngs = await renderZpl(zpl, { widthMm: 101.6, heightMm: 152.4, dpmm: 8, grayscale: false, fonts });
 ```
 
-In `<zpl-preview>`, pass them through `configure`:
-
-```ts
-import { configure } from "@zplkit/preview";
-import { renderZpl } from "@zplkit/render";
-
-configure({ render: (zpl, options) => renderZpl(zpl, { ...options, fonts }) });
-```
+`<zpl-preview>` takes them as its `fonts` property: `preview.fonts = fonts`.
 
 Code 49, CODABLOCK, TLC39 and GS1 DataBar composite symbols, and data a barcode can't encode, show as a crossed-out box naming the command, so they don't go missing silently. Commands it doesn't draw yet are listed per label by `layout()`, so you can warn about them.
 
 ## Accuracy
 
-Zebra's built-in fonts can't be redistributed, so open-licensed fonts stand in for them: Archivo for font 0, stretched to font 0's measured letter widths, and DejaVu Sans Mono for fonts A to H. Text takes up the same space as on a printer, but letters look slightly different.
+Zebra's built-in fonts are licensed, so zplkit doesn't include them. Open-licensed fonts stand in for them: Archivo for font 0, stretched to font 0's measured letter widths, and DejaVu Sans Mono for fonts A to H. Text takes up the same space as on a printer, but letters look slightly different.
+
+If you have a license for the printer's font 0, pass its TrueType or OpenType file as `font0`, or set the `font0` property of `<zpl-preview>`. Font 0 is then drawn with it, at the same size, and so are fonts the printer doesn't have. The [viewer](/viewer) and [playground](/playground) take font files under **Fonts**; they stay in your browser. A printer draws small text with its own hinting, so a few dots can still differ.
+
+```ts
+const font0 = new Uint8Array(await (await fetch("/your-font-0.ttf")).arrayBuffer());
+const pngs = await renderZpl(zpl, { widthMm: 101.6, heightMm: 152.4, dpmm: 8, grayscale: false, font0 });
+```
 
 Everything else is tested dot for dot against how Zebra printers draw it. Shapes, images and barcode bars come out exactly as printed, and interpretation lines sit where a printer puts them. Data Matrix, PDF417 and MicroPDF417 symbols are the same size as a printer's, but may encode the data differently, which scanners read the same. Long runs of digits can make a PDF417 symbol a row shorter.

@@ -25,6 +25,7 @@ const tryParse = (bytes: Uint8Array): Font | null => {
   }
 };
 
+/** The font in a file, or null if it isn't TrueType; cached per array */
 const fromBytes = (bytes: Uint8Array) => {
   let font = parsedBytes.get(bytes);
   if (font === undefined) {
@@ -79,4 +80,4 @@ class FontFiles {
 }
 
 export type { FontPath };
-export { FontFiles };
+export { FontFiles, fromBytes as parseFontFile };

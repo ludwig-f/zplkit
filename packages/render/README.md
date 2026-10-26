@@ -57,4 +57,8 @@ A font that isn't there prints in font 0, and its command is listed in `layout()
 
 Geometry follows Zebra's ZPL II Programming Guide, and every element is tested dot for dot against how Zebra printers draw it. Boxes, circles, diagonals, images and barcode bars come out exactly as printed, and interpretation lines sit where a printer puts them. Data Matrix, PDF417 and MicroPDF417 symbols have the same size as a printer's but can encode the data differently, which scanners read the same; long runs of digits can make a PDF417 symbol a row shorter.
 
-Zebra's fonts can't be redistributed, so open-licensed fonts stand in for them (see [fonts/README.md](fonts/README.md)): text takes the same space as on a printer, but letters look slightly different.
+Zebra's fonts are licensed, so they aren't included: open-licensed fonts stand in for them (see [fonts/README.md](fonts/README.md)). Text takes the same space as on a printer, but letters look slightly different. If you have a license for the printer's font 0, pass its TrueType or OpenType file as `font0` to draw font 0 with it:
+
+```ts
+const [png] = await renderZpl(zpl, { ...size, font0: readFileSync("font0.ttf") });
+```

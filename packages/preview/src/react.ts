@@ -20,6 +20,8 @@ type ZplPreviewProps = HTMLAttributes<ZplPreview> &
     dpmm?: number;
     smoothing?: number;
     fade?: boolean;
+    fonts?: Record<string, Uint8Array>;
+    font0?: Uint8Array;
     "onzpl-render-start"?: (event: CustomEvent<RenderStartDetail>) => void;
     "onzpl-render"?: (event: CustomEvent<RenderDetail>) => void;
     "onzpl-error"?: (event: CustomEvent<ErrorDetail>) => void;

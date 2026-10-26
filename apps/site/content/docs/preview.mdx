@@ -31,6 +31,8 @@ The `zpl` property also accepts a `Label` from zplkit, or anything with a `toZPL
 
 ZPL with several labels shows one image per label.
 
+Two properties take font files as `Uint8Array`s: `fonts`, for fonts stored on the printer by path like `"E:ARIAL.TTF"`, and `font0`, to draw font 0 with your own font instead of the open-licensed stand-in. See [rendering](/docs/rendering#accuracy) for why.
+
 ## Events
 
 | Event              | `event.detail`                                  | Fired when                                                |

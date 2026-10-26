@@ -5,6 +5,8 @@ import "@zplkit/preview/react";
 import "./styles.css";
 import Editor from "./Editor";
 import Bench from "./Bench";
+import FontsPanel from "./FontsPanel";
+import { useFonts } from "./fonts";
 import ProblemList from "./ProblemList";
 import codeExamples from "./code-examples";
 import { analyze } from "./analyze";
@@ -72,6 +74,9 @@ export default function Playground() {
   const [notice, setNotice] = useState<string>();
   const [tab, setTab] = useState<Tab>("Code");
   const [cursor, setCursor] = useState<Cursor>();
+  const [showFonts, setShowFonts] = useState(false);
+  const fonts = useFonts();
+  const fontCount = fonts.printerFonts.length + (fonts.font0 ? 1 : 0);
   const [render, setRender] = useState<{ busy: boolean; ms?: number }>({
     busy: true,
   });
@@ -240,6 +245,9 @@ export default function Playground() {
             </option>
           ))}
         </select>
+        <button type="button" onClick={() => setShowFonts(true)}>
+          {fontCount ? `Fonts (${fontCount})` : "Fonts"}
+        </button>
         <button type="button" onClick={share}>
           Share link
         </button>
@@ -343,6 +351,8 @@ export default function Playground() {
                   zpl={zpl}
                   dpmm={dpmm}
                   smoothing={smoothing}
+                  fonts={fonts.fonts}
+                  font0={fonts.font0?.bytes}
                   fade
                   onzpl-render-start={() =>
                     setRender((current) => ({ ...current, busy: true }))
@@ -361,6 +371,12 @@ export default function Playground() {
           </div>
         </section>
       </div>
+
+      <FontsPanel
+        open={showFonts}
+        onClose={() => setShowFonts(false)}
+        fonts={fonts}
+      />
 
       <div className="notice" role="status" aria-live="polite">
         {notice}

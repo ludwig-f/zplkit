@@ -454,9 +454,9 @@
   }
 }
 
-/* Show as code */
+/* Dialogs: show as code, fonts */
 
-.playground .code-panel {
+.playground .dialog {
   width: min(880px, calc(100vw - 32px));
   max-height: calc(100dvh - 64px);
   /* Tailwind's reset clears the margin that centers dialogs */
@@ -468,16 +468,16 @@
   color: var(--ink);
 }
 
-.playground .code-panel[open] {
+.playground .dialog[open] {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
 }
 
-.playground .code-panel::backdrop {
+.playground .dialog::backdrop {
   background: color-mix(in srgb, var(--zk-ink) 35%, transparent);
 }
 
-.playground .code-panel-header {
+.playground .dialog-header {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -487,34 +487,34 @@
   background: var(--zk-surface);
 }
 
-.playground .code-panel-header h2 {
+.playground .dialog-header h2 {
   margin: 0 8px 0 0;
   font: 700 15px var(--font-ui);
 }
 
-.playground .code-panel-header .spacer {
+.playground .dialog-header .spacer {
   flex: 1;
 }
 
-.playground .code-panel-body {
+.playground .dialog-body {
   overflow: auto;
   background: var(--panel);
 }
 
-.playground .code-panel-body pre {
+.playground .dialog-body pre {
   margin: 0;
   padding: 16px;
   font: 13px/1.6 var(--font-code);
   white-space: pre;
 }
 
-.playground .code-panel-error {
+.playground .dialog-error {
   margin: 0;
   padding: 16px;
   color: var(--error);
 }
 
-.playground .code-panel-note {
+.playground .dialog-note {
   margin: 0;
   padding: 10px 16px;
   border-top: 1px solid var(--line);
@@ -522,8 +522,68 @@
   font-size: 13px;
 }
 
-.playground .code-panel-note a {
+.playground .dialog-note a {
   color: var(--ink);
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+
+.playground .fonts-dialog {
+  width: min(640px, calc(100vw - 32px));
+}
+
+.playground .fonts-body {
+  display: grid;
+  gap: 20px;
+  padding: 16px;
+}
+
+.playground .fonts-body p {
+  margin: 0;
+  max-width: 68ch;
+}
+
+.playground .fonts-body section {
+  display: grid;
+  gap: 8px;
+}
+
+.playground .fonts-body h3 {
+  margin: 0;
+  font: 700 14px var(--font-ui);
+}
+
+.playground .fonts-body .hint {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.playground .fonts-body code {
+  font: 12.5px var(--font-code);
+}
+
+.playground .font-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.playground .font-row .font-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.playground .font-row .font-path {
+  font-weight: 600;
+}
+
+.playground .font-row input {
+  width: 180px;
+  text-transform: uppercase;
 }

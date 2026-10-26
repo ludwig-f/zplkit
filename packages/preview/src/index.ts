@@ -13,6 +13,10 @@ type RenderOptions = {
   dpmm: number;
   /** Anti-aliased 8-bit output instead of the printer's 1-bit dots */
   grayscale: boolean;
+  /** Fonts already on the printer, by path like "E:ARIAL.TTF" */
+  fonts?: Record<string, Uint8Array>;
+  /** A font file to draw font 0 with instead of the open-licensed stand-in */
+  font0?: Uint8Array;
 };
 
 /** Renders ZPL to one base64-encoded PNG per label */
@@ -88,6 +92,7 @@ const Base = (
  * from ^PW and ^LL when left out), `dpmm` (dots per millimeter, default 8)
  * `smoothing` (0 for the printer's exact dots to 1 for fully anti-aliased
  * edges, default 0.4) and `fade` (fade labels in when they first appear).
+ * Properties `fonts` and `font0` take font files, as for @zplkit/render.
  *
  * Events: `zpl-render-start` when a render starts, `zpl-render` with
  * `detail.images` (PNG data URLs), the size and resolution used and how long
@@ -98,6 +103,8 @@ class ZplPreview extends Base {
   // fade only changes the styles, so it isn't observed
 
   #zpl: ZplSource = "";
+  #fonts: Record<string, Uint8Array> | undefined;
+  #font0: Uint8Array | undefined;
   #renderId = 0;
   #scheduled = false;
   #labels: HTMLElement;
@@ -118,6 +125,32 @@ class ZplPreview extends Base {
 
   set zpl(value: ZplSource) {
     this.#zpl = value;
+    this.#schedule();
+  }
+
+  /**
+   * TrueType or OpenType fonts already stored on the printer, by path like
+   * "E:ARIAL.TTF", for labels that call them with ^A@ or ^CW
+   */
+  get fonts(): Record<string, Uint8Array> | undefined {
+    return this.#fonts;
+  }
+
+  set fonts(value: Record<string, Uint8Array> | undefined) {
+    this.#fonts = value;
+    this.#schedule();
+  }
+
+  /**
+   * A TrueType or OpenType font to draw font 0 with, instead of the
+   * open-licensed stand-in, like the printer's own if you have a license
+   */
+  get font0(): Uint8Array | undefined {
+    return this.#font0;
+  }
+
+  set font0(value: Uint8Array | undefined) {
+    this.#font0 = value;
     this.#schedule();
   }
 
@@ -244,6 +277,8 @@ class ZplPreview extends Base {
         heightMm: height,
         dpmm,
         grayscale: smoothing > 0,
+        ...(this.#fonts && { fonts: this.#fonts }),
+        ...(this.#font0 && { font0: this.#font0 }),
       });
       if (!pngs.length) {
         throw new Error(
