@@ -41,6 +41,17 @@ describe("run", () => {
     expect(outcome).toMatchObject({ ok: false, line: 4 });
   });
 
+  test("explains resolutions printers don't have", () => {
+    const outcome = run(
+      `${imports}\nexport default build(<Label width={mm(50)} height={mm(25)} dpmm={1300} />);`
+    );
+    expect(outcome).toMatchObject({
+      ok: false,
+      message: expect.stringContaining("dpmm must be 6, 8, 12 or 24"),
+      line: 3,
+    });
+  });
+
   test("only allows zplkit imports", () => {
     expect(
       run(`import fs from "node:fs";\nfs.readFileSync("secret");`)
