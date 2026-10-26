@@ -6,6 +6,8 @@ import ZplError from "./ZplError.js";
 import ImageConverter from "./ImageConverter.js";
 import { Orientation, ZebraFontFamily } from "./types.js";
 import { dots, mm } from "./units.js";
+import type { Length } from "./units.js";
+import type { LabelOptions } from "./options.js";
 
 suite("Label", () => {
   const header = "^XA^PW120^LL120^LRN^CI28^LH0,0";
@@ -721,6 +723,25 @@ describe("resolution", () => {
       ).not.toThrow();
     }
   );
+
+  test("says when dpmm is missing, like after a typo", () => {
+    expect(
+      () =>
+        new Label({ width: mm(50), height: mm(25) } as unknown as LabelOptions)
+    ).toThrow("Label needs dpmm");
+  });
+
+  test("says when a length is missing", () => {
+    const label = new Label({ width: mm(50), height: mm(25), dpmm: 8 });
+    expect(() =>
+      label.box({
+        position: { x: mm(1), y: mm(1) },
+        width: undefined as unknown as Length,
+        height: mm(5),
+        thickness: dots(2),
+      })
+    ).toThrow("Expected a length like mm(5) or dots(40), got undefined");
+  });
 
   test.each([0, 10, 1300])("rejects %i dots per millimeter", (dpmm) => {
     expect(

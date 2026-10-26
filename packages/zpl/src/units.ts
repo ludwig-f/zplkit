@@ -38,8 +38,15 @@ const dots = (value: number): Length => {
  * @param length Length to convert
  * @param dpmm Dots per millimeter of the printer
  */
-const toDots = (length: Length, dpmm: number): number =>
-  "dots" in length ? length.dots : Math.round(length.mm * dpmm);
+const toDots = (length: Length, dpmm: number): number => {
+  // Types require a Length, but JavaScript and unchecked code can leave one out
+  if (typeof length !== "object" || length === null) {
+    throw new ZplError(
+      `Expected a length like mm(5) or dots(40), got ${String(length)}`
+    );
+  }
+  return "dots" in length ? length.dots : Math.round(length.mm * dpmm);
+};
 
 export type { Length };
 export { mm, dots, toDots };
