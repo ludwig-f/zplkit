@@ -47,6 +47,8 @@ document.querySelector("zpl-preview").zpl = new Label({
 | `dpmm`      | `dpmm`      | 8                 | Dots per millimeter: 6, 8, 12 or 24 for 152, 203, 300 or 600 dpi                      |
 | `smoothing` | `smoothing` | 0.4               | How much to smooth edges, from 0 (the printer's exact dots) to 1 (fully anti-aliased) |
 | `fade`      | `fade`      | off               | Fade labels in when they first appear, over `--zpl-fade-duration` (200 ms by default) |
+|             | `fonts`     |                   | Fonts stored on the printer, by path like `"E:ARIAL.TTF"`, as `Uint8Array`s           |
+|             | `font0`     |                   | A font file to draw font 0 with instead of the open-licensed stand-in                 |
 
 Thermal printers print hard-edged dots, which look rough on screen. `smoothing` softens the edges by blending the printer's dots with an anti-aliased render. Set it to 0 to see exactly what the printer prints.
 
