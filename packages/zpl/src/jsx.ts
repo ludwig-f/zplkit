@@ -457,7 +457,7 @@ export {
   Raw,
 };
 export { Fragment } from "./jsx-runtime.js";
-export { mm, dots } from "./units.js";
+export { mm, inches, dots } from "./units.js";
 export { Orientation, ZebraFontFamily } from "./types.js";
 export type { ZplElement, ZplNode } from "./jsx-runtime.js";
 export type {

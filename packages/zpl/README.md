@@ -101,7 +101,7 @@ Label components are plain functions that `build()` calls, not React components,
 
 ### Units
 
-Every length takes an explicit unit: `mm(10)` for millimeters or `dots(80)` for printer dots, ZPL's native unit. Millimeters are converted to dots using the label's `dpmm` (dots per millimeter: 6, 8, 12 or 24 for 152, 203, 300 or 600 dpi printers). Passing a bare number is a type error, so mixing up units can't happen by accident.
+Every length takes an explicit unit: `mm(10)` for millimeters, `inches(0.5)` for inches or `dots(80)` for printer dots, ZPL's native unit. Millimeters and inches are converted to dots using the label's `dpmm` (dots per millimeter: 6, 8, 12 or 24 for 152, 203, 300 or 600 dpi printers). Passing a bare number is a type error, so mixing up units can't happen by accident.
 
 ### Escaping
 

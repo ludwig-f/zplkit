@@ -24,7 +24,7 @@ const label = new Label({ width: mm(57), height: mm(19), dpmm: 12 })
 
 ## Units
 
-Every length takes an explicit unit: `mm(10)` for millimeters or `dots(80)` for printer dots, ZPL's native unit. Millimeters are converted with the label's `dpmm`. A bare number is a type error, so millimeters and dots can't be mixed up by accident.
+Every length takes an explicit unit: `mm(10)` for millimeters, `inches(0.5)` for inches or `dots(80)` for printer dots, ZPL's native unit. Millimeters and inches are converted with the label's `dpmm`. A bare number is a type error, so units can't be mixed up by accident.
 
 ## Elements
 

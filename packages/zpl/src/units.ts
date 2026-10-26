@@ -21,6 +21,14 @@ const mm = (value: number): Length => {
 };
 
 /**
+ * A length in inches, converted to dots using the label's resolution
+ */
+const inches = (value: number): Length => {
+  assertNonNegative(value, "inches");
+  return { mm: value * 25.4 };
+};
+
+/**
  * A length in printer dots, ZPL's native unit
  */
 const dots = (value: number): Length => {
@@ -49,4 +57,4 @@ const toDots = (length: Length, dpmm: number): number => {
 };
 
 export type { Length };
-export { mm, dots, toDots };
+export { mm, inches, dots, toDots };
