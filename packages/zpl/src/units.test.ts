@@ -14,9 +14,15 @@ suite("units", () => {
     expect(toDots(mm(1.3), 8)).toStrictEqual(10);
   });
 
-  test("inches are converted using the dots per millimeter", () => {
-    expect(toDots(inches(4), 8)).toStrictEqual(813);
-    expect(toDots(inches(6), 12)).toStrictEqual(1829);
+  test("inches are converted with the printer's dots per inch", () => {
+    expect(toDots(inches(6), 6)).toStrictEqual(912);
+    expect(toDots(inches(4), 8)).toStrictEqual(812);
+    expect(toDots(inches(6), 12)).toStrictEqual(1800);
+    expect(toDots(inches(6), 24)).toStrictEqual(3600);
+  });
+
+  test("inches are rounded to whole dots", () => {
+    expect(toDots(inches(0.1), 8)).toStrictEqual(20);
   });
 
   test("dots must be whole numbers", () => {

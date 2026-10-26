@@ -71,6 +71,19 @@ suite("<zpl-preview>", () => {
       });
     });
 
+    test("labels without a size are 4 × 6 inches at the printer's dpi", async () => {
+      const element = create();
+      const rendered = nextRender(element);
+      element.setAttribute("dpmm", "12");
+      element.setAttribute("zpl", "^XA^FO20,20^GB40,40,40^FS^XZ");
+      await rendered;
+
+      expect(pngSize(images(element)[0].src)).toStrictEqual({
+        width: 1200,
+        height: 1800,
+      });
+    });
+
     test("width and height attributes in millimeters override ^PW and ^LL", async () => {
       const element = create();
       const rendered = nextRender(element);

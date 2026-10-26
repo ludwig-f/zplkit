@@ -50,7 +50,14 @@ const loadRenderer = (): Promise<Render> =>
 const DEFAULT_SMOOTHING = 0.4;
 
 /** Default size when neither attributes nor ^PW/^LL give one: 4 × 6 inches */
-const DEFAULT_SIZE_MM = { width: 101.6, height: 152.4 };
+const DEFAULT_SIZE_INCHES = { width: 4, height: 6 };
+
+/** The dots per inch printers are sold as, for each dots per millimeter */
+const dpiByDpmm: Record<number, number> = { 6: 152, 8: 203, 12: 300, 24: 600 };
+
+/** Inches in dots, like 6 in at 300 dpi is 1800 dots */
+const inchDots = (inches: number, dpmm: number): number =>
+  Math.round(inches * (dpiByDpmm[dpmm] ?? dpmm * 25.4));
 
 /** The last value of a command like ^PW800 in the ZPL, if any */
 const lastValue = (zpl: string, command: string): number | undefined => {
@@ -260,10 +267,12 @@ class ZplPreview extends Base {
     const smoothing = this.smoothing;
     const width =
       this.width ??
-      (lastValue(zpl, "PW") ?? DEFAULT_SIZE_MM.width * dpmm) / dpmm;
+      (lastValue(zpl, "PW") ?? inchDots(DEFAULT_SIZE_INCHES.width, dpmm)) /
+        dpmm;
     const height =
       this.height ??
-      (lastValue(zpl, "LL") ?? DEFAULT_SIZE_MM.height * dpmm) / dpmm;
+      (lastValue(zpl, "LL") ?? inchDots(DEFAULT_SIZE_INCHES.height, dpmm)) /
+        dpmm;
 
     const started = performance.now();
     this.dispatchEvent(

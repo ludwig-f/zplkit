@@ -15,7 +15,7 @@ import { decodeShare, encodeShare } from "./share";
 import type { Cursor } from "./Bench";
 import type { EditorHandle } from "./Editor";
 import type { Problem } from "./analyze";
-import type { ShareState } from "./share";
+import type { LabelLength, ShareState } from "./share";
 
 // Kept from before the rename, so saved labels stay
 const STORAGE_KEY = "node-zpl-playground";
@@ -27,28 +27,45 @@ const fileName = (name: string) =>
   `${name.toLowerCase().replace(/\s+/g, "-")}.zpl`;
 
 const fromExample = (index: number): ShareState => {
-  const { zpl, widthMm, heightMm, dpmm } = examples[index];
-  return { zpl, widthMm, heightMm, dpmm, smoothing: SMOOTHING };
+  const { zpl, width, height, dpmm } = examples[index];
+  return { zpl, width, height, dpmm, smoothing: SMOOTHING };
 };
 
 const loadSaved = (): ShareState | undefined => {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? (JSON.parse(saved) as ShareState) : undefined;
+    if (!saved) return undefined;
+    const state = JSON.parse(saved);
+    // Saved before sizes kept their unit, in millimeters
+    if ("widthMm" in state || "heightMm" in state) {
+      const { widthMm, heightMm, ...rest } = state;
+      return {
+        ...rest,
+        width: typeof widthMm === "number" ? { mm: widthMm } : undefined,
+        height: typeof heightMm === "number" ? { mm: heightMm } : undefined,
+      };
+    }
+    return state as ShareState;
   } catch {
     return undefined;
   }
 };
 
-/** Common label sizes in millimeters */
+const inches = (value: number): LabelLength => ({ inches: value });
+const mm = (value: number): LabelLength => ({ mm: value });
+
+/** Common label sizes, in the unit they're sold in */
 const sizes = [
-  { id: "4x6", label: "4 × 6 in", width: 101.6, height: 152.4 },
-  { id: "4x4", label: "4 × 4 in", width: 101.6, height: 101.6 },
-  { id: "4x2", label: "4 × 2 in", width: 101.6, height: 50.8 },
-  { id: "2x1", label: "2 × 1 in", width: 50.8, height: 25.4 },
-  { id: "100x150", label: "100 × 150 mm", width: 100, height: 150 },
-  { id: "57x32", label: "57 × 32 mm", width: 57, height: 32 },
+  { id: "4x6", label: "4 × 6 in", width: inches(4), height: inches(6) },
+  { id: "4x4", label: "4 × 4 in", width: inches(4), height: inches(4) },
+  { id: "4x2", label: "4 × 2 in", width: inches(4), height: inches(2) },
+  { id: "2x1", label: "2 × 1 in", width: inches(2), height: inches(1) },
+  { id: "100x150", label: "100 × 150 mm", width: mm(100), height: mm(150) },
+  { id: "57x32", label: "57 × 32 mm", width: mm(57), height: mm(32) },
 ];
+
+const sameLength = (a: LabelLength | undefined, b: LabelLength) =>
+  a !== undefined && JSON.stringify(a) === JSON.stringify(b);
 
 const resolutions = [
   { dpmm: 6, dpi: 152 },
@@ -63,6 +80,19 @@ const lastValue = (zpl: string, command: string): number | undefined => {
   const value = matches[matches.length - 1]?.[1];
   return value === undefined ? undefined : Number(value);
 };
+
+/**
+ * A label side in millimeters for the renderer. Inches use the dpi printers
+ * are sold as, so 6 in at 300 dpi is exactly 1800 dots.
+ */
+const toMm = (length: LabelLength, dpmm: number): number => {
+  if ("mm" in length) return length.mm;
+  const dpi = resolutions.find((r) => r.dpmm === dpmm)?.dpi ?? dpmm * 25.4;
+  return Math.round(length.inches * dpi) / dpmm;
+};
+
+const lengthMm = (value: number | undefined) =>
+  value === undefined ? undefined : mm(value);
 
 const parseMm = (text: string): number | undefined => {
   const value = Number(text.replace(",", "."));
@@ -107,7 +137,9 @@ export default function Viewer() {
     busy: true,
   });
   const editor = useRef<EditorHandle>(null);
-  const { zpl, widthMm, heightMm, dpmm, smoothing } = state;
+  const { zpl, width, height, dpmm, smoothing } = state;
+  const widthMm = width && toMm(width, dpmm);
+  const heightMm = height && toMm(height, dpmm);
   const update = (changes: Partial<ShareState>) =>
     setState((current) => ({ ...current, ...changes }));
 
@@ -145,14 +177,17 @@ export default function Viewer() {
 
   // The size the preview uses: settings, then ^PW/^LL, then 4 × 6 in
   const labelSize = {
-    width: widthMm ?? ((lastValue(zpl, "PW") ?? 0) / dpmm || 101.6),
-    height: heightMm ?? ((lastValue(zpl, "LL") ?? 0) / dpmm || 152.4),
+    width:
+      widthMm ?? ((lastValue(zpl, "PW") ?? 0) / dpmm || toMm(inches(4), dpmm)),
+    height:
+      heightMm ?? ((lastValue(zpl, "LL") ?? 0) / dpmm || toMm(inches(6), dpmm)),
   };
   const size =
-    widthMm === undefined && heightMm === undefined
+    width === undefined && height === undefined
       ? "auto"
       : sizes.find(
-          (preset) => preset.width === widthMm && preset.height === heightMm
+          (preset) =>
+            sameLength(width, preset.width) && sameLength(height, preset.height)
         )?.id ?? "custom";
   const [custom, setCustom] = useState(size === "custom");
   const sizeValue = custom ? "custom" : size;
@@ -215,10 +250,10 @@ export default function Viewer() {
               const id = event.target.value;
               setCustom(id === "custom");
               if (id === "auto") {
-                update({ widthMm: undefined, heightMm: undefined });
+                update({ width: undefined, height: undefined });
               } else if (id !== "custom") {
                 const preset = sizes.find((s) => s.id === id)!;
-                update({ widthMm: preset.width, heightMm: preset.height });
+                update({ width: preset.width, height: preset.height });
               }
             }}
           >
@@ -237,9 +272,9 @@ export default function Viewer() {
               aria-label="Width in millimeters"
               inputMode="decimal"
               placeholder={labelSize.width.toFixed(1)}
-              value={widthMm ?? ""}
+              value={widthMm === undefined ? "" : String(widthMm)}
               onChange={(event) =>
-                update({ widthMm: parseMm(event.target.value) })
+                update({ width: lengthMm(parseMm(event.target.value)) })
               }
             />
             ×
@@ -247,9 +282,9 @@ export default function Viewer() {
               aria-label="Height in millimeters"
               inputMode="decimal"
               placeholder={labelSize.height.toFixed(1)}
-              value={heightMm ?? ""}
+              value={heightMm === undefined ? "" : String(heightMm)}
               onChange={(event) =>
-                update({ heightMm: parseMm(event.target.value) })
+                update({ height: lengthMm(parseMm(event.target.value)) })
               }
             />
             mm

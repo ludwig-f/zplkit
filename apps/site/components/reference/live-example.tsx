@@ -104,8 +104,8 @@ export function LiveExample({
     const hash = await encodeShare({
       zpl: text,
       // A label from the top left corner to past the ink shown
-      widthMm: shown ? shown.right / DPMM : undefined,
-      heightMm: shown ? shown.bottom / DPMM : undefined,
+      width: shown ? { mm: shown.right / DPMM } : undefined,
+      height: shown ? { mm: shown.bottom / DPMM } : undefined,
       dpmm: DPMM,
       smoothing: 0.4,
     });

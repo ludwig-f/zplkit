@@ -1,15 +1,17 @@
+import type { LabelLength } from "./share";
+
 /** Example labels to start from */
 const examples: {
   name: string;
   zpl: string;
-  widthMm: number | undefined;
-  heightMm: number | undefined;
+  width: LabelLength | undefined;
+  height: LabelLength | undefined;
   dpmm: number;
 }[] = [
   {
     name: "Shipping label",
-    widthMm: 101.6,
-    heightMm: 152.4,
+    width: { inches: 4 },
+    height: { inches: 6 },
     dpmm: 8,
     zpl: `^XA
 
@@ -51,8 +53,8 @@ const examples: {
   },
   {
     name: "Product label",
-    widthMm: undefined,
-    heightMm: undefined,
+    width: undefined,
+    height: undefined,
     dpmm: 8,
     zpl: `^XA
 ^PW406^LL203
@@ -70,8 +72,8 @@ const examples: {
   },
   {
     name: "Asset tag",
-    widthMm: undefined,
-    heightMm: undefined,
+    width: undefined,
+    height: undefined,
     dpmm: 8,
     zpl: `^XA
 ^PW406^LL203
@@ -88,8 +90,8 @@ const examples: {
   },
   {
     name: "Common mistakes",
-    widthMm: undefined,
-    heightMm: undefined,
+    width: undefined,
+    height: undefined,
     dpmm: 8,
     zpl: `^XA
 ^PW406^LL203

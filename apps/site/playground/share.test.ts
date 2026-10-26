@@ -8,14 +8,19 @@ import {
 
 const state = {
   zpl: "^XA^FO50,50^A0,40^FDHello, wörld ^ _ ~^FS^XZ",
-  widthMm: 50.8,
-  heightMm: undefined,
+  width: { mm: 50.8 },
+  height: undefined,
   dpmm: 12,
   smoothing: 0.4,
 };
 
 test("a shared link decodes to the same label and settings", async () => {
   expect(await decodeShare(await encodeShare(state))).toStrictEqual(state);
+});
+
+test("sizes in inches stay in inches", async () => {
+  const inches = { ...state, width: { inches: 4 }, height: { inches: 6 } };
+  expect(await decodeShare(await encodeShare(inches))).toStrictEqual(inches);
 });
 
 test("links only use characters that are safe in a URL", async () => {
