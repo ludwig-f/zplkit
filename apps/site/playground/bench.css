@@ -3,6 +3,7 @@
  * Self-contained so it works in the playground and on other pages.
  */
 .bench {
+  --label-gap: 14px;
   --liner: var(--zk-liner);
   --liner-edge: var(--zk-rule-strong);
   --bench-muted: var(--zk-muted);
@@ -45,9 +46,17 @@
   border-bottom: 1px solid var(--bench-muted);
 }
 
-.bench .ruler.vertical {
+/* One ruler per label, spaced like the labels */
+.bench .vertical-rulers {
+  display: flex;
+  flex-direction: column;
+  gap: var(--label-gap);
   grid-column: 1;
   grid-row: 2;
+}
+
+.bench .ruler.vertical {
+  flex: none;
   /* The label's height at the width it's shown */
   height: calc((100cqw - var(--ruler)) * var(--aspect));
   margin-right: 6px;
@@ -165,7 +174,7 @@
 }
 
 .bench zpl-preview::part(labels) {
-  gap: 14px;
+  gap: var(--label-gap);
 }
 
 /* Die-cut labels: slightly rounded corners on white stock */

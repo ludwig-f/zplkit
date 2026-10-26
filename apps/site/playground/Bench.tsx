@@ -20,6 +20,11 @@ type BenchProps = {
   onCursor?: (cursor: Cursor | undefined) => void;
   /** Called when a label is clicked, with the position clicked */
   onPick?: (cursor: Cursor) => void;
+  /**
+   * How many labels are shown, each with its own vertical ruler
+   * @defaultValue 1
+   */
+  labels?: number;
   children: ReactNode;
 };
 
@@ -50,6 +55,7 @@ export default function Bench({
   heightMm,
   onCursor,
   onPick,
+  labels = 1,
   children,
 }: BenchProps) {
   const [hover, setHover] = useState<Hover>();
@@ -106,9 +112,6 @@ export default function Bench({
     onCursor?.(undefined);
   };
 
-  // The vertical ruler belongs to the first label, so only it marks there
-  const markY = hover && hover.label === 0 ? hover.fy : undefined;
-
   return (
     <div className="bench">
       <div
@@ -150,29 +153,35 @@ export default function Bench({
               />
             )}
           </div>
-          <div
-            className="ruler vertical"
-            role="img"
-            aria-label={`${heightMm.toFixed(1)} mm tall`}
-          >
-            {ticksFor(heightMm, step).map((mm) => (
-              <span
-                key={mm}
-                className={tickClass(mm)}
-                style={{ top: `${(mm / heightMm) * 100}%` }}
+          {/* Each label is its own piece of paper, measured from its top */}
+          <div className="vertical-rulers">
+            {Array.from({ length: Math.max(labels, 1) }, (_, index) => (
+              <div
+                key={index}
+                className="ruler vertical"
+                role="img"
+                aria-label={`${heightMm.toFixed(1)} mm tall`}
               >
-                {mm % 10 === 0 && mm > 0 && (
-                  <span className="tick-label">{mm}</span>
+                {ticksFor(heightMm, step).map((mm) => (
+                  <span
+                    key={mm}
+                    className={tickClass(mm)}
+                    style={{ top: `${(mm / heightMm) * 100}%` }}
+                  >
+                    {mm % 10 === 0 && mm > 0 && (
+                      <span className="tick-label">{mm}</span>
+                    )}
+                  </span>
+                ))}
+                {hover?.label === index && (
+                  <span
+                    className="marker"
+                    style={{ top: `${hover.fy * 100}%` }}
+                    aria-hidden="true"
+                  />
                 )}
-              </span>
+              </div>
             ))}
-            {markY !== undefined && (
-              <span
-                className="marker"
-                style={{ top: `${markY * 100}%` }}
-                aria-hidden="true"
-              />
-            )}
           </div>
           <div
             className={`labels${tracking ? " tracking" : ""}`}
