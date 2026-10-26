@@ -50,21 +50,35 @@ const fillCenters = (
   const { width, height } = raster;
   const value = color === "B" ? 1 : 0;
 
-  for (let row = 0; row < height; row++) {
+  // The edges that aren't horizontal, and the rows they span: only rows
+  // whose center line the path crosses can get ink
+  const edges: [x0: number, y0: number, x1: number, y1: number][] = [];
+  let minY = Infinity;
+  let maxY = -Infinity;
+  for (const contour of path) {
+    for (let i = 0; i < contour.length; i++) {
+      const [x0, y0] = contour[i];
+      const [x1, y1] = contour[(i + 1) % contour.length];
+      if (y0 === y1) continue;
+      edges.push([x0, y0, x1, y1]);
+      minY = Math.min(minY, y0, y1);
+      maxY = Math.max(maxY, y0, y1);
+    }
+  }
+  const first = Math.max(0, Math.floor(minY - 0.5));
+  const last = Math.min(height - 1, Math.ceil(maxY - 0.5));
+
+  for (let row = first; row <= last; row++) {
     const yc = row + 0.5;
     const crossings: [x: number, winding: number][] = [];
 
-    for (const contour of path) {
-      for (let i = 0; i < contour.length; i++) {
-        const [x0, y0] = contour[i];
-        const [x1, y1] = contour[(i + 1) % contour.length];
-        // Half-open, so a point shared by two edges is counted once
-        if ((y0 <= yc && yc < y1) || (y1 <= yc && yc < y0)) {
-          crossings.push([
-            x0 + ((yc - y0) * (x1 - x0)) / (y1 - y0),
-            y0 < y1 ? 1 : -1,
-          ]);
-        }
+    for (const [x0, y0, x1, y1] of edges) {
+      // Half-open, so a point shared by two edges is counted once
+      if ((y0 <= yc && yc < y1) || (y1 <= yc && yc < y0)) {
+        crossings.push([
+          x0 + ((yc - y0) * (x1 - x0)) / (y1 - y0),
+          y0 < y1 ? 1 : -1,
+        ]);
       }
     }
     if (crossings.length < 2) continue;
