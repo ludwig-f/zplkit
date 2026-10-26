@@ -11,14 +11,15 @@ The options tables link here for types they share. Import them from `@zplkit/cor
 type Length = { mm: number } | { dots: number };
 ```
 
-A length with its unit, so millimeters and dots can't be mixed up. A bare number is a type error. Make one with:
+A length with its unit, so units can't be mixed up. A bare number is a type error. Make one with:
 
 | Function | Makes |
 | --- | --- |
 | `mm(value)` | Millimeters, converted to dots with the label's `dpmm` |
+| `inches(value)` | Inches, converted the same way |
 | `dots(value)` | Printer dots, ZPL's own unit; whole numbers only |
 
-Both throw a `ZplError` for negative numbers.
+All three throw a `ZplError` for negative numbers.
 
 ```ts
 label.box({

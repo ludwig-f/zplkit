@@ -16,6 +16,7 @@ suite("entry points", () => {
       "ZplError",
       "dots",
       "escapeFieldData",
+      "inches",
       "lint",
       "mm",
       "parse",
@@ -70,6 +71,7 @@ suite("entry points", () => {
       "ZebraFontFamily",
       "build",
       "dots",
+      "inches",
       "mm",
     ]);
   });
