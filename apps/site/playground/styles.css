@@ -587,3 +587,85 @@
   width: 180px;
   text-transform: uppercase;
 }
+
+/* Loading: the page's own layout with placeholder lines and a blank label */
+
+.playground.skeleton .skeleton-lines {
+  padding: 12px 0;
+  font: 14px/1.65 var(--font-code);
+}
+
+.playground.skeleton .skeleton-line {
+  display: flex;
+  align-items: center;
+  height: 1.65em;
+}
+
+/* Placed like CodeMirror's line numbers, lint column and line padding */
+.playground.skeleton .skeleton-number {
+  flex: none;
+  box-sizing: border-box;
+  width: 25px;
+  padding: 0 3px 0 5px;
+  color: var(--muted);
+  text-align: right;
+}
+
+.playground.skeleton .skeleton-bar,
+.playground.skeleton .skeleton-paper {
+  animation: skeleton-pulse 1.6s ease-in-out infinite alternate;
+}
+
+.playground.skeleton .skeleton-bar {
+  max-width: calc(100% - 70px);
+  margin-left: 25px;
+  height: 0.7em;
+  border-radius: 3px;
+  background: var(--zk-rule);
+}
+
+/*
+ * A blank 4 by 6 inch label on its liner, the size most labels start at,
+ * with room for the rulers as in the bench
+ */
+.playground.skeleton .skeleton-liner {
+  width: min(100%, 662px);
+}
+
+.playground.skeleton .skeleton-frame {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  grid-template-rows: 22px auto;
+  row-gap: 6px;
+}
+
+.playground.skeleton .skeleton-frame::before {
+  grid-column: 2;
+  border-bottom: 1px solid var(--zk-muted);
+  content: "";
+  opacity: 0.5;
+}
+
+.playground.skeleton .skeleton-paper {
+  grid-column: 2;
+  grid-row: 2;
+  aspect-ratio: 101.6 / 152.4;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--zk-paper) 18%, transparent);
+}
+
+@keyframes skeleton-pulse {
+  from {
+    opacity: 0.55;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .playground.skeleton .skeleton-bar,
+  .playground.skeleton .skeleton-paper {
+    animation: none;
+  }
+}
