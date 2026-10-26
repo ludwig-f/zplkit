@@ -53,6 +53,12 @@ class Label extends ZplContent {
    */
   constructor(options: LabelOptions) {
     super({ minify: options.minify });
+    // Types only allow these, but JavaScript and unchecked code can pass more
+    if (![6, 8, 12, 24].includes(options.dpmm)) {
+      throw new ZplError(
+        `dpmm must be 6, 8, 12 or 24, for 152, 203, 300 or 600 dpi printers, got ${options.dpmm}`
+      );
+    }
     this.dpmm = options.dpmm;
 
     const width = this.dots(options.width);
