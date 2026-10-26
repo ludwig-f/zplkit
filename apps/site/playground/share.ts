@@ -1,8 +1,11 @@
+/** A label side, in the unit it was picked in */
+type LabelLength = { mm: number } | { inches: number };
+
 /** Everything a shared link restores */
 type ShareState = {
   zpl: string;
-  widthMm: number | undefined;
-  heightMm: number | undefined;
+  width: LabelLength | undefined;
+  height: LabelLength | undefined;
   dpmm: number;
   smoothing: number;
 };
@@ -17,6 +20,23 @@ const fromBase64Url = (text: string): Uint8Array =>
   Uint8Array.from(atob(text.replace(/-/g, "+").replace(/_/g, "/")), (char) =>
     char.charCodeAt(0)
   );
+
+/** Millimeters as a plain number, as links had them before inches */
+const encodeLength = (length: LabelLength | undefined) =>
+  length === undefined ? null : "mm" in length ? length.mm : length;
+
+const decodeLength = (value: unknown): LabelLength | undefined => {
+  if (typeof value === "number") return { mm: value };
+  if (
+    value &&
+    typeof value === "object" &&
+    "inches" in value &&
+    typeof value.inches === "number"
+  ) {
+    return { inches: value.inches };
+  }
+  return undefined;
+};
 
 const transform = async (
   bytes: Uint8Array,
@@ -35,8 +55,8 @@ const transform = async (
 const encodeShare = async (state: ShareState): Promise<string> => {
   const json = JSON.stringify([
     state.zpl,
-    state.widthMm ?? null,
-    state.heightMm ?? null,
+    encodeLength(state.width),
+    encodeLength(state.height),
     state.dpmm,
     state.smoothing,
   ]);
@@ -55,7 +75,7 @@ const decodeShare = async (text: string): Promise<ShareState | undefined> => {
       fromBase64Url(text),
       new DecompressionStream("deflate-raw")
     );
-    const [zpl, widthMm, heightMm, dpmm, smoothing] = JSON.parse(
+    const [zpl, width, height, dpmm, smoothing] = JSON.parse(
       new TextDecoder().decode(bytes)
     );
 
@@ -65,8 +85,8 @@ const decodeShare = async (text: string): Promise<ShareState | undefined> => {
 
     return {
       zpl,
-      widthMm: widthMm ?? undefined,
-      heightMm: heightMm ?? undefined,
+      width: decodeLength(width),
+      height: decodeLength(height),
       dpmm,
       smoothing: typeof smoothing === "number" ? smoothing : 0.4,
     };
@@ -114,5 +134,5 @@ const decodeCodeShare = async (
   }
 };
 
-export type { ShareState, CodeShareState };
+export type { LabelLength, ShareState, CodeShareState };
 export { encodeShare, decodeShare, encodeCodeShare, decodeCodeShare };

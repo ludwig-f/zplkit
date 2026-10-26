@@ -8,7 +8,7 @@ The options tables link here for types they share. Import them from `@zplkit/cor
 ## Length
 
 ```ts
-type Length = { mm: number } | { dots: number };
+type Length = { mm: number } | { inches: number } | { dots: number };
 ```
 
 A length with its unit, so units can't be mixed up. A bare number is a type error. Make one with:
@@ -16,10 +16,12 @@ A length with its unit, so units can't be mixed up. A bare number is a type erro
 | Function | Makes |
 | --- | --- |
 | `mm(value)` | Millimeters, converted to dots with the label's `dpmm` |
-| `inches(value)` | Inches, converted the same way |
+| `inches(value)` | Inches, converted to dots with the printer's dpi |
 | `dots(value)` | Printer dots, ZPL's own unit; whole numbers only |
 
 All three throw a `ZplError` for negative numbers.
+
+Inches and millimeters follow the numbers each is usually measured with. Inches use the dpi printers are sold as, so 6 inches at 300 dpi is 1800 dots, as in `^LL1800`. Millimeters use dots per millimeter, so 10 mm at 12 dpmm is 120 dots. The two don't quite agree: 300 dpi is really 11.8 dots per millimeter. At 203 dpi the difference is at most a dot, but at 300 and 600 dpi `inches(4)` is about 1.6 mm shorter than `mm(101.6)`. Use one unit for a label's size and the fields near its edges.
 
 ```ts
 label.box({

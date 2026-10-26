@@ -42,8 +42,8 @@ document.querySelector("zpl-preview").zpl = new Label({
 | Attribute   | Property    | Default           | Description                                                                           |
 | ----------- | ----------- | ----------------- | ------------------------------------------------------------------------------------- |
 | `zpl`       | `zpl`       |                   | ZPL to show. The property also accepts objects with `toZPL()`.                        |
-| `width`     | `width`     | `^PW`, else 101.6 | Label width in millimeters                                                            |
-| `height`    | `height`    | `^LL`, else 152.4 | Label height in millimeters                                                           |
+| `width`     | `width`     | `^PW`, else 4 in  | Label width in millimeters                                                            |
+| `height`    | `height`    | `^LL`, else 6 in  | Label height in millimeters                                                           |
 | `dpmm`      | `dpmm`      | 8                 | Dots per millimeter: 6, 8, 12 or 24 for 152, 203, 300 or 600 dpi                      |
 | `smoothing` | `smoothing` | 0.4               | How much to smooth edges, from 0 (the printer's exact dots) to 1 (fully anti-aliased) |
 | `fade`      | `fade`      | off               | Fade labels in when they first appear, over `--zpl-fade-duration` (200 ms by default) |
