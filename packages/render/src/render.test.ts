@@ -282,3 +282,21 @@ describe("renderLabels", () => {
     });
   });
 });
+
+describe("label size", () => {
+  test("refuses labels too large to render, instead of running out of memory", () => {
+    expect(() =>
+      renderLabels("^XA^XZ", { widthMm: 50.8, heightMm: 25.4, dpmm: 1300 })
+    ).toThrow("66040 × 33020 dots");
+  });
+
+  test("renders the largest real labels", () => {
+    // 8.5 by 39 inches at 300 dpi
+    const [raster] = renderLabels("^XA^XZ", {
+      widthMm: 215.9,
+      heightMm: 990.6,
+      dpmm: 12,
+    });
+    expect(raster.width * raster.height).toBeGreaterThan(30_000_000);
+  });
+});

@@ -147,6 +147,13 @@ const drawReversed = (raster: Raster, element: Element, dpmm: number): void => {
 };
 
 /**
+ * Most dots in a label, about three times the largest real ones (8.5 by 39
+ * inches at 300 dpi), so a mistyped size fails fast instead of taking
+ * seconds or running out of memory
+ */
+const MAX_DOTS = 100_000_000;
+
+/**
  * Render each label in ZPL (or parsed commands) to a raster of ink coverage.
  * Labels without ^PW use the full width; narrower print widths are centered,
  * like printers do.
@@ -159,6 +166,11 @@ const renderLabels = (
   const width = Math.ceil(options.widthMm * options.dpmm - 1e-9);
   const height = Math.ceil(options.heightMm * options.dpmm - 1e-9);
   const sampling = options.antialias ? "coverage" : "center";
+  if (width * height > MAX_DOTS) {
+    throw new RangeError(
+      `The label is ${width} × ${height} dots, too large to render. The largest real labels have about 30 million dots.`
+    );
+  }
 
   return layout(commands, { fonts: options.fonts, font0: options.font0 }).map(
     (label) => {

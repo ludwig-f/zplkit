@@ -711,3 +711,20 @@ suite("Label", () => {
     });
   });
 });
+
+describe("resolution", () => {
+  test.each([6, 8, 12, 24] as const)(
+    "accepts %i dots per millimeter",
+    (dpmm) => {
+      expect(
+        () => new Label({ width: mm(50), height: mm(25), dpmm })
+      ).not.toThrow();
+    }
+  );
+
+  test.each([0, 10, 1300])("rejects %i dots per millimeter", (dpmm) => {
+    expect(
+      () => new Label({ width: mm(50), height: mm(25), dpmm: dpmm as 8 })
+    ).toThrow("dpmm must be 6, 8, 12 or 24");
+  });
+});
