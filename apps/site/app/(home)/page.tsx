@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { CSSProperties, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Label, inches, lint, mm, parse } from "@zplkit/core";
 import { Code128, Label as LabelElement, Text, build } from "@zplkit/core/jsx";
 import { renderLabel } from "@/lib/render-label";
@@ -9,9 +9,11 @@ import { tools } from "@/components/tools";
 import type { Tool } from "@/components/tools";
 import { InstallBox } from "@/components/home/install-box";
 import {
+  orders,
   shippingLabel,
   shippingLabelSize,
 } from "@/components/home/shipping-label";
+import { LabelRoll } from "@/components/home/label-roll";
 
 const order = { name: "Amara Okafor", tracking: "1ZK4F9W82034417" };
 
@@ -179,68 +181,6 @@ const Output = ({
   </div>
 );
 
-/** Space between labels on the liner, in pixels */
-const LABEL_GAP = 14;
-
-/** How much of the next label shows below the printer's exit */
-const PEEK = 12;
-
-/**
- * The first label on its liner, coming out of the printer, with the next
- * one, still blank, at the exit
- */
-const Platen = ({
-  src,
-  width,
-  alt,
-  feed,
-}: {
-  src: string;
-  width: number;
-  alt: string;
-  /** Feed the liner out by one label when the page loads */
-  feed?: boolean;
-}) => {
-  const radius = Math.round((12 * width) / 400);
-  const height = Math.round(
-    width * (shippingLabelSize.heightMm / shippingLabelSize.widthMm)
-  );
-  const paper = {
-    width,
-    height,
-    borderRadius: radius,
-    boxShadow: "0 0 0 1px var(--zk-label-edge)",
-  };
-  return (
-    <div
-      className={`flex flex-col items-center self-start bg-(--zk-roll) px-3.5 pb-[26px] shadow-[0_1px_0_var(--zk-rule-strong),0_10px_30px_-14px_rgb(0_0_0/0.35)]${
-        feed
-          ? " motion-safe:animate-[feed_1.4s_cubic-bezier(0.3,0.1,0.25,1)_both]"
-          : ""
-      }`}
-      style={
-        {
-          gap: LABEL_GAP,
-          // Only the bottom of the next label is out of the printer
-          marginTop: -(height - PEEK),
-          // One label and the gap after it, how far the feed moves
-          "--pitch": `${height + LABEL_GAP}px`,
-        } as CSSProperties
-      }
-    >
-      <div aria-hidden="true" className="bg-paper" style={paper} />
-      <img
-        src={src}
-        alt={alt}
-        width={width}
-        height={height}
-        className="label-dim block bg-paper"
-        style={paper}
-      />
-    </div>
-  );
-};
-
 export default async function HomePage() {
   const [labelImage, builderHtml, jsxHtml, lintHtml, previewHtml] =
     await Promise.all([
@@ -250,8 +190,19 @@ export default async function HomePage() {
       highlight(lintSource, "ts"),
       highlight(previewSource, "tsx"),
     ]);
+  // The first label is in the page; the rest load as the roll prints them
+  const rollSources = [
+    labelImage,
+    ...orders.slice(1).map((_, index) => `/hero-labels/${index + 1}.png`),
+  ];
+  const labelHeight = (width: number) =>
+    Math.round(
+      width * (shippingLabelSize.heightMm / shippingLabelSize.widthMm)
+    );
   const labelAlt =
     "A 4 by 6 inch shipping label: sender, a priority mark, the recipient Amara Okafor in Glasgow, a routing code with a Data Matrix code, a Code 128 tracking barcode and a QR code";
+  const rollAlt =
+    "Shipping labels feeding out of a printer one after another, addressed to people in Glasgow, Düsseldorf, Warsaw, Copenhagen, Lyon, Istanbul and Madrid";
 
   return (
     <main className="@container w-full bg-bg text-ink">
@@ -298,10 +249,20 @@ export default async function HomePage() {
             {/* The printer's exit: a soft shadow the label feeds out from under */}
             <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-6 bg-gradient-to-b from-black/25 to-transparent dark:from-black/60" />
             <div className="hidden @[640px]:block">
-              <Platen src={labelImage} width={300} alt={labelAlt} feed />
+              <LabelRoll
+                sources={rollSources}
+                width={300}
+                height={labelHeight(300)}
+                alt={rollAlt}
+              />
             </div>
             <div className="@[640px]:hidden">
-              <Platen src={labelImage} width={230} alt={labelAlt} feed />
+              <LabelRoll
+                sources={rollSources}
+                width={230}
+                height={labelHeight(230)}
+                alt={rollAlt}
+              />
             </div>
           </div>
         </div>
