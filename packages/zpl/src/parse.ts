@@ -225,6 +225,17 @@ const parsers: Record<string, CommandParser> = {
     type: "LabelTop",
     offset: p.number(0, "offset"),
   })),
+  "^TB": withParams("^TB", (p) => ({
+    type: "TextBlock",
+    orientation: p.oneOf(0, "orientation", orientations),
+    width: p.number(1, "width"),
+    height: p.number(2, "height"),
+  })),
+  "^FP": withParams("^FP", (p) => ({
+    type: "FieldParameter",
+    direction: p.oneOf(0, "direction", ["H", "V", "R"] as const),
+    gap: p.number(1, "gap"),
+  })),
   "^SN": withParams("^SN", (p) => ({
     type: "SerialNumber",
     start: p.string(0),

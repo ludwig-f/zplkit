@@ -14,7 +14,7 @@ import { measuredFields } from "@zplkit/core/internal";
 import type { Command } from "@zplkit/core";
 import type { Font } from "./font.js";
 import type { FontPath } from "./font-files.js";
-import type { Orientation, TextBlockOptions } from "./text.js";
+import type { Orientation, TextBlockOptions, TextDirection } from "./text.js";
 
 type Common = {
   x: number;
@@ -70,6 +70,8 @@ type Element = Common &
         fromBottom: boolean;
         /** ^FB wraps the text in a block */
         block?: TextBlockOptions;
+        /** ^FP runs the characters down or right to left, or spaces them */
+        direction?: TextDirection;
       }
     | {
         kind: "barcode";
@@ -195,6 +197,9 @@ type Field = {
   /** ^FH: the character that starts a hex escape in the field data */
   hexIndicator?: string;
   block?: TextBlockOptions;
+  /** ^TB's orientation, which turns the field's text */
+  blockOrientation?: Orientation;
+  direction?: TextDirection;
   /** ^GS: the field data picks a graphic symbol */
   symbol?: { height?: number; width?: number; orientation?: Orientation };
   /** The barcode the field data goes into, or the code of one we can't draw */
@@ -611,6 +616,23 @@ const layout = (
           hangingIndent: command.hangingIndent ?? 0,
         };
         break;
+      case "TextBlock":
+        field.block = {
+          width: command.width ?? 0,
+          maxLines: 1,
+          lineSpacing: 0,
+          justification: "L",
+          hangingIndent: 0,
+          height: command.height ?? 0,
+        };
+        field.blockOrientation = command.orientation;
+        break;
+      case "FieldParameter":
+        field.direction = {
+          direction: command.direction ?? "H",
+          gap: command.gap ?? 0,
+        };
+        break;
       case "FieldHexIndicator":
         field.hexIndicator = command.indicator ?? "_";
         break;
@@ -700,9 +722,11 @@ const layout = (
           width: font.width,
           typeface: font.typeface,
           font0,
-          orientation: font.orientation ?? orientation,
+          orientation:
+            field.blockOrientation ?? font.orientation ?? orientation,
           fromBottom: field.fromBottom,
           block: field.block,
+          direction: field.direction,
         });
         break;
       }
