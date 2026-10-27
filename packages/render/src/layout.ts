@@ -21,6 +21,8 @@ type Common = {
   reverse: boolean;
   /** Indices of the commands that produced the element */
   commands: number[];
+  /** Right-justified: the element ends just before x instead of starting at it */
+  right?: boolean;
 };
 
 type Element = Common &
@@ -182,6 +184,8 @@ type Field = {
   /** ^FT positions the bottom-left corner instead of the top-left */
   fromBottom: boolean;
   reverse: boolean;
+  /** ^FO, ^FT or ^FW justification 1: the field ends at x */
+  right?: boolean;
   /** Font set with ^A for this field only */
   font?: FontSetting;
   /** ^FH: the character that starts a hex escape in the field data */
@@ -347,6 +351,8 @@ const layout = (
 
   let defaultFont = initialFont;
   let orientation: Orientation = "N";
+  /** ^FW's justification for fields that don't give one */
+  let justification: 0 | 1 | 2 = 0;
   let utf8 = false;
   let barcodeDefaults = initialBarcodeDefaults;
 
@@ -424,6 +430,7 @@ const layout = (
       labelReverse = false;
       defaultFont = initialFont;
       orientation = "N";
+      justification = 0;
       utf8 = false;
       field = newField();
       barcodeDefaults = initialBarcodeDefaults;
@@ -437,6 +444,7 @@ const layout = (
       y: field.y,
       reverse: field.reverse || labelReverse,
       commands: field.commands,
+      ...(field.right && { right: true }),
     });
 
     switch (command.type) {
@@ -498,6 +506,7 @@ const layout = (
           // ^LS can't move a field past the label's left edge
           x: Math.max(0, home.x + command.x - shift),
           y: home.y + command.y,
+          right: (command.justification ?? justification) === 1,
           commands: [index],
         };
         break;
@@ -507,6 +516,7 @@ const layout = (
           x: Math.max(0, home.x + (command.x ?? 0) - shift),
           y: home.y + (command.y ?? 0),
           fromBottom: true,
+          right: (command.justification ?? justification) === 1,
           commands: [index],
         };
         break;
@@ -563,6 +573,7 @@ const layout = (
       }
       case "FieldOrientation":
         orientation = command.orientation;
+        justification = command.justification ?? justification;
         break;
       case "GraphicSymbol":
         field.symbol = {
