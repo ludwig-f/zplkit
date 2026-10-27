@@ -226,6 +226,10 @@ const parsers: Record<string, CommandParser> = {
     const reverse = p.yesNo(0, "reverse");
     return reverse === undefined ? null : { type: "LabelReverse", reverse };
   }),
+  "^PM": withParams("^PM", (p) => {
+    const mirror = p.yesNo(0, "mirror");
+    return mirror === undefined ? null : { type: "PrintMirror", mirror };
+  }),
   "^CI": withParams("^CI", (p) =>
     // Character remapping (^CIa,s1,d1,...) has no typed node
     p.length > 1

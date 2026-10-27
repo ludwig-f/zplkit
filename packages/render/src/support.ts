@@ -14,6 +14,7 @@ const renderedCommands: readonly string[] = [
   "^LR",
   "^PW",
   "^PO",
+  "^PM",
   "^DF",
   "^XF",
   "^CC",

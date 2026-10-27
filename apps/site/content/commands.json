@@ -1140,8 +1140,8 @@
       "code": "^PM",
       "name": "Printing Mirror Image of Label",
       "category": "Labels and formats",
-      "support": "no",
-      "drawn": false,
+      "support": "yes",
+      "drawn": true,
       "note": ""
     },
     {

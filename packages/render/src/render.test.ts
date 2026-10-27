@@ -233,6 +233,50 @@ describe("renderLabels", () => {
     });
   });
 
+  describe("mirror image", () => {
+    const boxes = (zpl: string) =>
+      renderLabels(zpl, { widthMm: 406 / 8, heightMm: 406 / 8, dpmm: 8 }).map(
+        (raster) => {
+          const { x, y } = dots(raster);
+          return { x, y };
+        }
+      );
+    const box = "^FO100,100^GB50,30,30^FS";
+
+    test("^PMY mirrors the label, wherever it is", () => {
+      expect(boxes(`^XA^PMY${box}^XZ`)).toStrictEqual([
+        { x: [256, 305], y: [100, 129] },
+      ]);
+      expect(boxes(`^XA${box}^PMY^XZ`)).toStrictEqual([
+        { x: [256, 305], y: [100, 129] },
+      ]);
+      expect(boxes(`^XA^PMY${box}^PMN^XZ`)).toStrictEqual([
+        { x: [100, 149], y: [100, 129] },
+      ]);
+    });
+
+    test("mirrors the print width", () => {
+      expect(boxes(`^XA^PW300^PMY${box}^XZ`)).toStrictEqual([
+        { x: [203, 252], y: [100, 129] },
+      ]);
+    });
+
+    test("with ^POI flips the label top to bottom", () => {
+      expect(boxes(`^XA^PMY^POI${box}^XZ`)).toStrictEqual([
+        { x: [100, 149], y: [276, 305] },
+      ]);
+    });
+
+    test("stays for the next label, and an empty ^PM keeps it", () => {
+      expect(
+        boxes(`^XA^PMY^XZ^XA${box}^XZ^XA^PM${box}^XZ`).slice(1)
+      ).toStrictEqual([
+        { x: [256, 305], y: [100, 129] },
+        { x: [256, 305], y: [100, 129] },
+      ]);
+    });
+  });
+
   describe("ellipses", () => {
     test("draw the line inside the width and height", () => {
       expect(

@@ -120,6 +120,8 @@ type LabelLayout = {
   printWidth?: number;
   /** ^POI: the label prints upside down */
   inverted?: boolean;
+  /** ^PMY: the label prints as its mirror image */
+  mirrored?: boolean;
   elements: Element[];
   /** Commands that were understood but aren't drawn yet */
   unsupported: number[];
@@ -312,9 +314,10 @@ const layout = (
   const identifiers = new Map<string, FontPath>();
   let label: LabelLayout | undefined;
   let home = { x: 0, y: 0 };
-  /** ^LS and ^LT, kept between labels like the printer settings they are */
+  /** ^LS, ^LT and ^PM, kept between labels like the printer settings they are */
   let shift = 0;
   let top = 0;
+  let mirror = false;
   let labelReverse = false;
   let field = newField();
 
@@ -415,6 +418,7 @@ const layout = (
             element.y = Math.max(0, element.y + top);
           }
         }
+        if (mirror) label.mirrored = true;
         label = undefined;
         break;
       case "PrintWidth":
@@ -454,6 +458,9 @@ const layout = (
         break;
       case "LabelReverse":
         labelReverse = command.reverse;
+        break;
+      case "PrintMirror":
+        mirror = command.mirror;
         break;
       case "FieldOrigin":
         field = {
