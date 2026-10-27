@@ -214,13 +214,14 @@ const Platen = ({
           boxShadow: "0 0 0 1px var(--zk-label-edge)",
         }}
       />
-      {/* The top of the next label on the roll */}
+      {/* The next label on the roll, running off the bottom of the frame */}
       <div
         aria-hidden="true"
-        className="h-10 bg-paper"
+        className="bg-paper"
         style={{
           width,
-          borderRadius: `${radius}px ${radius}px 0 0`,
+          height,
+          borderRadius: radius,
           boxShadow: "0 0 0 1px var(--zk-label-edge)",
         }}
       />
