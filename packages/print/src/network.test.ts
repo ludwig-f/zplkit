@@ -90,11 +90,11 @@ describe("connectNetworkPrinter", () => {
   });
 
   test("rejects when nothing listens", async () => {
-    const fake = await fakePrinter();
-    await new Promise((resolve) => server!.close(resolve));
-    server = undefined;
+    // Port 1 is outside the range the system picks client ports from. A
+    // port a fake printer just let go of is inside it, and the connection
+    // can be given that same port as its own and connect to itself.
     await expect(
-      connectNetworkPrinter("127.0.0.1", { port: fake.port })
+      connectNetworkPrinter("127.0.0.1", { port: 1 })
     ).rejects.toThrow();
   });
 });
