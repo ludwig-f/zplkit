@@ -44,6 +44,8 @@
   --zk-syn-zpl: #b3261e;
   --zk-paper: #ffffff;
   --zk-liner: #e3d9be;
+  /* The hero's label roll: the liner's own color in both themes */
+  --zk-roll: #e3d9be;
   --zk-platen: #e8e5dc;
   --zk-dot: rgb(25 24 19 / 0.17);
   --zk-label-edge: rgb(25 24 19 / 0.16);
@@ -84,6 +86,8 @@
   --zk-syn-zpl: #ff9c8f;
   --zk-paper: #e8e5dc;
   --zk-liner: #3a3527;
+  /* The light liner dimmed as the paper is: #fff to #e8e5dc */
+  --zk-roll: #cfc3a4;
   --zk-platen: #0e0e0c;
   --zk-dot: rgb(236 233 225 / 0.09);
   --zk-label-edge: rgb(0 0 0 / 0.6);
