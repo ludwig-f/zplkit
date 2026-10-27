@@ -1,7 +1,7 @@
 import { source } from "@/lib/source";
 import { notFound } from "next/navigation";
-import { generateOGImage } from "fumadocs-ui/og";
-import { appName, getPageImageUrl } from "@/lib/shared";
+import { getPageImageUrl } from "@/lib/shared";
+import { OgLabel, OgTitle, ogImage } from "@/lib/og";
 
 export const revalidate = false;
 
@@ -13,10 +13,11 @@ export async function GET(
   const page = source.getPage(slug.slice(0, -1));
   if (!page) notFound();
 
-  return generateOGImage({
-    title: page.data.title,
+  return ogImage({
+    section: page.slugs[0] === "api" ? "Docs · API" : "Docs",
+    title: <OgTitle>{page.data.title}</OgTitle>,
     description: page.data.description,
-    site: appName,
+    aside: await OgLabel(),
   });
 }
 
