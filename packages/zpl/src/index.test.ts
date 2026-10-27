@@ -4,6 +4,7 @@ import * as image from "./image.js";
 import * as jsx from "./jsx.js";
 import * as jsxRuntime from "./jsx-runtime.js";
 import * as jsxDevRuntime from "./jsx-dev-runtime.js";
+import * as internal from "./internal.js";
 
 suite("entry points", () => {
   test("the main entry exports the builder, units and serializer", () => {
@@ -18,12 +19,15 @@ suite("entry points", () => {
       "escapeFieldData",
       "inches",
       "lint",
-      "measuredFields",
       "mm",
       "parse",
       "serialize",
       "serializeCommand",
     ]);
+  });
+
+  test("the internal entry is for zplkit's own packages", () => {
+    expect(Object.keys(internal)).toStrictEqual(["measuredFields"]);
   });
 
   test("the image converter has its own Node-only entry", () => {

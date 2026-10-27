@@ -8,7 +8,7 @@ import { decodeObjectData } from "./data.js";
 import { FontFiles, parseFontFile } from "./font-files.js";
 import { expandFormats } from "./formats.js";
 import { decodeGraphicData } from "./graphics.js";
-import { measuredFields } from "@zplkit/core";
+import { measuredFields } from "@zplkit/core/internal";
 import type { Command } from "@zplkit/core";
 import type { Font } from "./font.js";
 import type { FontPath } from "./font-files.js";

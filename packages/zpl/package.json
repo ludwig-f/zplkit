@@ -27,6 +27,10 @@
     "./convert": {
       "types": "./build/convert.d.ts",
       "default": "./build/convert.js"
+    },
+    "./internal": {
+      "types": "./build/internal.d.ts",
+      "default": "./build/internal.js"
     }
   },
   "repository": {
