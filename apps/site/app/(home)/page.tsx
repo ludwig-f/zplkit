@@ -214,7 +214,7 @@ const Platen = ({
   return (
     <div
       className={`flex flex-col items-center self-start bg-liner px-3.5 pb-[26px] shadow-[0_1px_0_var(--zk-rule-strong),0_10px_30px_-14px_rgb(0_0_0/0.35)]${
-        feed ? " motion-safe:animate-[feed_1.1s_steps(12,end)_both]" : ""
+        feed ? " motion-safe:animate-[feed_1.4s_cubic-bezier(0.3,0.1,0.25,1)_both]" : ""
       }`}
       style={
         {

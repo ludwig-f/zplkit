@@ -256,7 +256,7 @@ html > body[data-scroll-locked] {
   border-radius: 3px;
 }
 
-/* The hero labels feeding out of the printer on their liner, one label in steps */
+/* The hero label feeding out of the printer on its liner, easing to a stop */
 @keyframes feed {
   /* One label pitch, set where it's used */
   from {
