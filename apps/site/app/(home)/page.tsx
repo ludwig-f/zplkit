@@ -189,7 +189,7 @@ const Platen = ({
   src: string;
   width: number;
   alt: string;
-  /** Feed the label out of the printer once when the page loads */
+  /** Feed the labels out of the printer once when the page loads */
   feed?: boolean;
 }) => {
   const radius = Math.round((12 * width) / 400);
@@ -197,26 +197,24 @@ const Platen = ({
     width * (shippingLabelSize.heightMm / shippingLabelSize.widthMm)
   );
   return (
-    <div className="flex flex-col items-center gap-3.5 bg-liner px-3.5 pt-[26px] shadow-[0_1px_0_var(--zk-rule-strong),0_10px_30px_-14px_rgb(0_0_0/0.35)]">
-      <div
-        className={
-          feed
-            ? "motion-safe:animate-[feed_1.1s_steps(12,end)_both]"
-            : undefined
-        }
-      >
-        <img
-          src={src}
-          alt={alt}
-          width={width}
-          height={height}
-          className="label-dim block bg-paper"
-          style={{
-            borderRadius: radius,
-            boxShadow: "0 0 0 1px var(--zk-label-edge)",
-          }}
-        />
-      </div>
+    // The liner carries both labels, so they feed out together
+    <div
+      className={`flex flex-col items-center gap-3.5 bg-liner px-3.5 pt-[26px] shadow-[0_1px_0_var(--zk-rule-strong),0_10px_30px_-14px_rgb(0_0_0/0.35)]${
+        feed ? " motion-safe:animate-[feed_1.1s_steps(12,end)_both]" : ""
+      }`}
+    >
+      <img
+        src={src}
+        alt={alt}
+        width={width}
+        height={height}
+        className="label-dim block bg-paper"
+        style={{
+          borderRadius: radius,
+          boxShadow: "0 0 0 1px var(--zk-label-edge)",
+        }}
+      />
+      {/* The top of the next label on the roll */}
       <div
         aria-hidden="true"
         className="h-10 bg-paper"
@@ -241,12 +239,6 @@ export default async function HomePage() {
     ]);
   const labelAlt =
     "A 4 by 6 inch shipping label: sender, a priority mark, the recipient Amara Okafor in Glasgow, a routing code with a Data Matrix code, a Code 128 tracking barcode and a QR code";
-  const dotsWide = Math.round(
-    shippingLabelSize.widthMm * shippingLabelSize.dpmm
-  );
-  const dotsHigh = Math.round(
-    shippingLabelSize.heightMm * shippingLabelSize.dpmm
-  );
 
   return (
     <main className="@container w-full bg-bg text-ink">
@@ -288,7 +280,7 @@ export default async function HomePage() {
           </div>
         </div>
 
-        <figure className="flex min-w-0 flex-[1_1_340px] flex-col gap-3">
+        <div className="flex min-w-0 flex-[1_1_340px] flex-col">
           <div className="relative flex h-[400px] justify-center overflow-hidden rounded-lg border border-rule pb-9 bg-platen @[640px]:h-[520px]">
             {/* The printer's exit: a soft shadow the label feeds out from under */}
             <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-6 bg-gradient-to-b from-black/25 to-transparent dark:from-black/60" />
@@ -299,13 +291,7 @@ export default async function HomePage() {
               <Platen src={labelImage} width={230} alt={labelAlt} feed />
             </div>
           </div>
-          <figcaption className="flex flex-wrap justify-between gap-3 font-mono text-xs font-medium text-muted">
-            <span>Rendered by @zplkit/render</span>
-            <span>
-              4 × 6 in · 203 dpi · {dotsWide} × {dotsHigh} dots
-            </span>
-          </figcaption>
-        </figure>
+        </div>
       </section>
 
       <div
