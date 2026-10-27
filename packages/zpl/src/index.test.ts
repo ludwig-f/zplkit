@@ -18,6 +18,7 @@ suite("entry points", () => {
       "escapeFieldData",
       "inches",
       "lint",
+      "measuredFields",
       "mm",
       "parse",
       "serialize",

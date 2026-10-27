@@ -52,16 +52,18 @@ class Params {
     return value;
   }
 
-  number(index: number, name: string, float = false): number | undefined {
+  /**
+   * A number, which can have decimals: printers round positions and sizes
+   * to the nearest dot, and ^MU makes them millimeters or inches
+   */
+  number(index: number, name: string): number | undefined {
     const value = this.string(index);
 
     if (value === undefined) {
       return undefined;
     }
 
-    const pattern = float ? /^-?\d+(\.\d+)?$/ : /^-?\d+$/;
-
-    if (!pattern.test(value)) {
+    if (!/^-?\d+(\.\d+)?$/.test(value)) {
       throw new ParamError(
         `${this.code}: ${name} must be a number, got '${value}'`
       );
@@ -222,6 +224,12 @@ const parsers: Record<string, CommandParser> = {
     type: "LabelTop",
     offset: p.number(0, "offset"),
   })),
+  "^MU": withParams("^MU", (p) => ({
+    type: "MeasurementUnits",
+    unit: p.oneOf(0, "unit", ["D", "I", "M"] as const),
+    baseDpi: p.number(1, "base resolution"),
+    targetDpi: p.number(2, "desired resolution"),
+  })),
   "^LR": withParams("^LR", (p) => {
     const reverse = p.yesNo(0, "reverse");
     return reverse === undefined ? null : { type: "LabelReverse", reverse };
@@ -376,7 +384,7 @@ const parsers: Record<string, CommandParser> = {
   "^BY": withParams("^BY", (p) => ({
     type: "BarcodeDefaults",
     moduleWidth: p.number(0, "moduleWidth"),
-    ratio: p.number(1, "ratio", true),
+    ratio: p.number(1, "ratio"),
     height: p.number(2, "height"),
   })),
   "^B1": withParams("^B1", (p) => {
@@ -571,7 +579,7 @@ const parsers: Record<string, CommandParser> = {
   })),
   "^MD": withParams("^MD", (p) => ({
     type: "MediaDarkness",
-    darkness: p.number(0, "darkness", true),
+    darkness: p.number(0, "darkness"),
   })),
   "^BX": withParams("^BX", (p) =>
     // The aspect ratio parameter has no typed node

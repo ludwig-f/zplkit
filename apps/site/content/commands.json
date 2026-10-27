@@ -1060,8 +1060,8 @@
       "code": "^MU",
       "name": "Set Units of Measurement",
       "category": "Labels and formats",
-      "support": "no",
-      "drawn": false,
+      "support": "yes",
+      "drawn": true,
       "note": ""
     },
     {
