@@ -1,5 +1,5 @@
 // Generates the supported commands data from the code: the site's
-// reference page lists every command, the core README a summary per category.
+// commands page lists every command, the core README a summary per category.
 // Usage: node scripts/commands.mjs [--check]  (after pnpm build)
 //
 // With --check, it exits with an error instead of writing when a file is
@@ -12,7 +12,7 @@ import { renderedCommands } from "../packages/render/build/support.js";
 const root = new URL("../", import.meta.url);
 const docsData = new URL("apps/site/content/commands.json", root);
 const readme = new URL("packages/zpl/README.md", root);
-const docsUrl = "https://zplkit.fingal.dev/reference";
+const docsUrl = "https://zplkit.fingal.dev/docs/commands";
 
 const groups = {
   "Labels and formats": ["^XA", "^XZ", "^LH", "^LL", "^LR", "^LS", "^LT", "^PW", "^PO", "^PM", "^DF", "^XF", "^MU", "^CC", "~CC", "^CD", "~CD", "^CT", "~CT"],

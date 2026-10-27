@@ -24,7 +24,7 @@ function CommandSummary({ command }: { command: Command }) {
       <p className="text-ink-2">{info.summary}</p>
       <p className="flex flex-wrap gap-x-4 gap-y-1">
         <a
-          href={`/reference/${anchorOf(command.code)}`}
+          href={`/docs/commands/${anchorOf(command.code)}`}
           className="font-semibold text-accent hover:underline"
         >
           Parameters and example
@@ -231,7 +231,9 @@ export function CommandsTable() {
                                 <span className="-ms-1.5 w-5" />
                               )}
                               <a
-                                href={`/reference/${anchorOf(command.code)}`}
+                                href={`/docs/commands/${anchorOf(
+                                  command.code
+                                )}`}
                                 className="font-mono text-sm font-semibold text-ink underline decoration-rule-strong underline-offset-[3px] hover:text-accent hover:decoration-accent"
                               >
                                 {command.code}
@@ -250,7 +252,7 @@ export function CommandsTable() {
                           </td>
                           <td className="hidden border-b border-rule px-3 py-[7px] align-top @[640px]:table-cell">
                             <a
-                              href={`/reference/${anchorOf(command.code)}`}
+                              href={`/docs/commands/${anchorOf(command.code)}`}
                               className="hover:text-accent hover:underline"
                             >
                               {command.name}

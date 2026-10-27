@@ -465,8 +465,8 @@ export default async function HomePage() {
           <Link href="/docs" className="hover:text-ink">
             Docs
           </Link>
-          <Link href="/reference" className="hover:text-ink">
-            Reference
+          <Link href="/docs/commands" className="hover:text-ink">
+            ZPL commands
           </Link>
           <Link href="/releases" className="hover:text-ink">
             Releases

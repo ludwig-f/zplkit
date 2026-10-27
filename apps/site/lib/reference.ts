@@ -2,7 +2,7 @@ import data from "@/content/commands.json";
 import { detailsOf } from "@/components/reference/command-details";
 import { anchorOf } from "@/components/reference/anchor";
 
-/** A command's page under /reference: ^BC at /reference/BC, ~CC at /reference/tilde-CC */
+/** A command's page under /docs/commands: ^BC at /docs/commands/BC, ~CC at /docs/commands/tilde-CC */
 export const commandSlug = anchorOf;
 
 export const commandBySlug = (slug: string) =>

@@ -119,9 +119,12 @@ export function LiveExample({
     <div className="grid gap-x-8 gap-y-4 @[720px]:grid-cols-[minmax(0,1fr)_auto]">
       <div className="flex min-w-0 flex-col gap-1.5">
         <div className="flex items-baseline gap-4">
-          <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.06em] text-muted">
+          <h2
+            id="example"
+            className="scroll-mt-24 font-mono text-[11px] font-semibold uppercase tracking-[0.06em] text-muted"
+          >
             Example
-          </span>
+          </h2>
           <span className="text-[12.5px] text-muted">
             {image ? "Edit it to see what prints" : "Editable"}
           </span>
@@ -190,7 +193,7 @@ export function LiveExample({
               />
             ) : (
               <FadeInImage
-                src={`/reference/examples/${image.file}`}
+                src={`/docs/commands/examples/${image.file}`}
                 alt={`What the ${code} example prints`}
                 width={image.width}
                 height={image.height}

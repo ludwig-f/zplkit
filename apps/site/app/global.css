@@ -157,6 +157,38 @@
   border-color: var(--zk-rule);
 }
 
+/* The sidebar's top folders, Guides, API and ZPL commands, as small labels */
+#nd-sidebar [data-id$="-viewport"] > div > div > button {
+  margin-top: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--zk-muted);
+}
+
+/* Commands in the sidebar and page footer: the code in mono, then the name */
+.command-name {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: 0.6em;
+}
+.command-name > code {
+  flex: none;
+  min-width: 2.6em;
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+  font-weight: 600;
+  color: var(--zk-muted);
+}
+.command-name > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* The neutral theme gives the dark sidebar cool grays of its own */
 .dark #nd-sidebar {
   --color-fd-muted: var(--zk-surface);
