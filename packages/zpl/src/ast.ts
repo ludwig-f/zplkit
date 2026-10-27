@@ -36,6 +36,8 @@ type LabelHome = Node<"LabelHome", { x: number; y: number }>;
 type LabelShift = Node<"LabelShift", { shift?: number }>;
 /** `^LTx`: moves the whole label down, or up when negative */
 type LabelTop = Node<"LabelTop", { offset?: number }>;
+/** `^PMa`: prints the label as its mirror image, kept between labels */
+type PrintMirror = Node<"PrintMirror", { mirror: boolean }>;
 /** `^LRa` */
 type LabelReverse = Node<"LabelReverse", { reverse: boolean }>;
 /** `^CIa` */
@@ -613,6 +615,7 @@ type Command =
   | LabelShift
   | LabelTop
   | LabelReverse
+  | PrintMirror
   | ChangeEncoding
   | DefaultFont
   | FieldOrientation
@@ -690,6 +693,7 @@ export type {
   LabelShift,
   LabelTop,
   LabelReverse,
+  PrintMirror,
   ChangeEncoding,
   DefaultFont,
   FieldOrientation,

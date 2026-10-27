@@ -189,6 +189,13 @@ const renderLabels = (
         else draw(printed, element, options.dpmm);
       }
 
+      // Mirrored: each row of the print area runs the other way
+      if (label.mirrored) {
+        for (let y = 0; y < height; y++) {
+          printed.ink.subarray(y * printWidth, (y + 1) * printWidth).reverse();
+        }
+      }
+
       // Upside down: turning the print area half a turn reverses its dots
       if (label.inverted) printed.ink.reverse();
 

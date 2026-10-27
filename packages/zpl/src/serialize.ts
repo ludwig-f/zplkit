@@ -53,6 +53,8 @@ const serializeCommand = (command: Command): string => {
       return `^LT${params(command.offset)}`;
     case "LabelReverse":
       return `^LR${yn(command.reverse)}`;
+    case "PrintMirror":
+      return `^PM${yn(command.mirror)}`;
     case "ChangeEncoding":
       return `^CI${command.charset}`;
     case "DefaultFont":

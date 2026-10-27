@@ -50,6 +50,7 @@ const commandCases: [Command, string][] = [
   [{ type: "GraphicBox", width: 100, height: 50 }, "^GB100,50"],
   [{ type: "GraphicCircle", diameter: 80, thickness: 4 }, "^GC80,4"],
   [{ type: "LabelShift", shift: 40 }, "^LS40"],
+  [{ type: "PrintMirror", mirror: true }, "^PMY"],
   [{ type: "LabelTop", offset: -20 }, "^LT-20"],
   [
     { type: "GraphicEllipse", width: 200, height: 100, thickness: 4 },
