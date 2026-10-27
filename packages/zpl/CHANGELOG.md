@@ -8,9 +8,8 @@
 * drawText, drawBox, drawGraphic, drawStoredGraphic, drawField and the drawCode128-style barcode methods are now text, box, graphic, storedGraphic, field, code11, code39, code128, ean13, interleaved2of5, pdf417, aztec, maxiCode, dataMatrix and qrCode.
 * ImageConverter no longer reads BMP, GIF or TIFF files.
 * install @zplkit/core and import from "@zplkit/core", "@zplkit/core/jsx" and "@zplkit/core/image". JSX projects set jsxImportSource to "@zplkit/core".
-* install zplkit instead of node-zpl, and import from "zplkit", "zplkit/jsx" and "zplkit/image". JSX projects set jsxImportSource to "zplkit".
-* node-zpl and @node-zpl/preview need Node 22 or newer and no longer have separate CommonJS entries.
-* Label and PrinterSetup take options objects with mm() and dots() lengths, drawGraphic takes a graphic object, drawDataMatrix's height is now moduleSize, storeGraphics is now storeGraphic, startField and endField are replaced by add(), and ImageConverter is imported from node-zpl/image.
+* Node 22 or newer is required, and there are no longer separate CommonJS entries.
+* Label and PrinterSetup take options objects with mm() and dots() lengths, drawGraphic takes a graphic object, drawDataMatrix's height is now moduleSize, storeGraphics is now storeGraphic, startField and endField are replaced by add(), and ImageConverter is imported from @zplkit/core/image.
 
 ### Features
 
@@ -38,9 +37,8 @@
 * PrintJob, for setup and labels sent together ([85c3351](https://github.com/ludwig-f/zplkit/commit/85c3351190249f75259e63624ed7237457aea923))
 * publish ES modules only and require Node 22 ([f4e189b](https://github.com/ludwig-f/zplkit/commit/f4e189b1d4aceae298bb071ae2c58a2bffd5f273))
 * publish the main package as @zplkit/core ([d71720f](https://github.com/ludwig-f/zplkit/commit/d71720f787531f2feeaeddaeb1a70c9466678473))
-* rename node-zpl to zplkit ([23d6525](https://github.com/ludwig-f/zplkit/commit/23d6525a96b64a951ab5a15780aecadb091bf996))
 * **site:** a playground for zplkit code ([ec6000b](https://github.com/ludwig-f/zplkit/commit/ec6000b5e93117f8d04c5848320d1dc9d26db82d))
-* **site:** docs site with the playground at zpl.fingal.dev ([f2ac552](https://github.com/ludwig-f/zplkit/commit/f2ac552d591e284d3f712b8446d95398454f5642))
+* **site:** docs site with the playground at zplkit.fingal.dev ([f2ac552](https://github.com/ludwig-f/zplkit/commit/f2ac552d591e284d3f712b8446d95398454f5642))
 * **site:** give the command reference its own page and keep the site header on docs ([0cf450e](https://github.com/ludwig-f/zplkit/commit/0cf450e2f2707da3e234dda8bc2ac3a23f730093))
 * **site:** move the playground to /viewer ([2f16880](https://github.com/ludwig-f/zplkit/commit/2f168800bde8fad84930d21794c06f223211435c))
 * **site:** tool cards on the home page, inch-sized examples ([124dcf1](https://github.com/ludwig-f/zplkit/commit/124dcf157fc68eaa476289a25b0f199bbe287af0))

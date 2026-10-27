@@ -3,11 +3,6 @@
 ## 0.1.0 (2026-10-27)
 
 
-### ⚠ BREAKING CHANGES
-
-* install @zplkit/core and import from "@zplkit/core", "@zplkit/core/jsx" and "@zplkit/core/image". JSX projects set jsxImportSource to "@zplkit/core".
-* install zplkit instead of node-zpl, and import from "zplkit", "zplkit/jsx" and "zplkit/image". JSX projects set jsxImportSource to "zplkit".
-
 ### Features
 
 * add ^FW to the builder and JSX ([639e3fe](https://github.com/ludwig-f/zplkit/commit/639e3fed800049b36ee77b498484ff37267750da))
@@ -16,9 +11,8 @@
 * EAN-8, UPC-A, UPC-E, UPC/EAN add-ons, Code 93, Codabar and ^B0 ([00b8a23](https://github.com/ludwig-f/zplkit/commit/00b8a23d9210a7e0a0722da3eaffdd8235a08662))
 * Industrial and Standard 2 of 5, LOGMARS, MSI and Plessey ([0d9623f](https://github.com/ludwig-f/zplkit/commit/0d9623f3c69ac5fff97a2f44618713beae3d1fd7))
 * POSTNET, PLANET, Intelligent Mail, GS1 DataBar and MicroPDF417 ([208c0de](https://github.com/ludwig-f/zplkit/commit/208c0deefd2998f279c6ae6892c2c2f325e39120))
-* **preview:** render with @node-zpl/render ([6251e8a](https://github.com/ludwig-f/zplkit/commit/6251e8ae0be7585a1998ebccebff9e8559ab0471))
+* **preview:** render with @zplkit/render ([6251e8a](https://github.com/ludwig-f/zplkit/commit/6251e8ae0be7585a1998ebccebff9e8559ab0471))
 * publish the main package as @zplkit/core ([d71720f](https://github.com/ludwig-f/zplkit/commit/d71720f787531f2feeaeddaeb1a70c9466678473))
-* rename node-zpl to zplkit ([23d6525](https://github.com/ludwig-f/zplkit/commit/23d6525a96b64a951ab5a15780aecadb091bf996))
 * **render:** draw Aztec, MaxiCode and graphic symbols ([f99a690](https://github.com/ludwig-f/zplkit/commit/f99a690a9bc45755c8af30b92fbea96044e9ee9b))
 * **render:** draw bitmap fonts A to H ([9a9c42d](https://github.com/ludwig-f/zplkit/commit/9a9c42d1da141f6ecee999732734e4b1baf97f46))
 * **render:** draw Code 128 barcodes ([ff2e5a0](https://github.com/ludwig-f/zplkit/commit/ff2e5a0d30378d0d06795328a43c21c19569405f))
