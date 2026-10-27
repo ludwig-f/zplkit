@@ -3,15 +3,21 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import "@zplkit/preview/react";
 import "./styles.css";
+import { PopoverClose } from "fumadocs-ui/components/ui/popover";
 import Editor from "./Editor";
 import ProblemList from "./ProblemList";
+import { Code, ImageDown, Link2 } from "lucide-react";
+import { convert } from "@zplkit/core/convert";
+import type { ConvertOptions } from "@zplkit/core/convert";
 import Bench from "./Bench";
-import FontsPanel from "./FontsPanel";
 import { useFonts } from "./fonts";
 import CodePanel from "./CodePanel";
 import examples from "./examples";
 import { analyze } from "./analyze";
-import { decodeShare, encodeShare } from "./share";
+import { decodeShare, encodeCodeShare, encodeShare } from "./share";
+import { useSettings } from "./settings";
+import { DiscardDialog, ExportMenu, TemplateMenu, ViewMenu } from "./chrome";
+import ToolTitle from "./ToolTitle";
 import type { Cursor } from "./Bench";
 import type { EditorHandle } from "./Editor";
 import type { Problem } from "./analyze";
@@ -20,18 +26,37 @@ import type { LabelLength, ShareState } from "./share";
 // Kept from before the rename, so saved labels stay
 const STORAGE_KEY = "node-zpl-playground";
 
-/** Smoothing when "Smooth edges" is on; off shows the printer's exact dots */
-const SMOOTHING = 0.4;
+/** A label to start from scratch with */
+const BLANK = "^XA\n\n^XZ\n";
+
+/** The label, and the template or file it started from */
+type Saved = ShareState & { template?: number; file?: string };
 
 const fileName = (name: string) =>
-  `${name.toLowerCase().replace(/\s+/g, "-")}.zpl`;
+  name
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/\.zpl$/, "");
 
-const fromExample = (index: number): ShareState => {
+const fromExample = (index: number): Saved => {
   const { zpl, width, height, dpmm } = examples[index];
-  return { zpl, width, height, dpmm, smoothing: SMOOTHING };
+  return { zpl, width, height, dpmm, smoothing: 0, template: index };
 };
 
-const loadSaved = (): ShareState | undefined => {
+const labelCount = (count: number) => `${count} label${count === 1 ? "" : "s"}`;
+
+/**
+ * The label as playground code: convert()'s JSX, with the label as the
+ * default export so the playground shows it
+ */
+const playgroundCode = (code: string) => {
+  const name = ["job", "label", "setup"].find((candidate) =>
+    code.includes(`const ${candidate} =`)
+  );
+  return name ? `${code}\nexport default ${name};\n` : code;
+};
+
+const loadSaved = (): Saved | undefined => {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (!saved) return undefined;
@@ -45,7 +70,7 @@ const loadSaved = (): ShareState | undefined => {
         height: typeof heightMm === "number" ? { mm: heightMm } : undefined,
       };
     }
-    return state as ShareState;
+    return state as Saved;
   } catch {
     return undefined;
   }
@@ -121,26 +146,27 @@ const blockingReason = (problems: Problem[]) => {
 type Tab = "Editor" | "Preview" | "Problems";
 
 export default function Viewer() {
-  const [state, setState] = useState<ShareState>(
+  const [state, setState] = useState<Saved>(
     () => loadSaved() ?? fromExample(0)
   );
-  const [name, setName] = useState("label.zpl");
+  const settings = useSettings();
+  // A template waiting for the visitor to confirm replacing their edits
+  const [pending, setPending] = useState<number | "blank">();
   const [images, setImages] = useState<string[]>([]);
   const [notice, setNotice] = useState<string>();
   const [tab, setTab] = useState<Tab>("Editor");
   const [showCode, setShowCode] = useState(false);
-  const [showFonts, setShowFonts] = useState(false);
   const fonts = useFonts();
-  const fontCount = fonts.printerFonts.length + (fonts.font0 ? 1 : 0);
   const [cursor, setCursor] = useState<Cursor>();
   const [render, setRender] = useState<{ busy: boolean; ms?: number }>({
     busy: true,
   });
   const editor = useRef<EditorHandle>(null);
-  const { zpl, width, height, dpmm, smoothing } = state;
+  const { zpl, width, height, dpmm } = state;
+  const { smoothing } = settings;
   const widthMm = width && toMm(width, dpmm);
   const heightMm = height && toMm(height, dpmm);
-  const update = (changes: Partial<ShareState>) =>
+  const update = (changes: Partial<Saved>) =>
     setState((current) => ({ ...current, ...changes }));
 
   // Open shared links
@@ -148,7 +174,7 @@ export default function Viewer() {
     const hash = location.hash.slice(1);
     if (!hash) return;
     void decodeShare(hash).then((shared) => {
-      if (shared) setState(shared);
+      if (shared) setState({ ...shared, smoothing: 0 });
       else setNotice("This link doesn't contain a label.");
     });
   }, []);
@@ -172,8 +198,15 @@ export default function Viewer() {
     [zpl, dpmm, widthMm, heightMm]
   );
   const blocked = blockingReason(problems);
-  // The example shown, until it's edited
+  // The template shown: the one the ZPL matches, else the one it started from
   const example = examples.findIndex((option) => option.zpl === zpl);
+  const template = example === -1 ? state.template : example;
+  const edited = example === -1;
+  const name = state.file
+    ? fileName(state.file)
+    : template === undefined
+    ? "label"
+    : fileName(examples[template].name);
 
   // The size the preview uses: settings, then ^PW/^LL, then 4 × 6 in
   const labelSize = {
@@ -192,10 +225,64 @@ export default function Viewer() {
   const [custom, setCustom] = useState(size === "custom");
   const sizeValue = custom ? "custom" : size;
 
+  const open = (choice: number | "blank") => {
+    setState(
+      choice === "blank"
+        ? { ...state, zpl: BLANK, template: undefined, file: undefined }
+        : fromExample(choice)
+    );
+    setCustom(false);
+    history.replaceState(null, "", location.pathname);
+  };
+
+  /** Open a template, asking first if it would replace edited ZPL */
+  const pickTemplate = (choice: number | "blank") => {
+    if (edited && zpl !== BLANK) setPending(choice);
+    else open(choice);
+  };
+
+  /** Open a .zpl file from the visitor's computer */
+  const openFile = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".zpl,.txt,text/plain";
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      const text = await file.text();
+      update({ zpl: text, template: undefined, file: file.name });
+      history.replaceState(null, "", location.pathname);
+    };
+    input.click();
+  };
+
+  const openInPlayground = async () => {
+    try {
+      const code = convert(zpl, {
+        style: "jsx",
+        units: "mm",
+        dpmm: dpmm as ConvertOptions["dpmm"],
+        labelSize,
+      });
+      const hash = await encodeCodeShare({
+        code: playgroundCode(code),
+        smoothing,
+      });
+      window.location.href = `/playground#${hash}`;
+    } catch (cause) {
+      setNotice(
+        `This ZPL couldn't be converted: ${
+          cause instanceof Error ? cause.message : String(cause)
+        }`
+      );
+    }
+  };
+
   const share = async () => {
-    const link = `${location.origin}${location.pathname}#${await encodeShare(
-      state
-    )}`;
+    const link = `${location.origin}${location.pathname}#${await encodeShare({
+      ...state,
+      smoothing,
+    })}`;
     history.replaceState(null, "", link);
     try {
       await navigator.clipboard.writeText(link);
@@ -210,9 +297,7 @@ export default function Viewer() {
       const link = document.createElement("a");
       link.href = src;
       link.download =
-        images.length === 1
-          ? name.replace(/\.zpl$/, ".png")
-          : name.replace(/\.zpl$/, `-${index + 1}.png`);
+        images.length === 1 ? `${name}.png` : `${name}-${index + 1}.png`;
       link.click();
     });
   };
@@ -238,12 +323,26 @@ export default function Viewer() {
   };
 
   return (
-    <div className="playground" data-tab={tab}>
+    <div className="playground" data-tool="viewer" data-tab={tab}>
       <div className="toolbar">
-        <span className="filename">{name}</span>
+        <ToolTitle tool="viewer" />
         <span className="divider" aria-hidden="true" />
+        <TemplateMenu
+          tool="viewer"
+          templates={examples.map((option) => option.name)}
+          current={state.file ? undefined : template}
+          edited={edited}
+          onPick={pickTemplate}
+          onBlank={() => pickTemplate("blank")}
+          extra={
+            <PopoverClose className="menu-item" onClick={openFile}>
+              <span className="menu-spacer" />
+              Open a .zpl file
+            </PopoverClose>
+          }
+        />
         <label className="field">
-          Size
+          <span className="field-label">Size</span>
           <select
             value={sizeValue}
             onChange={(event) => {
@@ -304,54 +403,54 @@ export default function Viewer() {
           ))}
         </div>
         <span className="unit">dpi</span>
-        <label className="toggle">
-          <input
-            type="checkbox"
-            checked={smoothing > 0}
-            onChange={(event) =>
-              update({ smoothing: event.target.checked ? SMOOTHING : 0 })
-            }
-          />
-          Smooth edges
-        </label>
         <div className="spacer" />
-        <select
-          aria-label="Open an example"
-          value={example === -1 ? "" : example}
-          onChange={(event) => {
-            const index = Number(event.target.value);
-            setState(fromExample(index));
-            setName(fileName(examples[index].name));
-            setCustom(false);
-            history.replaceState(null, "", location.pathname);
-          }}
-        >
-          <option value="" disabled>
-            Examples
-          </option>
-          {examples.map((example, index) => (
-            <option key={example.name} value={index}>
-              {example.name}
-            </option>
-          ))}
-        </select>
-        <button type="button" onClick={() => setShowFonts(true)}>
-          {fontCount ? `Fonts (${fontCount})` : "Fonts"}
-        </button>
-        <button type="button" onClick={() => setShowCode(true)}>
-          Show as code
-        </button>
-        <button type="button" onClick={share}>
-          Share link
-        </button>
-        <button
-          type="button"
-          className="primary"
-          onClick={download}
-          disabled={!images.length}
-        >
-          Download PNG
-        </button>
+        <ExportMenu
+          tool="viewer"
+          rows={[
+            {
+              icon: <Link2 />,
+              title: "Share link",
+              detail: "A link that opens this label",
+              actions: (
+                <button type="button" onClick={share}>
+                  Copy link
+                </button>
+              ),
+            },
+            {
+              icon: <Code />,
+              title: "zplkit code",
+              detail: "This label as JSX or method calls",
+              actions: (
+                <>
+                  <button type="button" onClick={() => setShowCode(true)}>
+                    Show code
+                  </button>
+                  <button type="button" onClick={openInPlayground}>
+                    Open in playground
+                  </button>
+                </>
+              ),
+            },
+            {
+              icon: <ImageDown />,
+              title: "PNG",
+              detail: `${
+                resolutions.find((r) => r.dpmm === dpmm)?.dpi ?? dpmm
+              } dpi, ${labelCount(Math.max(images.length, 1))}`,
+              actions: (
+                <button
+                  type="button"
+                  className="primary"
+                  onClick={download}
+                  disabled={!images.length}
+                >
+                  Download PNG
+                </button>
+              ),
+            },
+          ]}
+        />
       </div>
 
       <div role="tablist" className="tabs">
@@ -399,6 +498,7 @@ export default function Viewer() {
                 ? "Rendering…"
                 : `Rendered in ${render.ms} ms`}
             </span>
+            <span className="spacer" />
             {cursor ? (
               <span title="Click to copy as ^FO">
                 x {cursor.x}, y {cursor.y}
@@ -409,6 +509,7 @@ export default function Viewer() {
                 {Math.round(labelSize.height * dpmm)} dots
               </span>
             )}
+            <ViewMenu tool="viewer" settings={settings} fonts={fonts} />
           </div>
           {blocked && (
             <p className="blocked">
@@ -458,10 +559,22 @@ export default function Viewer() {
         onCopied={setNotice}
       />
 
-      <FontsPanel
-        open={showFonts}
-        onClose={() => setShowFonts(false)}
-        fonts={fonts}
+      <DiscardDialog
+        from={
+          state.file ??
+          (template === undefined ? undefined : examples[template].name)
+        }
+        to={
+          pending === undefined
+            ? undefined
+            : pending === "blank"
+            ? "a blank label"
+            : examples[pending].name
+        }
+        onAnswer={(discard) => {
+          if (discard && pending !== undefined) open(pending);
+          setPending(undefined);
+        }}
       />
 
       <div className="notice" role="status" aria-live="polite">

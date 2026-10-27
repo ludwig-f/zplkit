@@ -4,12 +4,14 @@
  * platen on the right. On phones, tabs switch between the editor, the
  * preview and the problems. Scoped to .playground.
  */
-.playground {
+.playground,
+.tool-popover {
   --panel: var(--zk-code);
   --ink: var(--zk-ink);
   --muted: var(--zk-muted);
   --line: var(--zk-rule);
   --accent: var(--zk-accent);
+  --on-accent: var(--zk-on-accent);
   --selection: var(--zk-accent-soft);
   --active-line: var(--zk-surface);
   --warn: var(--zk-warn);
@@ -21,7 +23,16 @@
 
   --font-ui: var(--font-archivo), system-ui, sans-serif;
   --font-code: var(--font-plex-mono), ui-monospace, "SF Mono", Menlo, monospace;
+}
 
+/* The viewer's own accent, so the two tools are told apart */
+[data-tool="viewer"] {
+  --accent: var(--zk-view);
+  --on-accent: var(--zk-on-view);
+  --selection: var(--zk-view-soft);
+}
+
+.playground {
   display: grid;
   /* The toolbar, then the workspace; phones add a row of tabs between */
   grid-template-rows: auto minmax(0, 1fr);
@@ -34,7 +45,9 @@
 
 .playground button,
 .playground select,
-.playground input:not([type="checkbox"]) {
+.playground input:not([type="checkbox"]),
+.tool-popover button,
+.tool-popover input:not([type="checkbox"]) {
   height: 36px;
   padding: 0 12px;
   border: 1px solid var(--zk-rule-strong);
@@ -45,24 +58,28 @@
 }
 
 .playground select,
-.playground input:not([type="checkbox"]) {
+.playground input:not([type="checkbox"]),
+.tool-popover input:not([type="checkbox"]) {
   padding: 0 8px;
   font: 500 13px var(--font-code);
 }
 
-.playground button {
+.playground button,
+.tool-popover button {
   cursor: pointer;
 }
 
-.playground button:disabled {
+.playground button:disabled,
+.tool-popover button:disabled {
   opacity: 0.5;
   cursor: default;
 }
 
-.playground button.primary {
+.playground button.primary,
+.tool-popover button.primary {
   border-color: transparent;
   background: var(--accent);
-  color: var(--zk-on-accent);
+  color: var(--on-accent);
   font-weight: 700;
 }
 
@@ -118,7 +135,8 @@
   accent-color: var(--accent);
 }
 
-.playground .segmented {
+.playground .segmented,
+.tool-popover .segmented {
   display: flex;
   flex: none;
   overflow: hidden;
@@ -126,7 +144,8 @@
   border-radius: 4px;
 }
 
-.playground .segmented button {
+.playground .segmented button,
+.tool-popover .segmented button {
   height: 34px;
   padding: 0 10px;
   border: none;
@@ -136,11 +155,13 @@
   outline-offset: -2px;
 }
 
-.playground .segmented button:last-child {
+.playground .segmented button:last-child,
+.tool-popover .segmented button:last-child {
   border-right: none;
 }
 
-.playground .segmented button[aria-checked="true"] {
+.playground .segmented button[aria-checked="true"],
+.tool-popover .segmented button[aria-checked="true"] {
   background: var(--ink);
   color: var(--zk-bg);
 }
@@ -153,6 +174,387 @@
 
 .playground .spacer {
   flex: 1;
+}
+
+/* The tool's icon, name and what it's for */
+.playground .tool-title {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+.playground .tool-tile {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 5px;
+}
+
+.playground .tool-tile svg {
+  width: 17px;
+  height: 17px;
+}
+
+.playground .tool-title h1 {
+  margin: 0;
+  font: 800 16px var(--font-ui);
+  font-stretch: 108%;
+}
+
+.playground .tagline {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.playground .field-label {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* Buttons that open a menu, like the template */
+.playground .menu-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 260px;
+}
+
+.playground .menu-button svg {
+  flex: none;
+  width: 15px;
+  height: 15px;
+  color: var(--muted);
+}
+
+.playground .menu-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.playground .edited {
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: var(--zk-surface);
+  color: var(--muted);
+  font: 500 11px var(--font-code);
+}
+
+.playground .export-button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.playground .export-button svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* Menus and popovers, shown outside the page's layout */
+
+.tool-popover .menu-heading {
+  margin: 4px 0 2px;
+  padding: 4px 12px;
+  color: var(--muted);
+  font: 600 11px var(--font-code);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tool-popover .menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 34px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  font: 500 13.5px var(--font-ui);
+  text-align: left;
+}
+
+.tool-popover .menu-item:hover,
+.tool-popover .menu-item:focus-visible {
+  background: var(--selection);
+  outline: none;
+}
+
+.tool-popover .menu-item svg,
+.tool-popover .menu-spacer {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  visibility: hidden;
+}
+
+.tool-popover .menu-item[aria-current="true"] {
+  font-weight: 700;
+}
+
+.tool-popover .menu-item[aria-current="true"] svg {
+  visibility: visible;
+}
+
+.tool-popover .menu-rule {
+  height: 1px;
+  margin: 6px 0;
+  background: var(--line);
+}
+
+.tool-popover .popover-title {
+  margin: 0;
+  padding: 12px 14px 4px;
+  font: 700 14.5px var(--font-ui);
+}
+
+.tool-popover .popover-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 8px 8px 10px 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.tool-popover .popover-head > div {
+  flex: 1;
+}
+
+.tool-popover .popover-head .popover-title {
+  padding: 4px 0 2px;
+}
+
+.tool-popover .spacer {
+  flex: 1;
+}
+
+.tool-popover .hint {
+  display: block;
+  margin: 0;
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.tool-popover .icon-button {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+}
+
+.tool-popover .icon-button:hover {
+  color: var(--ink);
+}
+
+.tool-popover .icon-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.tool-popover .export-row {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 4px 10px;
+  align-items: center;
+  padding: 12px 14px;
+  border-top: 1px solid var(--line);
+}
+
+.tool-popover .export-icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 5px;
+  background: var(--zk-surface);
+  color: var(--ink);
+}
+
+.tool-popover .export-icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+.tool-popover .export-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.tool-popover .export-text span {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.tool-popover .export-actions {
+  display: flex;
+  flex-wrap: wrap;
+  grid-column: 2;
+  gap: 6px;
+}
+
+.tool-popover .export-actions button {
+  height: 30px;
+  padding: 0 10px;
+  font-size: 12.5px;
+}
+
+.tool-popover .setting {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin: 0;
+  padding: 12px 14px;
+  border: none;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  text-align: left;
+}
+
+.tool-popover .setting:last-child {
+  border-bottom: none;
+}
+
+.tool-popover .setting-row {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  height: auto;
+}
+
+.tool-popover .setting-title {
+  display: block;
+  margin: 0;
+  font: 700 13.5px var(--font-ui);
+}
+
+.tool-popover .setting-link:hover {
+  background: var(--zk-surface);
+}
+
+.tool-popover .setting-link svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--muted);
+}
+
+.tool-popover .segmented.full button {
+  flex: 1;
+}
+
+/* A switch from a checkbox, so it stays a real input */
+.tool-popover .switch {
+  flex: none;
+  appearance: none;
+  position: relative;
+  width: 34px;
+  height: 20px;
+  margin: 0;
+  border-radius: 10px;
+  background: var(--zk-rule-strong);
+  cursor: pointer;
+}
+
+.tool-popover .switch::after {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--zk-raised);
+  content: "";
+}
+
+.tool-popover .switch:checked {
+  background: var(--accent);
+}
+
+.tool-popover .switch:checked::after {
+  left: 17px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .tool-popover .switch::after {
+    transition: left 120ms;
+  }
+}
+
+.tool-popover .fonts-body {
+  max-height: min(60dvh, 520px);
+  overflow: auto;
+}
+
+.tool-popover .font-error {
+  margin: 0;
+  color: var(--error);
+  font-size: 13px;
+}
+
+/* The View button in the preview's status bar */
+.playground .view-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  margin: -4px -8px -4px 0;
+  padding: 0 8px;
+  font: 600 12px var(--font-ui);
+}
+
+.playground .view-button svg {
+  width: 14px;
+  height: 14px;
+}
+
+.playground .dialog.confirm-dialog {
+  width: min(440px, calc(100vw - 32px));
+}
+
+.playground .dialog.confirm-dialog[open] {
+  grid-template-rows: auto auto;
+}
+
+.playground .confirm-body {
+  padding: 18px 20px 6px;
+}
+
+.playground .confirm-body h2 {
+  margin: 0 0 6px;
+  font: 800 18px var(--font-ui);
+}
+
+.playground .confirm-body p {
+  margin: 0;
+  color: var(--zk-ink-2);
+  font-size: 14px;
+}
+
+.playground .confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 14px 20px 18px;
+}
+
+/* Below 1180 px the tagline makes room for the controls */
+@media (max-width: 1180px) {
+  .playground .tagline {
+    display: none;
+  }
 }
 
 /* Workspace */
@@ -317,7 +719,7 @@
 .playground .status {
   display: flex;
   flex: none;
-  justify-content: space-between;
+  align-items: center;
   gap: 12px;
   padding: 8px 16px;
   border-bottom: 1px solid var(--line);
@@ -385,11 +787,23 @@
 
 /* Phones: one panel at a time, picked with tabs */
 @media (max-width: 860px) {
-  .playground .filename,
+  .playground .tool-title,
   .playground .divider,
-  .playground .toggle,
+  .playground .field-label,
   .playground .spacer {
     display: none;
+  }
+
+  .playground .export-button span {
+    display: none;
+  }
+
+  /* Export stays in reach while the rest of the toolbar scrolls */
+  .playground .toolbar .export-button {
+    position: sticky;
+    right: 0;
+    margin-left: auto;
+    box-shadow: -14px 0 10px -6px var(--zk-surface);
   }
 
   .playground {
@@ -532,44 +946,44 @@
   width: min(640px, calc(100vw - 32px));
 }
 
-.playground .fonts-body {
+.tool-popover .fonts-body {
   display: grid;
   gap: 20px;
   padding: 16px;
 }
 
-.playground .fonts-body p {
+.tool-popover .fonts-body p {
   margin: 0;
   max-width: 68ch;
 }
 
-.playground .fonts-body section {
+.tool-popover .fonts-body section {
   display: grid;
   gap: 8px;
 }
 
-.playground .fonts-body h3 {
+.tool-popover .fonts-body h3 {
   margin: 0;
   font: 700 14px var(--font-ui);
 }
 
-.playground .fonts-body .hint {
+.tool-popover .fonts-body .hint {
   color: var(--muted);
   font-size: 13px;
 }
 
-.playground .fonts-body code {
+.tool-popover .fonts-body code {
   font: 12.5px var(--font-code);
 }
 
-.playground .font-row {
+.tool-popover .font-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
 }
 
-.playground .font-row .font-name {
+.tool-popover .font-row .font-name {
   flex: 1;
   min-width: 0;
   overflow: hidden;
@@ -579,11 +993,11 @@
   white-space: nowrap;
 }
 
-.playground .font-row .font-path {
+.tool-popover .font-row .font-path {
   font-weight: 600;
 }
 
-.playground .font-row input {
+.tool-popover .font-row input {
   width: 180px;
   text-transform: uppercase;
 }
