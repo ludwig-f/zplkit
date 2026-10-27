@@ -606,6 +606,25 @@ const drawText = (
   drawGlyphs(raster, block.glyphs, placement(block, options), color);
 };
 
+/**
+ * How far text reaches across the label from its origin: the laid-out
+ * width, or its height when turned a quarter
+ */
+const textWidth = (text: string, options: TextOptions): number => {
+  const face = faceFor(options);
+  if (options.orientation === "R" || options.orientation === "B") {
+    return (
+      options.block
+        ? layoutBlock(face, text, options.block)
+        : layoutLine(face, text)
+    ).height;
+  }
+  // A line's block is a dot short of its advance, for turning it
+  return options.block
+    ? options.block.width
+    : Math.ceil(advanceOf(face, text) - 1e-9);
+};
+
 type Place = (u: number, v: number) => readonly [number, number];
 
 /** Fill placed glyphs, mapping text coordinates onto the label with `place` */
@@ -626,4 +645,12 @@ const drawGlyphs = (
 };
 
 export type { Face, Orientation, Place, PlacedGlyph, TextBlockOptions };
-export { drawText, drawGlyphs, faceFor, scaledFace, placeLine, placement };
+export {
+  drawText,
+  drawGlyphs,
+  faceFor,
+  scaledFace,
+  placeLine,
+  placement,
+  textWidth,
+};

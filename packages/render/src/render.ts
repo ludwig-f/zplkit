@@ -2,7 +2,7 @@ import { parse } from "@zplkit/core";
 import { Raster, fillPath } from "./raster.js";
 import { boxPath, circlePath, diagonalPath, ellipsePath } from "./shapes.js";
 import { layout } from "./layout.js";
-import { drawText } from "./text.js";
+import { drawText, textWidth } from "./text.js";
 import { drawBarcode, drawPlaceholder } from "./barcode.js";
 import { drawSymbol } from "./symbols.js";
 import type { Command } from "@zplkit/core";
@@ -31,6 +31,44 @@ type RenderOptions = {
    * open-licensed stand-in, like the printer's own if you have a license
    */
   font0?: Uint8Array;
+};
+
+type TextElement = Extract<Element, { kind: "text" }>;
+
+const textOptions = (element: TextElement, dpmm: number) => ({
+  x: element.x,
+  y: element.y,
+  fromBottom: element.fromBottom,
+  font: element.font,
+  height: element.height,
+  width: element.width,
+  typeface: element.typeface,
+  font0: element.font0,
+  orientation: element.orientation,
+  block: element.block,
+  dpmm,
+});
+
+/**
+ * A right-justified element moved to end just before its x: text by its
+ * laid-out width, anything else by where its dots end, found by drawing it
+ * once at the left edge
+ */
+const justified = (element: Element, raster: Raster, dpmm: number): Element => {
+  if (!element.right) return element;
+  if (element.kind === "text") {
+    return {
+      ...element,
+      x: element.x - textWidth(element.text, textOptions(element, dpmm)),
+    };
+  }
+  const trial = new Raster(raster.width, raster.height, raster.sampling);
+  draw(trial, { ...element, x: 0 }, dpmm);
+  let end = 0;
+  for (let i = 0; i < trial.ink.length; i++) {
+    if (trial.ink[i] > 0) end = Math.max(end, (i % trial.width) + 1);
+  }
+  return { ...element, x: element.x - end };
 };
 
 /** Draw an element in the given color, ignoring reverse printing */
@@ -86,24 +124,7 @@ const draw = (
       );
       break;
     case "text":
-      drawText(
-        raster,
-        element.text,
-        {
-          x,
-          y,
-          fromBottom: element.fromBottom,
-          font: element.font,
-          height: element.height,
-          width: element.width,
-          typeface: element.typeface,
-          font0: element.font0,
-          orientation: element.orientation,
-          block: element.block,
-          dpmm,
-        },
-        color
-      );
+      drawText(raster, element.text, textOptions(element, dpmm), color);
       break;
     case "barcode":
       drawBarcode(raster, element, dpmm, color);
@@ -187,7 +208,8 @@ const renderLabels = (
     const printWidth = Math.min(width, label.printWidth ?? width);
     const printed = new Raster(printWidth, height, sampling);
 
-    for (const element of label.elements) {
+    for (const given of label.elements) {
+      const element = justified(given, printed, options.dpmm);
       if (element.reverse) drawReversed(printed, element, options.dpmm);
       else draw(printed, element, options.dpmm);
     }

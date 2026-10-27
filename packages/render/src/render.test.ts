@@ -233,6 +233,64 @@ describe("renderLabels", () => {
     });
   });
 
+  describe("right-justified fields", () => {
+    const at = (zpl: string) => {
+      const [raster] = renderLabels(zpl, {
+        widthMm: 406 / 8,
+        heightMm: 406 / 8,
+        dpmm: 8,
+      });
+      const { x, y } = dots(raster);
+      return { x, y };
+    };
+
+    test("end just before x", () => {
+      expect(at("^XA^FO300,100,1^A0N,50,50^FDRight^FS^XZ").x).toStrictEqual([
+        196, 297,
+      ]);
+      expect(at("^XA^FO300,100,1^GB50,30,30^FS^XZ").x).toStrictEqual([
+        250, 299,
+      ]);
+      expect(at("^XA^FO300,100,1^BY2^BCN,50,N^FD12^FS^XZ").x).toStrictEqual([
+        186, 299,
+      ]);
+    });
+
+    test("with ^FT keep their baseline", () => {
+      const left = at("^XA^FT300,150^A0N,50,50^FDRight^FS^XZ");
+      expect(at("^XA^FT300,150,1^A0N,50,50^FDRight^FS^XZ")).toStrictEqual({
+        x: [196, 297],
+        y: left.y,
+      });
+    });
+
+    test("move a field block by its width", () => {
+      expect(
+        at("^XA^FO300,100,1^FB200,1,0,L^A0N,50,50^FDRt^FS^XZ").x
+      ).toStrictEqual([103, 141]);
+    });
+
+    test("move rotated text by its turned width", () => {
+      // Turned a quarter, text reaches across by its height
+      const left = at("^XA^FO300,100^A0R,50,50^FDRight^FS^XZ").x;
+      expect(at("^XA^FO300,100,1^A0R,50,50^FDRight^FS^XZ").x).toStrictEqual(
+        left.map((x) => x - 50)
+      );
+    });
+
+    test("^FW sets the justification for the fields after it", () => {
+      expect(at("^XA^FWN,1^FO300,100^A0N,50,50^FDRight^FS^XZ").x).toStrictEqual(
+        [196, 297]
+      );
+    });
+
+    test("auto justification is left for left-to-right text", () => {
+      expect(at("^XA^FO300,100,2^A0N,50,50^FDRight^FS^XZ").x).toStrictEqual([
+        303, 404,
+      ]);
+    });
+  });
+
   describe("units", () => {
     const at = (zpl: string, dpmm = 8) => {
       const [raster] = renderLabels(zpl, {
