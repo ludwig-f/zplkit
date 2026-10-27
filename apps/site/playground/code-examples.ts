@@ -1,7 +1,7 @@
 /** zplkit code to start from in the playground */
 type CodeExample = { name: string; code: string };
 
-const shippingLabel = `import { Label, Text, Box, Code128, QrCode, build, mm, dots } from "@zplkit/core/jsx";
+const shippingLabel = `import { Label, Text, Box, Code128, QrCode, build, inches, mm, dots } from "@zplkit/core/jsx";
 
 const order = {
   id: 10442,
@@ -26,7 +26,7 @@ const Rule = (props: { y: number }) => (
 );
 
 const label = build(
-  <Label width={mm(101.6)} height={mm(152.4)} dpmm={8}>
+  <Label width={inches(4)} height={inches(6)} dpmm={8}>
     <Text x={mm(6)} y={mm(6)} height={mm(3)}>FROM</Text>
     <Lines x={6} y={11} size={3.5} lines={order.from} />
     {order.express && (
@@ -78,14 +78,26 @@ export default new PrintJob(
 );
 `;
 
-const helloLabel = `import { Label, Text, Box, build, mm, dots } from "@zplkit/core/jsx";
+const helloLabel = `import { Label, Text, Box, build, inches, mm, dots } from "@zplkit/core/jsx";
 
-// Change the code and the label redraws. Lengths take mm() or dots().
+// Change the code and the label redraws. Lengths take mm(), inches() or dots().
 const label = build(
-  <Label width={mm(50.8)} height={mm(25.4)} dpmm={8}>
+  <Label width={inches(2)} height={inches(1)} dpmm={8}>
     <Text x={mm(4)} y={mm(4)} height={mm(6)}>Hello, zplkit</Text>
     <Box x={mm(4)} y={mm(13)} width={mm(42.8)} height={dots(3)} thickness={dots(3)} />
     <Text x={mm(4)} y={mm(16)} height={mm(3.5)}>Built with JSX</Text>
+  </Label>
+);
+
+export default label;
+`;
+
+/** An empty 2 × 1 inch label, for "Start from a blank label" */
+const blankLabel = `import { Label, Text, build, inches, mm } from "@zplkit/core/jsx";
+
+const label = build(
+  <Label width={inches(2)} height={inches(1)} dpmm={8}>
+    <Text x={mm(4)} y={mm(4)} height={mm(5)}>Text</Text>
   </Label>
 );
 
@@ -99,4 +111,5 @@ const codeExamples: CodeExample[] = [
 ];
 
 export default codeExamples;
+export { blankLabel };
 export type { CodeExample };

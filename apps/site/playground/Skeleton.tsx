@@ -1,4 +1,7 @@
 import type { ReactNode } from "react";
+import { ChevronDown, Settings, Upload } from "lucide-react";
+import type { Tool } from "@/components/tools";
+import ToolTitle from "./ToolTitle";
 import "./styles.css";
 import "./bench.css";
 
@@ -11,21 +14,39 @@ const lines = [58, 0, 22, 34, 46, 40, 0, 30, 52, 44, 26, 0, 36, 60, 48, 18];
  * so nothing moves when the real page takes its place
  */
 export default function Skeleton({
-  file,
+  tool,
   tabs,
   toolbar,
 }: {
-  file: string;
+  tool: Tool;
   tabs: string[];
-  /** The page's toolbar controls, disabled */
-  toolbar: ReactNode;
+  /** The page's own toolbar controls, disabled, after the template */
+  toolbar?: ReactNode;
 }) {
   return (
-    <div className="playground skeleton" data-tab={tabs[0]} aria-busy="true">
+    <div
+      className="playground skeleton"
+      data-tool={tool}
+      data-tab={tabs[0]}
+      aria-busy="true"
+    >
       <div className="toolbar">
-        <span className="filename">{file}</span>
+        <ToolTitle tool={tool} />
         <span className="divider" aria-hidden="true" />
+        <div className="field template">
+          <span className="field-label">Template</span>
+          <button type="button" className="menu-button" disabled>
+            <span className="menu-value">Shipping label</span>
+            <ChevronDown aria-hidden="true" />
+          </button>
+        </div>
         {toolbar}
+        <div className="spacer" />
+        <button type="button" className="primary export-button" disabled>
+          <Upload aria-hidden="true" />
+          <span>Export</span>
+          <ChevronDown aria-hidden="true" />
+        </button>
       </div>
 
       <div className="tabs" aria-hidden="true">
@@ -56,6 +77,11 @@ export default function Skeleton({
         <section className="preview" aria-label="Loading the preview">
           <div className="status">
             <span className="busy">Loading…</span>
+            <span className="spacer" />
+            <button type="button" className="view-button" disabled>
+              <Settings aria-hidden="true" />
+              View
+            </button>
           </div>
           <div className="bench-area">
             <div className="bench">

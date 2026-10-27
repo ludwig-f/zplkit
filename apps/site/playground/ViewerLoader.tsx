@@ -8,14 +8,14 @@ const Viewer = dynamic(() => import("./Viewer"), {
   ssr: false,
   loading: () => (
     <Skeleton
-      file="label.zpl"
+      tool="viewer"
       tabs={["Editor", "Preview", "Problems (0)"]}
       toolbar={
         <>
           <label className="field">
-            Size
+            <span className="field-label">Size</span>
             <select disabled>
-              <option>From ^PW and ^LL</option>
+              <option>4 × 6 in</option>
             </select>
           </label>
           <div className="segmented" aria-hidden="true">
@@ -26,26 +26,6 @@ const Viewer = dynamic(() => import("./Viewer"), {
             ))}
           </div>
           <span className="unit">dpi</span>
-          <label className="toggle">
-            <input type="checkbox" defaultChecked disabled />
-            Smooth edges
-          </label>
-          <div className="spacer" />
-          <select aria-label="Open an example" disabled>
-            <option>Examples</option>
-          </select>
-          <button type="button" disabled>
-            Fonts
-          </button>
-          <button type="button" disabled>
-            Show as code
-          </button>
-          <button type="button" disabled>
-            Share link
-          </button>
-          <button type="button" className="primary" disabled>
-            Download PNG
-          </button>
         </>
       }
     />
