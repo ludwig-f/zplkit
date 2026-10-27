@@ -35,6 +35,7 @@ const renderedCommands: readonly string[] = [
   "^FS",
   "^FR",
   "^FW",
+  "^FP",
   "^FN",
   // Text and fonts
   "^A",

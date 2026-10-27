@@ -201,6 +201,9 @@ type TextBlockOptions = {
   hangingIndent: number;
 };
 
+/** ^FP: which way the characters run, and extra dots between them */
+type TextDirection = { direction: "H" | "V" | "R"; gap: number };
+
 type TextOptions = {
   x: number;
   /** Top of the text, or the baseline when fromBottom is set */
@@ -216,6 +219,7 @@ type TextOptions = {
   font0?: Font;
   orientation: Orientation;
   block?: TextBlockOptions;
+  direction?: TextDirection;
   dpmm: number;
 };
 
@@ -234,6 +238,8 @@ type Face = {
   height: number;
   ascent: number;
   advance: (char: string) => number;
+  /** Where reverse text (^FPR) ends its first character, from the origin */
+  reverseStart: number;
   /** Undefined for characters that print nothing */
   glyph: (char: string) => Glyph | undefined;
 };
@@ -250,6 +256,8 @@ const font0Face = (options: Pick<TextOptions, "height" | "width">): Face => {
   return {
     height,
     ascent: CAP_HEIGHT * height,
+    // Measured from reference renders of font 0
+    reverseStart: 0.75 * width,
     advance: (char) =>
       ((advances.get(char.codePointAt(0)!) ?? MISSING_ADVANCE) * width) / 100,
     glyph: (char) => {
@@ -290,6 +298,8 @@ const font0FileFace = (
   return {
     height,
     ascent: CAP_HEIGHT * height,
+    // Measured from reference renders of font 0
+    reverseStart: 0.75 * width,
     // Characters the font lacks print nothing, as with font 0
     advance: (char) => {
       const glyph = glyphOf(char);
@@ -327,6 +337,7 @@ const bitmapFace = (cell: Cell, magX: number, magY: number): Face => {
   return {
     height: cell.height * magY,
     ascent: cell.baseline * magY,
+    reverseStart: (cell.width + cell.gap) * magX,
     advance: () => (cell.width + cell.gap) * magX,
     glyph: (char) => {
       if (cell.letters === "upper") char = char.toUpperCase();
@@ -386,6 +397,52 @@ const layoutLine = (face: Face, text: string): TextBlock => ({
   ascent: face.ascent,
   lastBaseline: 0,
 });
+
+/**
+ * A line with ^FP: characters spaced by the gap, stacked a line apart (V,
+ * where printers ignore the gap) or run right to left (R) from where the
+ * first one ends
+ */
+const layoutDirected = (
+  face: Face,
+  text: string,
+  { direction, gap }: TextDirection
+): TextBlock => {
+  const chars = [...text];
+  const glyphs: PlacedGlyph[] = [];
+  let width = 0;
+  if (direction === "V") {
+    chars.forEach((char, i) => {
+      const glyph = face.glyph(char);
+      const baseline = i * face.height;
+      if (glyph) glyphs.push({ ...glyph, pen: glyph.offset, baseline });
+      width = Math.max(width, face.advance(char));
+    });
+    return {
+      glyphs,
+      width: Math.ceil(width - 1e-9),
+      height: chars.length * face.height,
+      ascent: face.ascent,
+      // ^FT puts the first character on the baseline
+      lastBaseline: 0,
+    };
+  }
+  let pen = direction === "R" ? face.reverseStart : 0;
+  for (const char of chars) {
+    const advance = face.advance(char) + gap;
+    if (direction === "R") pen -= advance;
+    const glyph = face.glyph(char);
+    if (glyph) glyphs.push({ ...glyph, pen: pen + glyph.offset, baseline: 0 });
+    if (direction === "H") pen += advance;
+  }
+  return {
+    glyphs,
+    width: Math.ceil(Math.abs(pen) - 1e-9) - 1,
+    height: face.height,
+    ascent: face.ascent,
+    lastBaseline: 0,
+  };
+};
 
 type Line = {
   text: string;
@@ -563,6 +620,8 @@ const trueTypeFace = (
   return {
     height,
     ascent: CAP_HEIGHT * height,
+    // Measured from reference renders of font 0
+    reverseStart: 0.75 * width,
     advance: (char) => font.advance(glyphOf(char)) * scaleX,
     // Characters the font lacks print its missing glyph
     glyph: (char) => ({
@@ -611,6 +670,8 @@ const drawText = (
   const face = faceFor(options);
   const block = options.block
     ? layoutBlock(face, text, options.block)
+    : options.direction
+    ? layoutDirected(face, text, options.direction)
     : layoutLine(face, text);
   drawGlyphs(raster, block.glyphs, placement(block, options), color);
 };
@@ -621,17 +682,16 @@ const drawText = (
  */
 const textWidth = (text: string, options: TextOptions): number => {
   const face = faceFor(options);
+  const block = options.block
+    ? layoutBlock(face, text, options.block)
+    : options.direction
+    ? layoutDirected(face, text, options.direction)
+    : layoutLine(face, text);
   if (options.orientation === "R" || options.orientation === "B") {
-    return (
-      options.block
-        ? layoutBlock(face, text, options.block)
-        : layoutLine(face, text)
-    ).height;
+    return block.height;
   }
   // A line's block is a dot short of its advance, for turning it
-  return options.block
-    ? options.block.width
-    : Math.ceil(advanceOf(face, text) - 1e-9);
+  return options.block ? block.width : block.width + 1;
 };
 
 type Place = (u: number, v: number) => readonly [number, number];
@@ -653,7 +713,14 @@ const drawGlyphs = (
   }
 };
 
-export type { Face, Orientation, Place, PlacedGlyph, TextBlockOptions };
+export type {
+  Face,
+  Orientation,
+  Place,
+  PlacedGlyph,
+  TextBlockOptions,
+  TextDirection,
+};
 export {
   drawText,
   drawGlyphs,

@@ -64,6 +64,14 @@ type SerializationField = Node<
   "SerializationField",
   { mask?: string; increment?: string }
 >;
+/**
+ * `^FPd,g`: prints the field's text horizontally (H), down (V) or right to
+ * left (R), with g extra dots between characters
+ */
+type FieldParameter = Node<
+  "FieldParameter",
+  { direction?: "H" | "V" | "R"; gap?: number }
+>;
 /** `^LRa` */
 type LabelReverse = Node<"LabelReverse", { reverse: boolean }>;
 /** `^CIa` */
@@ -644,6 +652,7 @@ type Command =
   | PrintMirror
   | MeasurementUnits
   | SerialNumber
+  | FieldParameter
   | SerializationField
   | ChangeEncoding
   | DefaultFont
@@ -725,6 +734,7 @@ export type {
   PrintMirror,
   MeasurementUnits,
   SerialNumber,
+  FieldParameter,
   SerializationField,
   ChangeEncoding,
   DefaultFont,

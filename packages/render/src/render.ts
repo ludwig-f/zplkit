@@ -53,6 +53,7 @@ const textOptions = (element: TextElement, dpmm: number) => ({
   font0: element.font0,
   orientation: element.orientation,
   block: element.block,
+  direction: element.direction,
   dpmm,
 });
 

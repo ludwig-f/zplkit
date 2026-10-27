@@ -79,6 +79,47 @@ describe("font 0", () => {
     expect(ink("|")).toStrictEqual([23, 27]);
   });
 
+  describe("^FP", () => {
+    const at = (body: string) => inkBounds(`^FO200,40${body}`);
+
+    test("adds a gap after each character", () => {
+      const plain = at("^A0N,40,40^FDABC^FS");
+      expect(at("^FPH,10^A0N,40,40^FDABC^FS").x).toStrictEqual([
+        plain.x[0],
+        plain.x[1] + 20,
+      ]);
+    });
+
+    test("stacks characters a line apart, ignoring the gap", () => {
+      // Reference: V, E, R and T at 40, 80, 120 and 160, from x
+      const vertical = at("^FPV,4^A0N,40,40^FDVERT^FS");
+      expect(vertical.y).toStrictEqual([40, 189]);
+      expect(vertical.x[0]).toBe(at("^A0N,40,40^FDV^FS").x[0]);
+    });
+
+    test("puts the first vertical character on the ^FT baseline", () => {
+      expect(inkBounds("^FT200,100^FPV^A0N,40,40^FDAB^FS").y).toStrictEqual([
+        70, 139,
+      ]);
+    });
+
+    test("prints reverse text right to left from three quarters of a width", () => {
+      // Reference: the first character ends 0.75 × the width right of x
+      const plain = at("^A0N,40,40^FDA^FS").x;
+      expect(at("^FPR^A0N,40,40^FDA^FS").x).toStrictEqual(
+        plain.map((x) => x + 8)
+      );
+      expect(at("^FPR^A0N,40,40^FDABC^FS").x).toStrictEqual([166, 229]);
+      expect(at("^FPR,10^A0N,40,40^FDABC^FS").x).toStrictEqual([136, 219]);
+    });
+
+    test("reverse text in a bitmap font starts where it would", () => {
+      expect(at("^FPR^ADN,36,20^FDA^FS")).toStrictEqual(
+        at("^ADN,36,20^FDA^FS")
+      );
+    });
+  });
+
   test("characters font 0 doesn't have advance like a space", () => {
     // Reference: a missing glyph prints nothing and advances 29.5
     const single = inkBounds("^FO100,100^A0N,100,100^FDH^FS").width;

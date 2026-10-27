@@ -38,7 +38,7 @@ const png = await encodePng(raster);
 
 - Boxes, circles, ellipses and diagonal lines (`^GB`, `^GC`, `^GE`, `^GD`), with rounded corners and white lines
 - Images (`^GF`, `~DG` or `~DY` with `^XG`), in hex with Zebra's compression or base64 (`:B64:`, `:Z64:`)
-- Text in font 0 and the bitmap fonts A to H (`^A`, `^CF`), rotated (`^FW`) and wrapped in blocks (`^FB`)
+- Text in font 0 and the bitmap fonts A to H (`^A`, `^CF`), rotated (`^FW`), wrapped in blocks (`^FB`), and printed down, right to left or spaced out (`^FP`)
 - Text in TrueType fonts downloaded with `~DU` or `~DY` (hex, `:B64:` or `:Z64:`), called with `^A@` or `^CW`
 - Code 128, Code 39, LOGMARS, Code 93, Code 11, Codabar, MSI, Plessey, and Interleaved, Industrial and Standard 2 of 5, with interpretation lines (`^BY`, `^BC`, `^B3`, `^BL`, `^BA`, `^B1`, `^BK`, `^BM`, `^BP`, `^B2`, `^BI`, `^BJ`)
 - EAN-13, EAN-8, UPC-A, UPC-E and their add-ons (`^BE`, `^B8`, `^BU`, `^B9`, `^BS`)
