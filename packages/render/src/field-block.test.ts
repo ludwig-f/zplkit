@@ -221,6 +221,25 @@ describe("font 0", () => {
     expectLines(`${font}${block}`, expected, 1);
   });
 
+  test("centering counts a space after the last line only if it fits", () => {
+    // Left and right of each line's ink; with the space it'd start at -2
+    const across = (body: string) =>
+      lines(`^FO400,400^A0N,32,32${body}`).map(([, , left, right]) => [
+        left,
+        right,
+      ]);
+    expect(across("^FB320,4,8,C^FDCentered block of text in^FS")).toStrictEqual(
+      [[3, 315]]
+    );
+    // A wrapped line counts its space, but doesn't start before the block
+    expect(
+      across("^FB320,4,8,C^FDCentered block of text in mm^FS")
+    ).toStrictEqual([
+      [1, 313],
+      [133, 176],
+    ]);
+  });
+
   test("^FT puts the baseline of the last possible line at y", () => {
     expectLines(
       `^FT400,400^A0N,40^FB300,5${words}`,
