@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+  # Publishes again without a new release, for when publishing failed
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -19,29 +21,33 @@ jobs:
       # Versions and changelogs per package come from release-please-config.json
       - uses: googleapis/release-please-action@5c625bfb5d1ff62eadeeb3772007f7f66fdcf071 # v4.4.1
         id: release
+        if: ${{ github.event_name == 'push' }}
         with:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
 
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-        if: ${{ steps.release.outputs.releases_created == 'true' }}
+        if: ${{ steps.release.outputs.releases_created == 'true' || github.event_name == 'workflow_dispatch' }}
       - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
-        if: ${{ steps.release.outputs.releases_created == 'true' }}
+        if: ${{ steps.release.outputs.releases_created == 'true' || github.event_name == 'workflow_dispatch' }}
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
-        if: ${{ steps.release.outputs.releases_created == 'true' }}
+        if: ${{ steps.release.outputs.releases_created == 'true' || github.event_name == 'workflow_dispatch' }}
         with:
           # Node 24 comes with npm 11, which trusted publishing needs
           node-version: 24
           cache: pnpm
           registry-url: "https://registry.npmjs.org"
+      # Trusted publishing needs npm 11.5.1 or newer
+      - run: npm install -g npm@11 && npm --version
+        if: ${{ steps.release.outputs.releases_created == 'true' || github.event_name == 'workflow_dispatch' }}
       - run: pnpm install --frozen-lockfile
-        if: ${{ steps.release.outputs.releases_created == 'true' }}
+        if: ${{ steps.release.outputs.releases_created == 'true' || github.event_name == 'workflow_dispatch' }}
       - run: pnpm build
-        if: ${{ steps.release.outputs.releases_created == 'true' }}
+        if: ${{ steps.release.outputs.releases_created == 'true' || github.event_name == 'workflow_dispatch' }}
       # Publishes every package whose version isn't on npm yet. pnpm packs
       # them, turning workspace:* dependencies into versions, and npm
       # publishes with trusted publishing, adding provenance
       - name: Publish to npm
-        if: ${{ steps.release.outputs.releases_created == 'true' }}
+        if: ${{ steps.release.outputs.releases_created == 'true' || github.event_name == 'workflow_dispatch' }}
         run: |
           for dir in packages/*/; do
             name=$(node -p "require('./${dir}package.json').name")
@@ -54,5 +60,5 @@ jobs:
               continue
             fi
             tarball=$(cd "$dir" && pnpm pack --pack-destination "$RUNNER_TEMP" | tail -n 1)
-            npm publish "$tarball" --access public
+            npm publish "$tarball" --access public --loglevel verbose
           done
