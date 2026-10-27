@@ -32,6 +32,10 @@ type PrintWidth = Node<"PrintWidth", { width: number }>;
 type LabelLength = Node<"LabelLength", { length: number }>;
 /** `^LHx,y` */
 type LabelHome = Node<"LabelHome", { x: number; y: number }>;
+/** `^LSa`: shifts the fields after it left, kept between labels */
+type LabelShift = Node<"LabelShift", { shift?: number }>;
+/** `^LTx`: moves the whole label down, or up when negative */
+type LabelTop = Node<"LabelTop", { offset?: number }>;
 /** `^LRa` */
 type LabelReverse = Node<"LabelReverse", { reverse: boolean }>;
 /** `^CIa` */
@@ -606,6 +610,8 @@ type Command =
   | PrintWidth
   | LabelLength
   | LabelHome
+  | LabelShift
+  | LabelTop
   | LabelReverse
   | ChangeEncoding
   | DefaultFont
@@ -681,6 +687,8 @@ export type {
   PrintWidth,
   LabelLength,
   LabelHome,
+  LabelShift,
+  LabelTop,
   LabelReverse,
   ChangeEncoding,
   DefaultFont,

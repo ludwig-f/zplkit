@@ -154,6 +154,85 @@ describe("renderLabels", () => {
     });
   });
 
+  describe("label shift and top", () => {
+    /** Where the dots of each label are, for a job of labels 406 dots square */
+    const boxes = (zpl: string) =>
+      renderLabels(zpl, { widthMm: 406 / 8, heightMm: 406 / 8, dpmm: 8 }).map(
+        (raster) => {
+          const { x, y } = dots(raster);
+          return { x, y };
+        }
+      );
+    const box = "^FO100,100^GB50,50,50^FS";
+
+    test("^LS shifts the fields after it to the left", () => {
+      expect(boxes(`^XA^LS40${box}^XZ`)).toStrictEqual([
+        { x: [60, 109], y: [100, 149] },
+      ]);
+      expect(boxes(`^XA^LS-40${box}^XZ`)).toStrictEqual([
+        { x: [140, 189], y: [100, 149] },
+      ]);
+      expect(boxes(`^XA${box}^LS40^XZ`)).toStrictEqual([
+        { x: [100, 149], y: [100, 149] },
+      ]);
+    });
+
+    test("^LS adds to ^LH and stops at the label's left edge", () => {
+      expect(boxes(`^XA^LH50,0^LS40${box}^XZ`)).toStrictEqual([
+        { x: [110, 159], y: [100, 149] },
+      ]);
+      expect(boxes(`^XA^LS120${box}^XZ`)).toStrictEqual([
+        { x: [0, 49], y: [100, 149] },
+      ]);
+    });
+
+    test("^LS stays for the next label, and an empty one keeps it", () => {
+      expect(
+        boxes(`^XA^LS40^XZ^XA${box}^XZ^XA^LS${box}^XZ`).slice(1)
+      ).toStrictEqual([
+        { x: [60, 109], y: [100, 149] },
+        { x: [60, 109], y: [100, 149] },
+      ]);
+    });
+
+    test("^LT moves the whole label down or up, wherever it is", () => {
+      expect(boxes(`^XA^LT40${box}^XZ`)).toStrictEqual([
+        { x: [100, 149], y: [140, 189] },
+      ]);
+      expect(boxes(`^XA^LT-120${box}^XZ`)).toStrictEqual([
+        { x: [100, 149], y: [0, 49] },
+      ]);
+      expect(boxes(`^XA${box}^LT40^XZ`)).toStrictEqual([
+        { x: [100, 149], y: [140, 189] },
+      ]);
+      expect(boxes(`^XA^LT40${box}^LT0^XZ`)).toStrictEqual([
+        { x: [100, 149], y: [100, 149] },
+      ]);
+    });
+
+    test("^LT ignores offsets beyond 120 dots", () => {
+      expect(boxes(`^XA^LT121${box}^XZ`)).toStrictEqual([
+        { x: [100, 149], y: [100, 149] },
+      ]);
+    });
+
+    test("^LT stays for the next label", () => {
+      expect(boxes(`^XA^LT40^XZ^XA${box}^XZ`)[1]).toStrictEqual({
+        x: [100, 149],
+        y: [140, 189],
+      });
+    });
+
+    test("^LS and ^LT apply before ^PO turns the label", () => {
+      expect(boxes(`^XA^POI^LS40${box}^XZ`)).toStrictEqual([
+        { x: [296, 345], y: [256, 305] },
+      ]);
+      expect(boxes(`^XA^POI^LT40${box}^XZ`)).toStrictEqual([
+        { x: [256, 305], y: [216, 265] },
+      ]);
+    });
+  });
+
   describe("ellipses", () => {
     test("draw the line inside the width and height", () => {
       expect(

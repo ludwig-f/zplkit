@@ -214,6 +214,14 @@ const parsers: Record<string, CommandParser> = {
     x: p.requiredNumber(0, "x", 0),
     y: p.requiredNumber(1, "y", 0),
   })),
+  "^LS": withParams("^LS", (p) => ({
+    type: "LabelShift",
+    shift: p.number(0, "shift"),
+  })),
+  "^LT": withParams("^LT", (p) => ({
+    type: "LabelTop",
+    offset: p.number(0, "offset"),
+  })),
   "^LR": withParams("^LR", (p) => {
     const reverse = p.yesNo(0, "reverse");
     return reverse === undefined ? null : { type: "LabelReverse", reverse };

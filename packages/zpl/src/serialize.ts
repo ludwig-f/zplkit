@@ -47,6 +47,10 @@ const serializeCommand = (command: Command): string => {
       return `^LL${command.length}`;
     case "LabelHome":
       return `^LH${params(command.x, command.y)}`;
+    case "LabelShift":
+      return `^LS${params(command.shift)}`;
+    case "LabelTop":
+      return `^LT${params(command.offset)}`;
     case "LabelReverse":
       return `^LR${yn(command.reverse)}`;
     case "ChangeEncoding":
