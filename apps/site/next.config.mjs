@@ -5,10 +5,26 @@ const withMDX = createMDX();
 /** @type {import('next').NextConfig} */
 const config = {
   reactStrictMode: true,
-  // The command reference moved out of the docs
+  // The command reference moved into the docs. Browsers keep the #fragment
+  // through a redirect, so /reference#barcodes still lands on its category.
   async redirects() {
     return [
-      { source: "/docs/commands", destination: "/reference", permanent: true },
+      { source: "/reference", destination: "/docs/commands", permanent: true },
+      {
+        source: "/reference/examples/:file",
+        destination: "/docs/commands/examples/:file",
+        permanent: true,
+      },
+      {
+        source: "/reference/:command",
+        destination: "/docs/commands/:command",
+        permanent: true,
+      },
+      {
+        source: "/og/reference/:command/image.png",
+        destination: "/og/docs/commands/:command/image.png",
+        permanent: true,
+      },
     ];
   },
   // The playground runs code from shared links in a worker. Workers follow

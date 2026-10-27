@@ -1,20 +1,4 @@
 {
   "title": "Docs",
-  "pages": [
-    "index",
-    "getting-started",
-    "---Labels---",
-    "jsx",
-    "building-labels",
-    "parsing",
-    "converting",
-    "linting",
-    "---Showing labels---",
-    "preview",
-    "rendering",
-    "---Printers---",
-    "printing",
-    "---API reference---",
-    "...api"
-  ]
+  "pages": ["index", "getting-started", "(guides)", "api", "commands"]
 }

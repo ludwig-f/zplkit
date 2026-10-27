@@ -12,11 +12,26 @@ import { getMDXComponents } from "@/components/mdx";
 import type { Metadata } from "next";
 import { createRelativeLink } from "fumadocs-ui/mdx";
 import { getPageImageUrl, getPageMarkdownUrl, gitConfig } from "@/lib/shared";
+import {
+  CommandPage,
+  CommandsIndex,
+  commandToc,
+} from "@/components/docs/command-page";
 
 export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
   const params = await props.params;
   const page = source.getPage(params.slug);
   if (!page) notFound();
+
+  // ZPL commands come from commands.json rather than MDX
+  if (page.type === "commands") {
+    const { code } = page.data;
+    return (
+      <DocsPage toc={code ? commandToc(code) : []} full={!code}>
+        {code ? <CommandPage code={code} /> : <CommandsIndex />}
+      </DocsPage>
+    );
+  }
 
   const MDX = page.data.body;
   const markdownUrl = getPageMarkdownUrl(page).url;

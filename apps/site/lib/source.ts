@@ -1,4 +1,6 @@
+import { createElement } from "react";
 import { llms, loader } from "fumadocs-core/source";
+import type { LoaderPlugin } from "fumadocs-core/source";
 import { lucideIconsPlugin } from "fumadocs-core/source/lucide-icons";
 import { docsRoute } from "./shared";
 import { defineDocs } from "fumadocs-mdx/macro";
@@ -11,6 +13,7 @@ import {
   remarkAutoTypeTable,
 } from "fumadocs-typescript";
 import type { RemarkAutoTypeTableOptions } from "fumadocs-typescript";
+import { commandsSource } from "./commands-source";
 
 type TypeSimplifierContext = Parameters<
   NonNullable<
@@ -100,11 +103,35 @@ const docs = defineDocs({
   },
 });
 
-// See https://fumadocs.dev/docs/headless/source-api for more info
+/** Commands in the sidebar as their code in mono, then their name */
+const commandNames: LoaderPlugin = {
+  name: "command-names",
+  transformPageTree: {
+    file(node, filePath) {
+      if (!filePath?.startsWith("commands/") || typeof node.name !== "string") {
+        return node;
+      }
+      const [code, ...name] = node.name.split(" ");
+      if (!/^[\^~]/.test(code)) return node;
+      return {
+        ...node,
+        name: createElement(
+          "span",
+          { className: "command-name" },
+          createElement("code", null, code),
+          createElement("span", null, name.join(" "))
+        ),
+      };
+    },
+  },
+};
+
+// See https://fumadocs.dev/docs/headless/source-api for more info. The
+// guides and API pages are MDX; the ZPL commands come from commands.json.
 export const source = loader({
   baseUrl: docsRoute,
-  source: docs.toFumadocsSource(),
-  plugins: [lucideIconsPlugin()],
+  source: { docs: docs.toFumadocsSource(), commands: commandsSource },
+  plugins: [lucideIconsPlugin(), commandNames],
 });
 
 export const docsLlms = llms(source, {
