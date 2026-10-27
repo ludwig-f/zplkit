@@ -21,7 +21,9 @@ const table = Object.entries(advances)
 // to their advance are left out
 const inkTable = Object.entries(ink)
   .filter(([, extent]) => extent !== null)
-  .map(([code, [left, right]]) => `${Number(code).toString(36)}:${left}:${right}`)
+  .map(
+    ([code, [left, right]]) => `${Number(code).toString(36)}:${left}:${right}`
+  )
   .join(",");
 
 writeFileSync(
@@ -35,13 +37,15 @@ export const font0Data =
   "${font}";
 
 /** Advance widths at ^A0N,100,100 by code point, as base-36 code:width pairs */
-export const font0Advances = "${table}";
+export const font0Advances =
+  "${table}";
 
 /**
  * Where each character's ink starts and ends after the pen at ^A0N,100,100,
  * as base-36 code:left:right triples
  */
-export const font0Ink = "${inkTable}";
+export const font0Ink =
+  "${inkTable}";
 `
 );
 console.log(
