@@ -3,6 +3,7 @@ import { DocsLayout } from "fumadocs-ui/layouts/docs";
 import { HomeLayout } from "fumadocs-ui/layouts/home";
 import { baseOptions } from "@/lib/layout.shared";
 import { DocsSubnav } from "@/components/docs/subnav";
+import { SiteHeader } from "@/components/site-header";
 
 /**
  * Docs sit under the same header as the rest of the site. The sidebar only
@@ -11,7 +12,7 @@ import { DocsSubnav } from "@/components/docs/subnav";
  */
 export default function Layout({ children }: LayoutProps<"/docs">) {
   return (
-    <HomeLayout {...baseOptions()}>
+    <HomeLayout {...baseOptions()} slots={{ header: SiteHeader }}>
       <DocsLayout
         tree={source.getPageTree()}
         searchToggle={{ enabled: false }}
