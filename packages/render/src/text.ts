@@ -199,6 +199,11 @@ type TextBlockOptions = {
   lineSpacing: number;
   justification: "L" | "C" | "R" | "J";
   hangingIndent: number;
+  /**
+   * ^TB: the block's height in dots. Lines that don't fit are left out,
+   * instead of printing over the last as with ^FB.
+   */
+  height?: number;
 };
 
 /** ^FP: which way the characters run, and extra dots between them */
@@ -506,13 +511,20 @@ const layoutBlock = (
   block: TextBlockOptions
 ): TextBlock => {
   const pitch = face.height + block.lineSpacing;
-  const lines = wrap(face, text, block);
+  const maxLines =
+    block.height === undefined
+      ? block.maxLines
+      : Math.max(1, Math.floor(block.height / pitch));
+  const lines = wrap(face, text, block).slice(
+    0,
+    block.height === undefined ? undefined : maxLines
+  );
   const space = face.advance(" ");
   const glyphs: PlacedGlyph[] = [];
 
   lines.forEach((line, i) => {
     // Lines past the last print over it
-    const baseline = Math.min(i, block.maxLines - 1) * pitch;
+    const baseline = Math.min(i, maxLines - 1) * pitch;
     const advance = advanceOf(face, line.text);
     const indent = i > 0 ? block.hangingIndent : 0;
     const last = i === lines.length - 1;
@@ -559,9 +571,9 @@ const layoutBlock = (
   return {
     glyphs,
     width: block.width,
-    height: block.maxLines * pitch,
+    height: block.height ?? maxLines * pitch,
     ascent: face.ascent,
-    lastBaseline: (block.maxLines - 1) * pitch,
+    lastBaseline: (maxLines - 1) * pitch,
   };
 };
 

@@ -197,6 +197,8 @@ type Field = {
   /** ^FH: the character that starts a hex escape in the field data */
   hexIndicator?: string;
   block?: TextBlockOptions;
+  /** ^TB's orientation, which turns the field's text */
+  blockOrientation?: Orientation;
   direction?: TextDirection;
   /** ^GS: the field data picks a graphic symbol */
   symbol?: { height?: number; width?: number; orientation?: Orientation };
@@ -614,6 +616,17 @@ const layout = (
           hangingIndent: command.hangingIndent ?? 0,
         };
         break;
+      case "TextBlock":
+        field.block = {
+          width: command.width ?? 0,
+          maxLines: 1,
+          lineSpacing: 0,
+          justification: "L",
+          hangingIndent: 0,
+          height: command.height ?? 0,
+        };
+        field.blockOrientation = command.orientation;
+        break;
       case "FieldParameter":
         field.direction = {
           direction: command.direction ?? "H",
@@ -709,7 +722,8 @@ const layout = (
           width: font.width,
           typeface: font.typeface,
           font0,
-          orientation: font.orientation ?? orientation,
+          orientation:
+            field.blockOrientation ?? font.orientation ?? orientation,
           fromBottom: field.fromBottom,
           block: field.block,
           direction: field.direction,

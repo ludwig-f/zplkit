@@ -53,6 +53,8 @@ const serializeCommand = (command: Command): string => {
       return `^LT${params(command.offset)}`;
     case "LabelReverse":
       return `^LR${yn(command.reverse)}`;
+    case "TextBlock":
+      return `^TB${params(command.orientation, command.width, command.height)}`;
     case "FieldParameter":
       return `^FP${params(command.direction, command.gap)}`;
     case "SerialNumber":

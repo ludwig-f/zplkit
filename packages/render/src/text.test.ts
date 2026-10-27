@@ -79,6 +79,38 @@ describe("font 0", () => {
     expect(ink("|")).toStrictEqual([23, 27]);
   });
 
+  describe("^TB", () => {
+    // Zebra's guide: text wraps in the block, and what doesn't fit is cut
+    const sentence =
+      "^A0N,40,40^FDText block wraps this sentence across lines.^FS";
+
+    test("wraps text like ^FB", () => {
+      expect(render(`^FO40,40^TBN,300,200${sentence}`).ink).toStrictEqual(
+        render(`^FO40,40^FB300,5${sentence}`).ink
+      );
+    });
+
+    test("leaves out lines that don't fit its height", () => {
+      // Two lines of 40 fit in 80
+      expect(inkBounds(`^FO40,40^TBN,300,80${sentence}`).y[1]).toBeLessThan(
+        120
+      );
+      expect(inkBounds(`^FO40,40^TBN,300,80${sentence}`).y).toStrictEqual(
+        inkBounds(
+          `^FO40,40^FB300,2${"^A0N,40,40^FDText block wraps this sentence^FS"}`
+        ).y
+      );
+    });
+
+    test("turns the block with its orientation", () => {
+      expect(render(`^FO40,40^TBR,300,200${sentence}`).ink).toStrictEqual(
+        render(
+          `^FO40,40^FB300,5^A0R,40,40^FDText block wraps this sentence across lines.^FS`
+        ).ink
+      );
+    });
+  });
+
   describe("^FP", () => {
     const at = (body: string) => inkBounds(`^FO200,40${body}`);
 

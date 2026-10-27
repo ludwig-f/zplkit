@@ -72,6 +72,14 @@ type FieldParameter = Node<
   "FieldParameter",
   { direction?: "H" | "V" | "R"; gap?: number }
 >;
+/**
+ * `^TBa,b,c`: wraps the field's text in a block b dots wide and c high,
+ * turned to orientation a. Text that doesn't fit is left out.
+ */
+type TextBlock = Node<
+  "TextBlock",
+  { orientation?: Orientation; width?: number; height?: number }
+>;
 /** `^LRa` */
 type LabelReverse = Node<"LabelReverse", { reverse: boolean }>;
 /** `^CIa` */
@@ -653,6 +661,7 @@ type Command =
   | MeasurementUnits
   | SerialNumber
   | FieldParameter
+  | TextBlock
   | SerializationField
   | ChangeEncoding
   | DefaultFont
@@ -735,6 +744,7 @@ export type {
   MeasurementUnits,
   SerialNumber,
   FieldParameter,
+  TextBlock,
   SerializationField,
   ChangeEncoding,
   DefaultFont,

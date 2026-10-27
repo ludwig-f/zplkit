@@ -57,6 +57,10 @@ const commandCases: [Command, string][] = [
   [{ type: "GraphicCircle", diameter: 80, thickness: 4 }, "^GC80,4"],
   [{ type: "LabelShift", shift: 40 }, "^LS40"],
   [{ type: "FieldParameter", direction: "V", gap: 4 }, "^FPV,4"],
+  [
+    { type: "TextBlock", orientation: "N", width: 300, height: 80 },
+    "^TBN,300,80",
+  ],
   [{ type: "PrintMirror", mirror: true }, "^PMY"],
   [{ type: "LabelTop", offset: -20 }, "^LT-20"],
   [
