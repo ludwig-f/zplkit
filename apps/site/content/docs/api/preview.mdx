@@ -18,9 +18,10 @@ import { configure } from "@zplkit/preview";
 | `width`, `height` | `number` | `^PW` and `^LL`, else 4 × 6 in | Label size in millimeters |
 | `dpmm` | `number` | `8` | Dots per millimeter: 6, 8, 12 or 24 |
 | `smoothing` | `number` | `0.4` | Edge smoothing, from 0 (the printer's exact dots) to 1 (fully anti-aliased) |
+| `max-labels`, `maxLabels` | `number` | `20` | Labels to show; past that, a line says how many more there are |
 | `fade` | `boolean` | `false` | Fade labels in when they first appear, over `--zpl-fade-duration` (200 ms) |
 
-The images are styled with `::part(label)`, their container with `::part(labels)` and the error message with `::part(error)`.
+The images are styled with `::part(label)`, their container with `::part(labels)` and the error message with `::part(error)`. Each image is in a `::part(item)`, with copies printed with `^PQ` marked in `::part(copies)`, and the line about more labels is `::part(more)`.
 
 ## Events
 

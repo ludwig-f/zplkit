@@ -19,6 +19,7 @@ type ZplPreviewProps = HTMLAttributes<ZplPreview> &
     height?: number;
     dpmm?: number;
     smoothing?: number;
+    maxLabels?: number;
     fade?: boolean;
     fonts?: Record<string, Uint8Array>;
     font0?: Uint8Array;

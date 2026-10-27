@@ -46,29 +46,30 @@ document.querySelector("zpl-preview").zpl = new Label({
 | `height`    | `height`    | `^LL`, else 6 in  | Label height in millimeters                                                           |
 | `dpmm`      | `dpmm`      | 8                 | Dots per millimeter: 6, 8, 12 or 24 for 152, 203, 300 or 600 dpi                      |
 | `smoothing` | `smoothing` | 0.4               | How much to smooth edges, from 0 (the printer's exact dots) to 1 (fully anti-aliased) |
+| `max-labels` | `maxLabels` | 20               | Labels to show; past that, a line says how many more there are                        |
 | `fade`      | `fade`      | off               | Fade labels in when they first appear, over `--zpl-fade-duration` (200 ms by default) |
 |             | `fonts`     |                   | Fonts stored on the printer, by path like `"E:ARIAL.TTF"`, as `Uint8Array`s           |
 |             | `font0`     |                   | A font file to draw font 0 with instead of the open-licensed stand-in                 |
 
 Thermal printers print hard-edged dots, which look rough on screen. `smoothing` softens the edges by blending the printer's dots with an anti-aliased render. Set it to 0 to see exactly what the printer prints.
 
-ZPL with several labels shows one image per label. Changes made together, like setting `dpmm` and `zpl` one after the other, render once.
+ZPL with several labels shows one image per label. Copies printed with `^PQ` that are all the same show once, marked "+2 identical"; serialized ones (`^SN`, `^SF`) show once each, up to `max-labels`. Changes made together, like setting `dpmm` and `zpl` one after the other, render once.
 
 ### Events
 
 - `zpl-render-start`: a render started, with `event.detail.zpl`. Use it to show a loading state.
-- `zpl-render`: `event.detail.images` holds the rendered PNGs as data URLs, with the label `width` and `height` in millimeters, the `dpmm` used and the `duration` in milliseconds.
+- `zpl-render`: `event.detail.images` holds the rendered PNGs as data URLs, and `copies` how many times each prints. `labels` and `printed` count all the different labels and all the labels printed, also those past `max-labels`. With them come the label `width` and `height` in millimeters, the `dpmm` used and the `duration` in milliseconds.
 - `zpl-error`: `event.detail.error` is the rendering error. The element also shows its message.
 
 ### Styling
 
-The label images, the element around them and the error message are exposed as [parts](https://developer.mozilla.org/en-US/docs/Web/CSS/::part): `zpl-preview::part(label)`, `zpl-preview::part(labels)` and `zpl-preview::part(error)`.
+The label images, the element around them and the error message are exposed as [parts](https://developer.mozilla.org/en-US/docs/Web/CSS/::part): `zpl-preview::part(label)`, `zpl-preview::part(labels)` and `zpl-preview::part(error)`. Each image is in a `part(item)`, with its copies marked in `part(copies)`, and the line about more labels is `part(more)`.
 
 ## Loading the renderer
 
 The renderer, with its fonts and barcode encoders, is loaded with a dynamic `import()` the first time a preview renders, so bundlers put it in a separate chunk and pages without previews never download it.
 
-You can also use a different renderer entirely. It receives the ZPL, the size and whether anti-aliased output is wanted (`grayscale`), and returns one base64 PNG per label:
+You can also use a different renderer entirely. It receives the ZPL, the size, whether anti-aliased output is wanted (`grayscale`) and a `limit` it may ignore, and returns one base64 PNG per label, or `{ png, copies }` objects to mark copies:
 
 ```ts
 configure({
