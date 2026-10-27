@@ -256,7 +256,7 @@ html > body[data-scroll-locked] {
   border-radius: 3px;
 }
 
-/* The hero label feeding out of the printer in whole-dot steps */
+/* The hero labels feeding out of the printer on their liner, in steps */
 @keyframes feed {
   from {
     transform: translateY(-80%);
