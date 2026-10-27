@@ -5,7 +5,7 @@
 
 TypeScript tools for ZPL, the language Zebra label printers speak. Build labels with typed code or JSX, check them for the mistakes printers stay quiet about, and see them before you print.
 
-**[Docs](https://zplkit.fingal.dev/docs)**, a **[playground](https://zplkit.fingal.dev/playground)** and a **[ZPL viewer](https://zplkit.fingal.dev/viewer)** live at [zplkit.fingal.dev](https://zplkit.fingal.dev).
+**[Docs](https://zplkit.fingal.dev/docs)** live at [zplkit.fingal.dev](https://zplkit.fingal.dev), with two tools that run in the browser: the **[playground](https://zplkit.fingal.dev/playground)**, to write labels in code, and the **[ZPL viewer](https://zplkit.fingal.dev/viewer)**, to preview ZPL before it prints.
 
 ```tsx
 import { Label, Text, Code128, build, mm } from "@zplkit/core/jsx";
