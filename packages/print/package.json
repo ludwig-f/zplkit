@@ -1,0 +1,60 @@
+{
+  "name": "@zplkit/print",
+  "version": "0.0.0",
+  "description": "Send ZPL labels to Zebra printers and read their status",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ludwig-f/zplkit.git",
+    "directory": "packages/print"
+  },
+  "keywords": [
+    "zpl",
+    "zebra",
+    "label",
+    "printer",
+    "printing"
+  ],
+  "exports": {
+    ".": {
+      "types": "./build/index.d.ts",
+      "default": "./build/index.js"
+    },
+    "./network": {
+      "types": "./build/network.d.ts",
+      "default": "./build/network.js"
+    },
+    "./usb": {
+      "types": "./build/usb.d.ts",
+      "default": "./build/usb.js"
+    },
+    "./bluetooth": {
+      "types": "./build/bluetooth.d.ts",
+      "default": "./build/bluetooth.js"
+    }
+  },
+  "files": [
+    "build",
+    "CHANGELOG.md",
+    "LICENSE",
+    "README.md"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest --run"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.43",
+    "@zplkit/core": "workspace:^",
+    "typescript": "~5.9.3",
+    "vitest": "^1.6.1"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

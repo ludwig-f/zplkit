@@ -1,0 +1,101 @@
+---
+title: Method calls
+description: Build labels with chained, typed method calls, without JSX.
+---
+
+Without [JSX](/docs/jsx), `Label` builds a label one element at a time. Each method returns the label, so calls can be chained, and `toZPL()` returns the finished ZPL. Both produce the same commands, and units, escaping and images work the same way.
+
+```ts
+import { Label, Orientation, mm, dots } from "@zplkit/core";
+
+const label = new Label({ width: mm(57), height: mm(19), dpmm: 12 })
+  .text({
+    position: { x: mm(2), y: mm(2) },
+    text: "Organic Oat Drink",
+    font: { height: mm(4) },
+  })
+  .ean13({
+    position: { x: mm(2), y: mm(8) },
+    data: "735000123456",
+    height: mm(7),
+    orientation: Orientation.Normal,
+  });
+```
+
+## Units
+
+Every length takes an explicit unit: `mm(10)` for millimeters, `inches(0.5)` for inches or `dots(80)` for printer dots, ZPL's native unit. Millimeters are converted with the label's `dpmm`, and inches with the printer's dpi, so `inches(6)` at 300 dpi is 1800 dots. A bare number is a type error, so units can't be mixed up by accident.
+
+## Elements
+
+There's a method for each kind of element: `text`, `box`, `graphic` and `storedGraphic`, one per barcode, like `code128`, `ean13`, `upcA` and `qrCode`, and `field` for any other command. The [API reference](/docs/api/label) lists them all with every option.
+
+## QR codes
+
+```ts
+label.qrCode({
+  position: { x: mm(2), y: mm(2) },
+  data: "https://example.com/orders/10442",
+  moduleSize: dots(5),
+  errorCorrection: "Q",
+});
+```
+
+`moduleSize` is the size of each square, and `errorCorrection` how much of the code can be damaged and still scan: L (7%), M (15%, the default), Q (25%) or H (30%).
+
+## Escaping
+
+Text and barcode data are escaped for you. Characters that ZPL would read as commands, `^` and `~`, are hex-encoded with `^FH`, so user input can't break a label:
+
+```ts
+label.text({ position: { x: dots(0), y: dots(0) }, text: "50% off ^ today" });
+// ^FO0,0^FH^FD50% off _5E today^FS
+```
+
+## Images
+
+`ImageConverter` turns a PNG or JPEG into a ZPL graphic. It runs in Node only, so it has its own entry point:
+
+```ts
+import { readFileSync } from "node:fs";
+import { Label, mm, dots } from "@zplkit/core";
+import { ImageConverter } from "@zplkit/core/image";
+
+const graphic = await new ImageConverter().toZPL(readFileSync("logo.png"));
+
+new Label({ width: mm(57), height: mm(19), dpmm: 12 })
+  .graphic({ position: { x: dots(0), y: dots(0) }, graphic });
+```
+
+It also takes pixels as `{ width, height, data }` with four bytes per pixel, like a canvas's `ImageData`. Pixels darker than half gray print, and transparent ones don't.
+
+## Commands without a method
+
+For elements without their own method, `field` wraps any command in a field and escapes its data, so user input is still safe. For example, an EAN-8 barcode:
+
+```ts
+label.field({
+  position: { x: mm(2), y: mm(2) },
+  command: "^B8N,100,Y,N",
+  data: "1234567",
+});
+// ^FO24,24^B8N,100,Y,N^FD1234567^FS
+```
+
+Labels are built from typed command nodes, which you can read with `label.commands`. Commands with a typed node but no method can be added with `add()`, and anything else as plain ZPL with `raw()`, the escape hatch. Neither escapes anything, so keep user input out of `raw()`:
+
+```ts
+label.add({ type: "GraphicCircle", diameter: 80, thickness: 4 });
+label.raw("^MMC"); // cut after each label
+```
+
+## Print settings
+
+How many copies print, how fast and how dark are options of the label, since ZPL keeps them with the label they apply to:
+
+```ts
+new Label({ width: mm(57), height: mm(19), dpmm: 12, copies: 3, speed: 4, darkness: 5 });
+// ^XA…^PR4^MD5^PQ3…^XZ
+```
+
+Settings that change the printer itself, like its default darkness or stored graphics, are sent before the label with [`PrinterSetup`](/docs/printing), and a [`PrintJob`](/docs/printing#print-jobs) sends both together. [Lint](/docs/linting#printer-command-in-label) warns when one ends up inside a label.

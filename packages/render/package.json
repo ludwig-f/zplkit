@@ -1,0 +1,54 @@
+{
+  "name": "@zplkit/render",
+  "version": "0.0.0",
+  "description": "Render ZPL labels to images in pure TypeScript, in Node and the browser",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ludwig-f/zplkit.git",
+    "directory": "packages/render"
+  },
+  "keywords": [
+    "zpl",
+    "zebra",
+    "label",
+    "render",
+    "png"
+  ],
+  "exports": {
+    ".": {
+      "types": "./build/index.d.ts",
+      "default": "./build/index.js"
+    }
+  },
+  "files": [
+    "build",
+    "fonts/LICENSE-DejaVu.txt",
+    "fonts/OFL.txt",
+    "fonts/README.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest --run"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "bwip-js": "4.11.4",
+    "fflate": "^0.8.2",
+    "@zplkit/core": "workspace:^"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "typescript": "~5.9.3",
+    "vitest": "^1.6.1"
+  }
+}

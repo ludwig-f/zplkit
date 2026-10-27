@@ -1,0 +1,74 @@
+---
+title: Rendering
+description: Render ZPL to images in Node or the browser with @zplkit/render.
+---
+
+`@zplkit/render` draws ZPL the way a Zebra printer does, dot for dot, in plain TypeScript. It runs in Node and in browsers without WebAssembly or native modules, and powers [`<zpl-preview>`](/docs/preview) and the [ZPL viewer](/viewer).
+
+```bash
+npm install @zplkit/render
+```
+
+```ts
+import { renderZpl } from "@zplkit/render";
+
+// One base64-encoded PNG per label
+const [png] = await renderZpl("^XA^FO50,50^A0,40^FDHello^FS^XZ", {
+  widthMm: 101.6,
+  heightMm: 152.4,
+  dpmm: 8,
+  grayscale: false,
+});
+```
+
+`grayscale: false` gives the printer's dots exactly. `true` anti-aliases edges, which reads better on screen.
+
+For the image data itself, `renderLabels` returns a raster per label, with ink coverage from 0 to 1 for each dot:
+
+```ts
+import { renderLabels, encodePng } from "@zplkit/render";
+
+const [raster] = renderLabels(zpl, { widthMm: 50, heightMm: 25, dpmm: 12 });
+raster.width; // 600
+raster.ink[0]; // 0 (no ink) to 1 (black)
+const png = await encodePng(raster);
+```
+
+## What it draws
+
+- Boxes, circles and diagonal lines (`^GB`, `^GC`, `^GD`), with rounded corners and white lines
+- Images (`^GF`, `~DG` or `~DY` with `^XG`), in hex with Zebra's compression or base64 (`:B64:`, `:Z64:`)
+- Text in font 0 and the bitmap fonts A to H (`^A`, `^CF`), rotated (`^FW`) and wrapped in blocks (`^FB`)
+- Text in TrueType fonts downloaded with `~DU` or `~DY` (hex, `:B64:` or `:Z64:`), called with `^A@` or `^CW`
+- Code 128, Code 39, LOGMARS, Code 93, Code 11, Codabar, MSI, Plessey, and Interleaved, Industrial and Standard 2 of 5, with interpretation lines (`^BY`, `^BC`, `^B3`, `^BL`, `^BA`, `^B1`, `^BK`, `^BM`, `^BP`, `^B2`, `^BI`, `^BJ`)
+- EAN-13, EAN-8, UPC-A, UPC-E and their add-ons (`^BE`, `^B8`, `^BU`, `^B9`, `^BS`)
+- USPS POSTNET, PLANET and Intelligent Mail (`^BZ`, `^B5`), and GS1 DataBar (`^BR`)
+- PDF417, MicroPDF417, QR codes, Data Matrix, Aztec and MaxiCode (`^B7`, `^BF`, `^BQ`, `^BX`, `^BO`, `^B0`, `^BD`)
+- Graphic symbols (`^GS`), stored formats (`^DF`, `^XF`, `^FN`), labels printed upside down (`^PO`) and stored images as backgrounds (`^IL`)
+- Reverse printing (`^FR`, `^LR`), label home (`^LH`), print width (`^PW`) and UTF-8 text (`^CI28`)
+
+Fonts already stored on the printer can be passed in by path. A path without a device matches any device, and a font that isn't there prints in font 0:
+
+```ts
+import { renderZpl } from "@zplkit/render";
+
+const fonts = { "E:ARIAL.TTF": new Uint8Array(await (await fetch("/arial.ttf")).arrayBuffer()) };
+const pngs = await renderZpl(zpl, { widthMm: 101.6, heightMm: 152.4, dpmm: 8, grayscale: false, fonts });
+```
+
+`<zpl-preview>` takes them as its `fonts` property: `preview.fonts = fonts`.
+
+Code 49, CODABLOCK, TLC39 and GS1 DataBar composite symbols, and data a barcode can't encode, show as a crossed-out box naming the command, so they don't go missing silently. Commands it doesn't draw yet are listed per label by `layout()`, so you can warn about them.
+
+## Accuracy
+
+Zebra's built-in fonts are licensed, so zplkit doesn't include them. Open-licensed fonts stand in for them: Archivo for font 0, stretched to font 0's measured letter widths, and DejaVu Sans Mono for fonts A to H. Text takes up the same space as on a printer, but letters look slightly different.
+
+If you have a license for the printer's font 0, pass its TrueType or OpenType file as `font0`, or set the `font0` property of `<zpl-preview>`. Font 0 is then drawn with it, at the same size, and so are fonts the printer doesn't have. The [viewer](/viewer) and [playground](/playground) take font files under **Fonts**; they stay in your browser. A printer draws small text with its own hinting, so a few dots can still differ.
+
+```ts
+const font0 = new Uint8Array(await (await fetch("/your-font-0.ttf")).arrayBuffer());
+const pngs = await renderZpl(zpl, { widthMm: 101.6, heightMm: 152.4, dpmm: 8, grayscale: false, font0 });
+```
+
+Everything else is tested dot for dot against how Zebra printers draw it. Shapes, images and barcode bars come out exactly as printed, and interpretation lines sit where a printer puts them. Data Matrix, PDF417 and MicroPDF417 symbols are the same size as a printer's, but may encode the data differently, which scanners read the same. Long runs of digits can make a PDF417 symbol a row shorter.

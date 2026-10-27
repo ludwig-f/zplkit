@@ -1,0 +1,49 @@
+---
+title: Getting started
+description: Install zplkit and build your first label.
+---
+
+## Install
+
+```bash
+npm install @zplkit/core
+```
+
+## Build a label
+
+A label has a size and a resolution. Zebra printers come in 6, 8, 12 and 24 dots per millimeter (152, 203, 300 and 600 dpi); use the one your printer has.
+
+```tsx title="label.tsx"
+import { Label, Text, Code128, build, inches, mm } from "@zplkit/core/jsx";
+
+const label = build(
+  <Label width={inches(4)} height={inches(2)} dpmm={8}>
+    <Text x={mm(5)} y={mm(5)} height={mm(7)}>
+      Harbor Parts Co.
+    </Text>
+    <Code128 x={mm(5)} y={mm(20)} height={mm(13)}>
+      10442-B3
+    </Code128>
+  </Label>
+);
+
+const zpl = label.toZPL();
+// ^XA^PW812^LL406^LRN^CI28^LH0,0^FO40,40^A0,56^FDHarbor Parts Co.^FS...^XZ
+```
+
+In a React project this works as it is. Otherwise, tell TypeScript to use zplkit's JSX runtime with `"jsxImportSource": "@zplkit/core"`; [JSX](/docs/jsx#setup) has the details. To build labels without JSX, use [method calls](/docs/building-labels).
+
+`toZPL()` returns the ZPL text to send to the printer. To see what it looks like first, paste it into the [ZPL viewer](/viewer) or show it with the [preview component](/docs/preview).
+
+## Check it
+
+```ts
+const problems = label.lint();
+```
+
+`lint()` returns problems the printer wouldn't report, like a box thinner than its line or a field outside the label. See [linting](/docs/linting).
+
+## Next steps
+
+- Write your own label components with [JSX](/docs/jsx).
+- [Send the label to a printer](/docs/printing).

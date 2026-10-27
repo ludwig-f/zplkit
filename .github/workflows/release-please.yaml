@@ -5,41 +5,54 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+  pull-requests: write
+  # npm trusted publishing: npm checks the workflow's OIDC token instead of
+  # a stored secret
+  id-token: write
+
 jobs:
   release-please:
     runs-on: ubuntu-latest
     steps:
-      - uses: google-github-actions/release-please-action@v4
+      # Versions and changelogs per package come from release-please-config.json
+      - uses: googleapis/release-please-action@5c625bfb5d1ff62eadeeb3772007f7f66fdcf071 # v4.4.1
         id: release
         with:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
-          release-type: node
-      - uses: actions/checkout@v4
-        if: ${{ steps.release.outputs.release_created }}
-      - uses: actions/setup-node@v4
+
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        if: ${{ steps.release.outputs.releases_created == 'true' }}
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+        if: ${{ steps.release.outputs.releases_created == 'true' }}
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        if: ${{ steps.release.outputs.releases_created == 'true' }}
         with:
-          node-version: 20
+          # Node 24 comes with npm 11, which trusted publishing needs
+          node-version: 24
+          cache: pnpm
           registry-url: "https://registry.npmjs.org"
-        if: ${{ steps.release.outputs.release_created }}
-      - run: npm ci
-        if: ${{ steps.release.outputs.release_created }}
-      - run: npm run build
-        if: ${{ steps.release.outputs.release_created }}
-      - run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
-        if: ${{ steps.release.outputs.release_created }}
-      - name: tag major and minor versions
-        if: ${{ steps.release.outputs.release_created }}
+      - run: pnpm install --frozen-lockfile
+        if: ${{ steps.release.outputs.releases_created == 'true' }}
+      - run: pnpm build
+        if: ${{ steps.release.outputs.releases_created == 'true' }}
+      # Publishes every package whose version isn't on npm yet. pnpm packs
+      # them, turning workspace:* dependencies into versions, and npm
+      # publishes with trusted publishing, adding provenance
+      - name: Publish to npm
+        if: ${{ steps.release.outputs.releases_created == 'true' }}
         run: |
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git remote add gh-token "https://${{ secrets.GITHUB_TOKEN }}@github.com/google-github-actions/release-please-action.git"
-          git tag -d v${{ steps.release.outputs.major }} || true
-          git tag -d v${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }} || true
-          git push origin :v${{ steps.release.outputs.major }} || true
-          git push origin :v${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }} || true
-          git tag -a v${{ steps.release.outputs.major }} -m "Release v${{ steps.release.outputs.major }}"
-          git tag -a v${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }} -m "Release v${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }}"
-          git push origin v${{ steps.release.outputs.major }}
-          git push origin v${{ steps.release.outputs.major }}.${{ steps.release.outputs.minor }}
+          for dir in packages/*/; do
+            name=$(node -p "require('./${dir}package.json').name")
+            version=$(node -p "require('./${dir}package.json').version")
+            if [ "$(node -p "require('./${dir}package.json').private === true")" = true ]; then
+              continue
+            fi
+            if npm view "$name@$version" version > /dev/null 2>&1; then
+              echo "$name@$version is already on npm"
+              continue
+            fi
+            tarball=$(cd "$dir" && pnpm pack --pack-destination "$RUNNER_TEMP" | tail -n 1)
+            npm publish "$tarball" --access public
+          done

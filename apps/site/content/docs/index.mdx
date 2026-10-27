@@ -1,0 +1,35 @@
+---
+title: Introduction
+description: TypeScript tools for ZPL, the language Zebra label printers speak.
+---
+
+ZPL (Zebra Programming Language) is the text format thermal label printers understand. A label is a stream of commands like `^FO50,50` (move to 50, 50) and `^FDHello^FS` (print "Hello"). The printer reads the text and draws the label itself, dot by dot.
+
+Writing ZPL by hand is fiddly, and printers don't report mistakes: they quietly clamp values, skip fields or print nothing at all. zplkit helps at each step:
+
+<Cards>
+  <Card title="Build labels" href="/docs/jsx">
+    JSX or typed method calls, with explicit units and automatic escaping.
+  </Card>
+  <Card title="Parse and lint" href="/docs/linting">
+    Read existing ZPL and find problems before anything is printed.
+  </Card>
+  <Card title="Preview" href="/docs/preview">
+    Show labels as images in the browser, in any framework.
+  </Card>
+  <Card title="Print" href="/docs/printing">
+    Send labels to Zebra printers and store graphics on them.
+  </Card>
+</Cards>
+
+## Packages
+
+| Package | What it does |
+| --- | --- |
+| `@zplkit/core` | Build labels with JSX or method calls, parse and lint ZPL |
+| `@zplkit/render` | Renders ZPL to images in Node or the browser, the way a printer draws it |
+| `@zplkit/preview` | `<zpl-preview>`, a web component that renders ZPL in the browser |
+
+All three are ES modules and need Node 22 or newer. They're open source under the MIT license; the code is on [GitHub](https://github.com/ludwig-f/zplkit).
+
+To try zplkit without installing anything, write a label in the [playground](/playground). To see existing ZPL, paste it into the [ZPL viewer](/viewer).

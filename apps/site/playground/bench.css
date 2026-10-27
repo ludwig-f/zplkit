@@ -1,0 +1,211 @@
+/*
+ * The label bench: labels on their backing paper under a millimeter ruler.
+ * Self-contained so it works in the playground and on other pages.
+ */
+.bench {
+  --label-gap: 14px;
+  --liner: var(--zk-liner);
+  --liner-edge: var(--zk-rule-strong);
+  --bench-muted: var(--zk-muted);
+
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 10px;
+}
+
+.bench .liner {
+  max-width: 100%;
+  padding: 10px 10px 14px;
+  border: 1px solid var(--liner-edge);
+  border-radius: 3px;
+  background: var(--liner);
+}
+
+/*
+ * Rulers along the top and left edges, meeting at the label's corner. The
+ * frame is a container, so the left ruler's height follows the label width.
+ */
+.bench .frame {
+  container-type: inline-size;
+  display: grid;
+  grid-template-columns: var(--ruler) minmax(0, 1fr);
+  grid-template-rows: 22px auto;
+  row-gap: 6px;
+}
+
+.bench .ruler {
+  position: relative;
+  color: var(--bench-muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.bench .ruler.horizontal {
+  grid-column: 2;
+  border-bottom: 1px solid var(--bench-muted);
+}
+
+/* One ruler per label, spaced like the labels */
+.bench .vertical-rulers {
+  display: flex;
+  flex-direction: column;
+  gap: var(--label-gap);
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.bench .ruler.vertical {
+  flex: none;
+  /* The label's height at the width it's shown */
+  height: calc((100cqw - var(--ruler)) * var(--aspect));
+  margin-right: 6px;
+  border-right: 1px solid var(--bench-muted);
+}
+
+.bench .tick {
+  position: absolute;
+  background: currentColor;
+}
+
+.bench .horizontal .tick {
+  bottom: 0;
+  width: 1px;
+  height: 4px;
+}
+
+.bench .horizontal .tick.mid {
+  height: 7px;
+}
+
+.bench .horizontal .tick.major {
+  height: 11px;
+}
+
+.bench .vertical .tick {
+  right: 0;
+  width: 4px;
+  height: 1px;
+}
+
+.bench .vertical .tick.mid {
+  width: 7px;
+}
+
+.bench .vertical .tick.major {
+  width: 11px;
+}
+
+.bench .tick-label {
+  position: absolute;
+  line-height: 1;
+}
+
+.bench .horizontal .tick-label {
+  bottom: 11px;
+  left: 0;
+  transform: translateX(-50%);
+}
+
+.bench .vertical .tick-label {
+  right: 13px;
+  top: 0;
+  transform: translateY(-50%);
+}
+
+/* Where the pointer is, on each ruler */
+.bench .marker {
+  position: absolute;
+  background: var(--zk-accent);
+}
+
+.bench .horizontal .marker {
+  bottom: 0;
+  width: 2px;
+  height: 100%;
+  transform: translateX(-1px);
+}
+
+.bench .vertical .marker {
+  right: 0;
+  width: 100%;
+  height: 2px;
+  transform: translateY(-1px);
+}
+
+.bench .labels {
+  position: relative;
+  grid-column: 2;
+  grid-row: 2;
+  min-width: 0;
+}
+
+.bench .labels.tracking {
+  cursor: crosshair;
+}
+
+.bench .guides {
+  position: absolute;
+  overflow: hidden;
+  border-radius: 6px;
+  pointer-events: none;
+}
+
+.bench .guide {
+  position: absolute;
+  background: color-mix(in srgb, var(--zk-accent) 70%, transparent);
+}
+
+.bench .guide.vertical {
+  top: 0;
+  bottom: 0;
+  width: 1px;
+}
+
+.bench .guide.horizontal {
+  left: 0;
+  right: 0;
+  height: 1px;
+}
+
+.bench zpl-preview {
+  display: block;
+  width: 100%;
+}
+
+.bench zpl-preview::part(labels) {
+  gap: var(--label-gap);
+}
+
+/* Die-cut labels: slightly rounded corners on white stock */
+.bench zpl-preview::part(label),
+.bench .label-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+  background: var(--zk-paper);
+  box-shadow: var(--shadow-label);
+}
+
+.bench zpl-preview::part(error) {
+  padding: 12px;
+  border-radius: 6px;
+}
+
+.bench .size {
+  margin: 0;
+  color: var(--bench-muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * Labels aren't inverted in dark mode, which would misrepresent what prints:
+ * the white paper dims to a warm tone near the paper token, and black stays black
+ */
+.dark .bench zpl-preview::part(label),
+.dark .bench .label-image,
+.dark .label-dim {
+  filter: brightness(0.91) sepia(0.12);
+}

@@ -1,0 +1,55 @@
+---
+title: "@zplkit/preview"
+description: The <zpl-preview> element, its events and configure().
+---
+
+```ts
+import "@zplkit/preview";
+import { configure } from "@zplkit/preview";
+```
+
+[Preview](/docs/preview) shows how to use it in each framework.
+
+## \<zpl-preview>
+
+| Attribute or property | Type | Default | Description |
+| --- | --- | --- | --- |
+| `zpl` | `string`, or anything with `toZPL()` | | The ZPL to show. Only the property takes a `Label`. |
+| `width`, `height` | `number` | `^PW` and `^LL`, else 4 × 6 in | Label size in millimeters |
+| `dpmm` | `number` | `8` | Dots per millimeter: 6, 8, 12 or 24 |
+| `smoothing` | `number` | `0.4` | Edge smoothing, from 0 (the printer's exact dots) to 1 (fully anti-aliased) |
+| `fade` | `boolean` | `false` | Fade labels in when they first appear, over `--zpl-fade-duration` (200 ms) |
+
+The images are styled with `::part(label)`, their container with `::part(labels)` and the error message with `::part(error)`.
+
+## Events
+
+### zpl-render-start
+
+<auto-type-table cwd path="../../packages/preview/src/index.ts" name="RenderStartDetail" />
+
+### zpl-render
+
+<auto-type-table cwd path="../../packages/preview/src/index.ts" name="RenderDetail" />
+
+### zpl-error
+
+<auto-type-table cwd path="../../packages/preview/src/index.ts" name="ErrorDetail" />
+
+## configure
+
+```ts
+configure(options: ConfigureOptions): void
+```
+
+Changes how every preview on the page renders.
+
+<auto-type-table cwd path="../../packages/preview/src/index.ts" name="ConfigureOptions" />
+
+A renderer is a function `(zpl, options) => Promise<string[]>` that returns one base64-encoded PNG per label. It's called with:
+
+<auto-type-table cwd path="../../packages/preview/src/index.ts" name="RenderOptions" />
+
+## React
+
+`import "@zplkit/preview/react"` registers the element and adds its props to React's JSX types, including `onzpl-render-start`, `onzpl-render` and `onzpl-error`. Its props type is exported as `ZplPreviewProps`.

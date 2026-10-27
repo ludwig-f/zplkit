@@ -1,0 +1,1412 @@
+{
+  "categories": [
+    "Labels and formats",
+    "Fields",
+    "Text and fonts",
+    "Graphics and images",
+    "Barcodes",
+    "Printer and media"
+  ],
+  "commands": [
+    {
+      "code": "^A",
+      "name": "Scalable/bitmapped font",
+      "category": "Text and fonts",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^A@",
+      "name": "Use font name to call font",
+      "category": "Text and fonts",
+      "support": "yes",
+      "drawn": true,
+      "note": "Needs the font file, downloaded in the label or passed to the renderer"
+    },
+    {
+      "code": "^B0",
+      "name": "Aztec bar code parameters",
+      "category": "Barcodes",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^B1",
+      "name": "Code 11 bar code",
+      "category": "Barcodes",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^B2",
+      "name": "Interleaved 2 of 5 bar code",
+      "category": "Barcodes",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^B3",
+      "name": "Code 39 bar code",
+      "category": "Barcodes",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^B4",
+      "name": "Code 49 bar code",
+      "category": "Barcodes",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^B5",
+      "name": "Planet Code bar code",
+      "category": "Barcodes",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^B7",
+      "name": "PDF417 bar code",
+      "category": "Barcodes",
+      "support": "yes",
+      "drawn": true,
+      "note": "Same size as a printer's symbol; error correction codewords can differ"
+    },
+    {
+      "code": "^B8",
+      "name": "EAN-8 bar code",
+      "category": "Barcodes",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^B9",
+      "name": "UPC-E bar code",
+      "category": "Barcodes",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^BA",
+      "name": "Code 93 bar code",
+      "category": "Barcodes",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^BB",
+      "name": "CODABLOCK bar code",
+      "category": "Barcodes",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^BC",
+      "name": "Code 128 bar code (subsets A, B, and C)",
+      "category": "Barcodes",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^BD",
+      "name": "UPS MaxiCode bar code",
+      "category": "Barcodes",
+      "support": "yes",
+      "drawn": true,
+      "note": "Modes 2 to 6"
+    },
+    {
+      "code": "^BE",
+      "name": "EAN-13 bar code",
+      "category": "Barcodes",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^BF",
+      "name": "MicroPDF417 bar code",
+      "category": "Barcodes",
+      "support": "yes",
+      "drawn": true,
+      "note": "Same size as a printer's symbol; data can be encoded differently"
+    },
+    {
+      "code": "^BI",
+      "name": "Industrial 2 of 5 bar code",
+      "category": "Barcodes",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^BJ",
+      "name": "Standard 2 of 5 bar code",
+      "category": "Barcodes",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^BK",
+      "name": "ANSI Codabar bar code",
+      "category": "Barcodes",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^BL",
+      "name": "LOGMARS bar code",
+      "category": "Barcodes",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^BM",
+      "name": "MSI bar code",
+      "category": "Barcodes",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^BO",
+      "name": "Aztec bar code",
+      "category": "Barcodes",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^BP",
+      "name": "Plessey bar code",
+      "category": "Barcodes",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^BQ",
+      "name": "QR Code bar code",
+      "category": "Barcodes",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^BR",
+      "name": "RSS (Reduced Space Symbology) bar code",
+      "category": "Barcodes",
+      "support": "partial",
+      "drawn": true,
+      "note": "Types 1 to 6; composite symbols show a placeholder"
+    },
+    {
+      "code": "^BS",
+      "name": "UPC/EAN bar code",
+      "category": "Barcodes",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^BT",
+      "name": "TLC39 bar code",
+      "category": "Barcodes",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^BU",
+      "name": "UPC-A bar code",
+      "category": "Barcodes",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^BX",
+      "name": "Data Matrix bar code",
+      "category": "Barcodes",
+      "support": "yes",
+      "drawn": true,
+      "note": "Same size as a printer's symbol; data can be encoded differently"
+    },
+    {
+      "code": "^BY",
+      "name": "Bar code field default",
+      "category": "Barcodes",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^BZ",
+      "name": "POSTNET bar code",
+      "category": "Barcodes",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^CC",
+      "name": "Change Caret",
+      "category": "Labels and formats",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "~CC",
+      "name": "Change Caret",
+      "category": "Labels and formats",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^CD",
+      "name": "Change Delimiter",
+      "category": "Labels and formats",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "~CD",
+      "name": "Change Delimiter",
+      "category": "Labels and formats",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^CF",
+      "name": "Change Alphanumeric Default Font",
+      "category": "Text and fonts",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^CI",
+      "name": "Change International Font/Encoding",
+      "category": "Text and fonts",
+      "support": "partial",
+      "drawn": true,
+      "note": "UTF-8 (28 to 30) and Latin-1"
+    },
+    {
+      "code": "^CM",
+      "name": "Change Memory Letter Designation",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^CO",
+      "name": "Cache On",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^CT",
+      "name": "Change Tilde",
+      "category": "Labels and formats",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "~CT",
+      "name": "Change Tilde",
+      "category": "Labels and formats",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^CV",
+      "name": "Code Validation",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^CW",
+      "name": "Font Identifier",
+      "category": "Text and fonts",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "~DB",
+      "name": "Download Bitmap Font",
+      "category": "Text and fonts",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "~DE",
+      "name": "Download Encoding",
+      "category": "Text and fonts",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^DF",
+      "name": "Download Format",
+      "category": "Labels and formats",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "~DG",
+      "name": "Download Graphics",
+      "category": "Graphics and images",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "~DN",
+      "name": "Abort Download Graphics",
+      "category": "Graphics and images",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "~DS",
+      "name": "Download Intellifont (Scalable Font)",
+      "category": "Text and fonts",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "~DT",
+      "name": "Download Bounded TrueType font",
+      "category": "Text and fonts",
+      "support": "partial",
+      "drawn": false,
+      "note": "Bounded fonts use Zebra's own format, which isn't drawn"
+    },
+    {
+      "code": "~DU",
+      "name": "Download Unbounded TrueType font",
+      "category": "Text and fonts",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "~DY",
+      "name": "Download Graphics / Native TrueType or OpenType font",
+      "category": "Graphics and images",
+      "support": "yes",
+      "drawn": true,
+      "note": "TrueType fonts and graphics"
+    },
+    {
+      "code": "~EG",
+      "name": "Erase Download Graphics",
+      "category": "Graphics and images",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^FB",
+      "name": "Field Block",
+      "category": "Text and fonts",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^FC",
+      "name": "Field Clock (or Real Time Clock)",
+      "category": "Fields",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^FD",
+      "name": "Field Data",
+      "category": "Fields",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^FH",
+      "name": "Field Hexadecimal Indicator",
+      "category": "Text and fonts",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^FM",
+      "name": "Multiple Field Origin Locations",
+      "category": "Fields",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^FN",
+      "name": "Field Number",
+      "category": "Fields",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^FO",
+      "name": "Field Origin",
+      "category": "Fields",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^FP",
+      "name": "Field Parameter",
+      "category": "Fields",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^FR",
+      "name": "Field Reverse Print",
+      "category": "Fields",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^FS",
+      "name": "Field Separator",
+      "category": "Fields",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^FT",
+      "name": "Field Typeset",
+      "category": "Fields",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^FV",
+      "name": "Field Variable",
+      "category": "Fields",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^FW",
+      "name": "Field Orientation",
+      "category": "Fields",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^FX",
+      "name": "Comment",
+      "category": "Fields",
+      "support": "yes",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^GB",
+      "name": "Graphic Box",
+      "category": "Graphics and images",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^GC",
+      "name": "Graphic Circle",
+      "category": "Graphics and images",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^GD",
+      "name": "Graphic Diagonal Line",
+      "category": "Graphics and images",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^GE",
+      "name": "Graphic Ellipse",
+      "category": "Graphics and images",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^GF",
+      "name": "Graphic Field",
+      "category": "Graphics and images",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^GS",
+      "name": "Graphic Symbol",
+      "category": "Graphics and images",
+      "support": "partial",
+      "drawn": true,
+      "note": "The UL and CSA marks are drawn as stand-ins"
+    },
+    {
+      "code": "~HB",
+      "name": "Battery Status",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "~HD",
+      "name": "Head Diagnostic",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^HF",
+      "name": "Host Format",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^HG",
+      "name": "Host Graphic",
+      "category": "Graphics and images",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^HH",
+      "name": "Configuration Label Return",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "~HI",
+      "name": "Host Identification",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "~HM",
+      "name": "Host RAM Status",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "~HS",
+      "name": "Host Status Return",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "~HU",
+      "name": "Return ZebraNet Alert Configuration",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^HV",
+      "name": "Host Verification",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^HW",
+      "name": "Host Directory List",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^HY",
+      "name": "Upload Graphics",
+      "category": "Graphics and images",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^HZ",
+      "name": "Display Description Information",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^ID",
+      "name": "Object Delete",
+      "category": "Graphics and images",
+      "support": "yes",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^IL",
+      "name": "Image Load",
+      "category": "Graphics and images",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^IM",
+      "name": "Image Move",
+      "category": "Graphics and images",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^IS",
+      "name": "Image Save",
+      "category": "Graphics and images",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "~JA",
+      "name": "Cancel All",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^JB",
+      "name": "Initialize Flash Memory",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "~JB",
+      "name": "Reset Optional Memory",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "~JC",
+      "name": "Set Media Sensor Calibration",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "~JD",
+      "name": "Enable Communications Diagnostics",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "~JE",
+      "name": "Disable Diagnostics",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "~JF",
+      "name": "Set Battery Condition",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "~JG",
+      "name": "Graphing Sensor Calibration",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^JJ",
+      "name": "Set Auxiliary Port",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "~JL",
+      "name": "Set Label Length",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^JM",
+      "name": "Set Dots per Millimeter",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "~JN",
+      "name": "Head Test Fatal",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "~JO",
+      "name": "Head Test Non-Fatal",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "~JP",
+      "name": "Pause and Cancel Format",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "~JR",
+      "name": "Power On Reset",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^JS",
+      "name": "Sensor Select",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "~JS",
+      "name": "Change Backfeed Sequence",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^JT",
+      "name": "Head Test Interval",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^JU",
+      "name": "Configuration Update",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^JW",
+      "name": "Set Ribbon Tension",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "~JX",
+      "name": "Cancel Current Partially Input Format",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^JZ",
+      "name": "Reprint After Error",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "~KB",
+      "name": "Kill Battery (Battery Discharge Mode)",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^KD",
+      "name": "Select Date and Time Format (for Real Time Clock)",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^KL",
+      "name": "Define Language",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^KN",
+      "name": "Define Printer Name",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^KP",
+      "name": "Set Password",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^LH",
+      "name": "Label Home",
+      "category": "Labels and formats",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^LL",
+      "name": "Label Length",
+      "category": "Labels and formats",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^LR",
+      "name": "Label Reverse Print",
+      "category": "Labels and formats",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^LS",
+      "name": "Label Shift",
+      "category": "Labels and formats",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^LT",
+      "name": "Label Top",
+      "category": "Labels and formats",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^MC",
+      "name": "Map Clear",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^MD",
+      "name": "Media Darkness",
+      "category": "Printer and media",
+      "support": "yes",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^MF",
+      "name": "Media Feed",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^ML",
+      "name": "Maximum Label Length",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^MM",
+      "name": "Print Mode",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^MN",
+      "name": "Media Tracking",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^MP",
+      "name": "Mode Protection",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^MT",
+      "name": "Media Type",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^MU",
+      "name": "Set Units of Measurement",
+      "category": "Labels and formats",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^MW",
+      "name": "Modify Head Cold Warning",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "~NC",
+      "name": "Network Connect",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^NI",
+      "name": "Network ID Number",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "~NR",
+      "name": "Set All Printers Transparent",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^NS",
+      "name": "Change Networking Settings",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "~NT",
+      "name": "Set Currently Connected Printer Transparent",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^PF",
+      "name": "Slew Given Number of Dot Rows",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^PH",
+      "name": "Slew to Home Position",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "~PH",
+      "name": "Slew to Home Position",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^PM",
+      "name": "Printing Mirror Image of Label",
+      "category": "Labels and formats",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^PO",
+      "name": "Print Orientation",
+      "category": "Labels and formats",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^PP",
+      "name": "Programmable Pause",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "~PP",
+      "name": "Programmable Pause",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^PQ",
+      "name": "Print Quantity",
+      "category": "Printer and media",
+      "support": "yes",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^PR",
+      "name": "Print Rate",
+      "category": "Printer and media",
+      "support": "yes",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "~PR",
+      "name": "Applicator Reprint",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "~PS",
+      "name": "Print Start",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^PW",
+      "name": "Print Width",
+      "category": "Labels and formats",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "~RO",
+      "name": "Reset Advanced Counter",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^SC",
+      "name": "Set Serial Communications",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "~SD",
+      "name": "Set Darkness",
+      "category": "Printer and media",
+      "support": "yes",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^SE",
+      "name": "Select Encoding",
+      "category": "Text and fonts",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^SF",
+      "name": "Serialization Field (with a standard ^FD String)",
+      "category": "Fields",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^SL",
+      "name": "Set Mode and Language",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^SN",
+      "name": "Serialization Data",
+      "category": "Fields",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^SO",
+      "name": "Set Offset (for Real Time Clock)",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^SP",
+      "name": "Start Print",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^SQ",
+      "name": "Halt ZebraNet Alert",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^SR",
+      "name": "Set Printhead Resistance",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^SS",
+      "name": "Set Media Sensors",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^ST",
+      "name": "Set Date and Time (for Real Time Clock)",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^SX",
+      "name": "Set ZebraNet Alert",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^SZ",
+      "name": "Set ZPL Mode",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "~TA",
+      "name": "Tear-off Adjust Position",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^TO",
+      "name": "Transfer Object",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "~WC",
+      "name": "Print Configuration Label",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^WD",
+      "name": "Print Directory Label",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^XA",
+      "name": "Start Format",
+      "category": "Labels and formats",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^XB",
+      "name": "Suppress Backfeed",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    },
+    {
+      "code": "^XF",
+      "name": "Recall Format",
+      "category": "Labels and formats",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^XG",
+      "name": "Recall Graphic",
+      "category": "Graphics and images",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^XZ",
+      "name": "End Format",
+      "category": "Labels and formats",
+      "support": "yes",
+      "drawn": true,
+      "note": ""
+    },
+    {
+      "code": "^ZZ",
+      "name": "Printer Sleep",
+      "category": "Printer and media",
+      "support": "no",
+      "drawn": false,
+      "note": ""
+    }
+  ]
+}

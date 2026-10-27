@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "packages": {
+    "packages/zpl": {
+      "release-type": "node",
+      "package-name": "@zplkit/core",
+      "include-component-in-tag": false
+    },
+    "packages/render": {
+      "release-type": "node",
+      "package-name": "@zplkit/render",
+      "initial-version": "0.1.0"
+    },
+    "packages/preview": {
+      "release-type": "node",
+      "package-name": "@zplkit/preview",
+      "initial-version": "0.1.0"
+    },
+    "packages/print": {
+      "release-type": "node",
+      "package-name": "@zplkit/print",
+      "initial-version": "0.1.0"
+    }
+  }
+}

@@ -1,0 +1,38 @@
+---
+title: "@zplkit/render"
+description: Render ZPL to images in Node or the browser.
+---
+
+```ts
+import { renderZpl, renderLabels, encodePng } from "@zplkit/render";
+```
+
+[Rendering](/docs/rendering) explains how the renderer draws labels.
+
+## renderZpl
+
+```ts
+renderZpl(zpl: string, options: RenderZplOptions): Promise<string[]>
+```
+
+Renders ZPL to one base64-encoded PNG per label. It's what `<zpl-preview>` uses, and can be passed to its `configure({ render })`.
+
+<auto-type-table cwd path="../../packages/render/src/index.ts" name="RenderZplOptions" />
+
+## renderLabels
+
+```ts
+renderLabels(zpl: string, options: RenderOptions): Raster[]
+```
+
+Renders ZPL to one `Raster` per label: its `width` and `height` in dots, and `ink`, a `Float32Array` with one value per dot from 0 (blank) to 1 (printed), row by row. Use it to process the dots yourself.
+
+<auto-type-table cwd path="../../packages/render/src/render.ts" name="RenderOptions" />
+
+## encodePng
+
+```ts
+encodePng(raster: Raster): Promise<Uint8Array>
+```
+
+Encodes a `Raster` as a grayscale PNG, returned as a `Promise<Uint8Array>`.

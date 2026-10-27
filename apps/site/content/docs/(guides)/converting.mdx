@@ -1,0 +1,54 @@
+---
+title: Converting ZPL to code
+description: Turn existing ZPL into zplkit JSX or Label method calls.
+---
+
+`convert()` turns ZPL into zplkit code, so labels written by hand or exported from a label designer can move into a project. The [ZPL viewer](/viewer) does the same under **Export**, where **Open in playground** carries the label on as code.
+
+```ts
+import { convert } from "@zplkit/core/convert";
+
+convert("^XA^PW400^LL200^FO40,40^A0N,32^FDHello^FS^FO40,90^GB320,3,3^FS^XZ");
+```
+
+```tsx
+import { Label, Box, Text, build, Orientation, dots, mm } from "@zplkit/core/jsx";
+
+const label = build(
+  <Label width={mm(50)} height={mm(25)} dpmm={8}>
+    <Text x={mm(5)} y={mm(5)} font="0" height={mm(4)} orientation={Orientation.Normal}>Hello</Text>
+    <Box x={mm(5)} y={mm(11.25)} width={mm(40)} height={dots(3)} thickness={dots(3)} />
+  </Label>
+);
+```
+
+Pass `{ style: "builder" }` for Label method calls instead:
+
+```ts
+import { Label, Orientation, dots, mm } from "@zplkit/core";
+
+const label = new Label({ width: mm(50), height: mm(25), dpmm: 8 })
+  .text({
+    position: { x: mm(5), y: mm(5) },
+    text: "Hello",
+    font: { name: "0", height: mm(4), orientation: Orientation.Normal },
+  })
+  .box({
+    position: { x: mm(5), y: mm(11.25) },
+    width: mm(40),
+    height: dots(3),
+    thickness: dots(3),
+  });
+```
+
+## What you get
+
+- The code builds the same label. Each field is converted, built again and compared with the original; fields that don't come out the same are kept as `field()` calls or raw ZPL, so nothing changes what prints.
+- Lengths are in millimeters when they convert back to exactly the same dots at the label's resolution, and in dots otherwise. Pass `{ units: "dots" }` to keep every length in dots.
+- `^FX` comments become code comments.
+- Commands without an element, like `^BY`, are kept as `<Raw>` elements or `raw()` calls in the same place.
+- Printer setup before or between labels, like `~SD`, becomes a `PrinterSetup`, and setup with several labels is put together in a `PrintJob`.
+- Field data written with `^FH` hex escapes is decoded, and zplkit escapes it again where needed.
+- A label with non-ASCII text and no `^CI` gets a comment: zplkit writes `^CI28` for UTF-8, which the original printed with a different character set.
+
+Set `dpmm` to the resolution the ZPL was written for, since millimeters depend on it. `labelSize` gives the size of labels that don't set `^PW` and `^LL`. The [API reference](/docs/api/convert) lists every option.

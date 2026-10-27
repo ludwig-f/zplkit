@@ -1,0 +1,84 @@
+---
+title: Linting
+description: Find problems in labels that printers don't report.
+---
+
+Printers don't report mistakes. They quietly clamp values, ignore commands or never print a label. `lint()` finds these problems before you print.
+
+```ts
+import { parse, lint } from "@zplkit/core";
+
+lint(parse("^XA^FO10,10^GB1,64,2^FS^FO40,40^BE^FD123^FS").commands);
+// [
+//   { rule: "box-smaller-than-line", severity: "warning", index: 2, span: { start: 11, end: 20 },
+//     message: "The box is 1 dot wide but its line is 2 dots thick, so the printer widens it to 2 dots." },
+//   { rule: "ean13-data", severity: "warning", ... },
+//   { rule: "missing-end-format", severity: "error", ... },
+// ]
+```
+
+Labels built with `Label` or JSX can be checked with `label.lint()`. Each problem has the command's `index` and, for parsed ZPL, its `span` in the text.
+
+**Errors** stop the label from printing as intended. **Warnings** mean the printer will change something.
+
+<Callout type="warn" title="The printer won't tell you">
+  None of these problems show up as an error on the printer. A skipped field leaves blank space, and a label without `^XZ` leaves the printer waiting. Treat warnings as failed prints.
+</Callout>
+
+## Media size
+
+Labels that don't set `^PW` and `^LL` take their size from the printer. Pass the media size in dots to check them too:
+
+```ts
+lint(commands, { width: 812, length: 406 });
+```
+
+## Rules
+
+### missing-start-format
+
+**Error.** Commands come before the first `^XA`. The printer ignores everything outside `^XA` … `^XZ`.
+
+### missing-end-format
+
+**Error.** The label never ends with `^XZ`, so the printer keeps waiting for the rest and nothing prints.
+
+### unclosed-field
+
+**Error.** A field started with `^FO` or `^FT` is never closed with `^FS`, so it merges with the next field.
+
+### command-outside-format
+
+**Warning.** A command comes after `^XZ` and before the next `^XA`, so the printer ignores it.
+
+### separator-without-field
+
+**Warning.** A `^FS` has no `^FO` or `^FT` before it. Watch out for comments: a `^FX` comment ends at the next `^`, so `^FX close with ^FS` contains a real `^FS`.
+
+### field-outside-label
+
+**Warning.** A field starts outside the label, so it may not print. A right-justified field can still reach into the label.
+
+### box-smaller-than-line
+
+**Warning.** A box is narrower or shorter than its line thickness. The printer enlarges the box to the thickness.
+
+### value-out-of-range
+
+**Warning.** A value is outside what the printer accepts, for example a `^BY` module width above 10. The printer clamps it or uses the default.
+
+### ean13-data
+
+**Warning.** EAN-13 data must be exactly 12 digits; the printer adds the check digit. Other lengths are padded or cut, which prints a different barcode.
+
+### barcode-without-data
+
+**Warning.** A barcode has no `^FD` data, so nothing prints.
+
+### unknown-command
+
+**Warning.** A command doesn't exist in ZPL, often a typo.
+
+### printer-command-in-label
+
+**Warning.** A tilde command, like `~SD` or `~JA`, is inside a label. The printer acts on tilde commands as soon as it reads them, so `~SD` changes the printer's darkness for every label that follows, not just this one. Send them before `^XA`, for example with [`PrinterSetup`](/docs/printing), and use the label's `darkness` option (`^MD`) for this label alone. Downloads like `~DG` are fine anywhere.

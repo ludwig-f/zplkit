@@ -131,3 +131,7 @@ dist
 
 # build output
 build
+
+# Vercel project link
+.vercel
+.env*

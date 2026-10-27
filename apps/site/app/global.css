@@ -1,0 +1,314 @@
+@import "tailwindcss";
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
+
+/*
+ * The label, not the IDE: warm paper tones from thermal stock and its liner,
+ * one cobalt accent for anything interactive, and amber, red and green kept
+ * for lint severity and support. Labels are never inverted in dark mode; the
+ * paper only dims, so what's shown is still what prints.
+ */
+:root {
+  --zk-bg: #f4f2ec;
+  --zk-surface: #ece9e1;
+  --zk-raised: #ffffff;
+  --zk-code: #fbfaf7;
+  --zk-code-inline: #e5e1d6;
+  --zk-ink: #191813;
+  --zk-ink-2: #34322b;
+  --zk-muted: #5c594f;
+  --zk-rule: #dad6cb;
+  --zk-rule-strong: #b3ae9f;
+  --zk-accent: #2742c4;
+  --zk-on-accent: #ffffff;
+  --zk-accent-soft: #e3e7f8;
+  --zk-accent-line: #b9c3ee;
+  /* The viewer's accent, so the two tools are told apart */
+  --zk-view: #0b6b74;
+  --zk-on-view: #ffffff;
+  --zk-view-soft: #dcedee;
+  --zk-view-line: #a9d3d6;
+  --zk-warn: #8a5300;
+  --zk-warn-soft: #f9edd2;
+  --zk-warn-line: #e5c98a;
+  --zk-err: #b3261e;
+  --zk-err-soft: #fbe6e3;
+  --zk-err-line: #edb1aa;
+  --zk-ok: #1d6e3a;
+  --zk-ok-soft: #ddefe2;
+  --zk-syn-kw: #8a2bb0;
+  --zk-syn-str: #1d6e3a;
+  --zk-syn-num: #9a4a0c;
+  --zk-syn-com: #706c60;
+  --zk-syn-fn: #2742c4;
+  --zk-syn-zpl: #b3261e;
+  --zk-paper: #ffffff;
+  --zk-liner: #e3d9be;
+  /* The hero's label roll: the liner's own color in both themes */
+  --zk-roll: #e3d9be;
+  --zk-platen: #e8e5dc;
+  --zk-dot: rgb(25 24 19 / 0.17);
+  --zk-label-edge: rgb(25 24 19 / 0.16);
+}
+
+.dark {
+  --zk-bg: #131311;
+  --zk-surface: #1b1a17;
+  --zk-raised: #24231f;
+  --zk-code: #181715;
+  --zk-code-inline: #2a2925;
+  --zk-ink: #ece9e1;
+  --zk-ink-2: #cfcbc0;
+  --zk-muted: #a29e92;
+  --zk-rule: #2e2d29;
+  --zk-rule-strong: #4a4841;
+  --zk-accent: #93a6ff;
+  --zk-on-accent: #0e1533;
+  --zk-accent-soft: #1e2440;
+  --zk-accent-line: #3a4580;
+  --zk-view: #6fcad2;
+  --zk-on-view: #08292c;
+  --zk-view-soft: #132a2c;
+  --zk-view-line: #2b5a5e;
+  --zk-warn: #f2b451;
+  --zk-warn-soft: #2d2413;
+  --zk-warn-line: #5e4a22;
+  --zk-err: #ff8f82;
+  --zk-err-soft: #331b19;
+  --zk-err-line: #6b302b;
+  --zk-ok: #74d396;
+  --zk-ok-soft: #16291c;
+  --zk-syn-kw: #d6a8ff;
+  --zk-syn-str: #9fddae;
+  --zk-syn-num: #f3b37c;
+  --zk-syn-com: #8c887d;
+  --zk-syn-fn: #93a6ff;
+  --zk-syn-zpl: #ff9c8f;
+  --zk-paper: #e8e5dc;
+  --zk-liner: #3a3527;
+  /* The light liner dimmed as the paper is: #fff to #e8e5dc */
+  --zk-roll: #cfc3a4;
+  --zk-platen: #0e0e0c;
+  --zk-dot: rgb(236 233 225 / 0.09);
+  --zk-label-edge: rgb(0 0 0 / 0.6);
+}
+
+@theme inline {
+  --color-bg: var(--zk-bg);
+  --color-surface: var(--zk-surface);
+  --color-raised: var(--zk-raised);
+  --color-code: var(--zk-code);
+  --color-code-inline: var(--zk-code-inline);
+  --color-ink: var(--zk-ink);
+  --color-ink-2: var(--zk-ink-2);
+  --color-muted: var(--zk-muted);
+  --color-rule: var(--zk-rule);
+  --color-rule-strong: var(--zk-rule-strong);
+  --color-accent: var(--zk-accent);
+  --color-on-accent: var(--zk-on-accent);
+  --color-accent-soft: var(--zk-accent-soft);
+  --color-accent-line: var(--zk-accent-line);
+  --color-view: var(--zk-view);
+  --color-on-view: var(--zk-on-view);
+  --color-view-soft: var(--zk-view-soft);
+  --color-view-line: var(--zk-view-line);
+  --color-warn: var(--zk-warn);
+  --color-warn-soft: var(--zk-warn-soft);
+  --color-warn-line: var(--zk-warn-line);
+  --color-err: var(--zk-err);
+  --color-err-soft: var(--zk-err-soft);
+  --color-err-line: var(--zk-err-line);
+  --color-ok: var(--zk-ok);
+  --color-ok-soft: var(--zk-ok-soft);
+  --color-paper: var(--zk-paper);
+  --color-liner: var(--zk-liner);
+  --color-platen: var(--zk-platen);
+
+  /* Fumadocs UI */
+  --color-fd-background: var(--zk-bg);
+  --color-fd-foreground: var(--zk-ink);
+  --color-fd-card: var(--zk-raised);
+  --color-fd-card-foreground: var(--zk-ink);
+  --color-fd-popover: var(--zk-raised);
+  --color-fd-popover-foreground: var(--zk-ink);
+  --color-fd-muted: var(--zk-surface);
+  --color-fd-muted-foreground: var(--zk-muted);
+  --color-fd-secondary: var(--zk-surface);
+  --color-fd-secondary-foreground: var(--zk-ink);
+  --color-fd-border: var(--zk-rule);
+  --color-fd-primary: var(--zk-accent);
+  --color-fd-primary-foreground: var(--zk-on-accent);
+  --color-fd-accent: var(--zk-accent-soft);
+  --color-fd-accent-foreground: var(--zk-accent);
+  --color-fd-ring: var(--zk-accent);
+  --color-fd-info: var(--zk-accent);
+  --color-fd-warning: var(--zk-warn);
+  --color-fd-error: var(--zk-err);
+  --color-fd-success: var(--zk-ok);
+}
+
+@theme {
+  --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "SF Mono", Menlo, monospace;
+
+  --text-display: clamp(2.5rem, 5.4cqi, 4.25rem);
+  --text-display--line-height: 0.98;
+  --text-display--letter-spacing: -0.025em;
+  --text-h1: 2.75rem;
+  --text-h1--line-height: 1.05;
+  --text-h2: 1.625rem;
+  --text-h2--line-height: 1.2;
+  --text-lede: 1.125rem;
+  --text-lede--line-height: 1.55;
+  --text-eyebrow: 0.75rem;
+  --text-eyebrow--letter-spacing: 0.06em;
+
+  --radius-label: 12px;
+  --shadow-label: 0 0 0 1px var(--zk-label-edge),
+    0 12px 28px -14px rgb(0 0 0 / 0.45);
+}
+
+/* The docs sidebar sits on the page, divided from it by a rule */
+#nd-sidebar {
+  background: var(--zk-bg);
+  border-color: var(--zk-rule);
+}
+
+/* The sidebar's top folders, Guides, API and ZPL commands, as small labels */
+#nd-sidebar [data-id$="-viewport"] > div > div > button {
+  margin-top: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--zk-muted);
+}
+
+/* Commands in the sidebar and page footer: the code in mono, then the name */
+.command-name {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: 0.6em;
+}
+.command-name > code {
+  flex: none;
+  min-width: 2.6em;
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+  font-weight: 600;
+  color: var(--zk-muted);
+}
+.command-name > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The neutral theme gives the dark sidebar cool grays of its own */
+.dark #nd-sidebar {
+  --color-fd-muted: var(--zk-surface);
+  --color-fd-secondary: var(--zk-surface);
+  --color-fd-muted-foreground: var(--zk-muted);
+}
+
+/* The printer platen: an 8 px dot grid, a millimeter at 203 dpi */
+@utility bg-platen {
+  background-color: var(--zk-platen);
+  background-image: radial-gradient(var(--zk-dot) 1px, transparent 1.3px);
+  background-size: 8px 8px;
+}
+
+/* A perforation line between sections */
+@utility rule-perf {
+  height: 2px;
+  background: linear-gradient(90deg, var(--zk-rule-strong) 50%, transparent 0) 0
+    0 / 10px 2px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--zk-accent);
+  outline-offset: 2px;
+}
+
+html {
+  scrollbar-gutter: stable;
+}
+
+html > body[data-scroll-locked] {
+  margin-right: 0px !important;
+  --removed-body-scroll-bar-size: 0px !important;
+}
+
+/* Headings use Archivo's expanded heavy cut, like shipping label type */
+#nd-page h1,
+.prose h2,
+.prose h3 {
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+#nd-page h1 {
+  font-stretch: 112%;
+}
+.prose h2 {
+  font-stretch: 108%;
+}
+.prose :not(pre) > code {
+  border: 0;
+  background: var(--zk-code-inline);
+  border-radius: 3px;
+}
+
+/* The hero label feeding out of the printer on its liner, easing to a stop */
+@keyframes feed {
+  /* One label pitch, set where it's used */
+  from {
+    transform: translateY(calc(-1 * var(--pitch, 50%)));
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* Docs: code blocks, tables and the active sidebar item */
+.prose figure.shiki {
+  border-color: var(--zk-rule-strong);
+  border-radius: 6px;
+  background: var(--zk-code);
+}
+.prose figure.shiki pre {
+  font-size: 0.84375rem;
+  line-height: 1.7;
+}
+
+.prose table {
+  overflow: hidden;
+  border: 1px solid var(--zk-rule-strong);
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 6px;
+  font-size: 0.906rem;
+}
+.prose thead th {
+  border-bottom: 1px solid var(--zk-rule-strong);
+  background: var(--zk-surface);
+  color: var(--zk-muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.prose td,
+.prose th {
+  border-bottom: 1px solid var(--zk-rule);
+}
+.prose tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+#nd-sidebar a[data-active="true"] {
+  box-shadow: inset 2px 0 0 var(--zk-accent);
+  font-weight: 700;
+}

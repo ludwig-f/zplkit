@@ -1,0 +1,86 @@
+---
+title: Printer setup and print jobs
+description: PrinterSetup, PrintJob and ImageConverter from @zplkit/core.
+---
+
+## PrinterSetup
+
+```ts
+import { PrinterSetup } from "@zplkit/core";
+```
+
+Builds ZPL that changes the printer or stores things on it, rather than printing a label. Its methods chain, and `toZPL()` returns the ZPL to send. See [Printing](/docs/printing).
+
+### storeGraphic
+
+```ts
+setup.storeGraphic(options: StoreGraphicOptions): this
+```
+
+Stores an image (`~DG`), to print it on labels with `storedGraphic()`.
+
+<auto-type-table cwd path="../../packages/zpl/src/options.ts" name="StoreGraphicOptions" />
+
+### storeFont
+
+```ts
+setup.storeFont(options: StoreFontOptions): this
+```
+
+Stores a TrueType font (`~DU`), to use with `text({ font: { file: "R:NAME.TTF" } })`.
+
+<auto-type-table cwd path="../../packages/zpl/src/options.ts" name="StoreFontOptions" />
+
+### Other methods
+
+| Method | Does |
+| --- | --- |
+| `setDarkness(darkness)` | Sets print darkness (`~SD`), 0 to 30 |
+| `deleteGraphic(name, device?)` | Deletes a stored graphic (`^ID`), from R: unless another device is given |
+
+## PrintJob
+
+```ts
+import { PrintJob } from "@zplkit/core";
+```
+
+```ts
+new PrintJob(...parts: PrintJobPart[]): PrintJob
+new PrintJob(options: PrintJobOptions, ...parts: PrintJobPart[]): PrintJob
+```
+
+Setup and labels to send together, in order. A part is anything with `toZPL()`, like a `Label` or `PrinterSetup`. See [Printing](/docs/printing#print-jobs).
+
+<auto-type-table cwd path="../../packages/zpl/src/PrintJob.ts" name="PrintJobOptions" />
+
+| Method | Returns |
+| --- | --- |
+| `add(...parts)` | The job, with the parts added to the end |
+| `toZPL()` | The ZPL of every part, in order |
+| `lint()` | Problems the printer won't report in the whole job, as [`LintDiagnostic`](/docs/api/parsing#lintdiagnostic)s |
+| `parts` | The parts, in order |
+
+## ImageConverter
+
+```ts
+import { ImageConverter } from "@zplkit/core/image";
+```
+
+Converts PNG and JPEG images to ZPL graphics. It runs in Node only, so it has its own entry point.
+
+```ts
+converter.toZPL(image: Uint8Array | Pixels): Promise<ZplImage>
+```
+
+`toZPL` takes a PNG or JPEG file as a `Uint8Array`, or pixels:
+
+<auto-type-table cwd path="../../packages/zpl/src/ImageConverter.ts" name="Pixels" />
+
+It returns a `ZplImage`, ready for `graphic()` or `storeGraphic()`:
+
+<auto-type-table cwd path="../../packages/zpl/src/ImageConverter.ts" name="ZplImage" />
+
+| Property | Default | Description |
+| --- | --- | --- |
+| `compress` | `true` | Compress the data with Zebra's run-length scheme |
+| `blacknessLimitPercentage` | `50` | How dark a pixel must be to print, in percent |

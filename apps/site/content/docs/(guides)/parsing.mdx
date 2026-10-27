@@ -1,0 +1,22 @@
+---
+title: Parsing ZPL
+description: Read existing ZPL into typed commands.
+---
+
+`parse()` reads ZPL into the same command nodes that labels are built from, so you can inspect, check or change labels you didn't build with zplkit.
+
+```ts
+import { parse, serialize } from "@zplkit/core";
+
+const { commands, diagnostics } = parse("^XA^FO50,50^A0N,30^FDHello^FS^XZ");
+// [{ type: "StartFormat", span: { start: 0, end: 3 } },
+//  { type: "FieldOrigin", x: 50, y: 50, span: { start: 3, end: 11 } }, ...]
+
+serialize(commands); // "^XA^FO50,50^A0N,30^FDHello^FS^XZ"
+```
+
+- Every command has a `span` with its position in the text.
+- Commands without a typed node are kept as `Raw` nodes, so nothing is lost: parsing and serializing gives the same ZPL back.
+- Commands with invalid parameters are kept as `Raw` nodes and reported in `diagnostics`, like `^FO: x must be a number, got 'abc'`, with the rule `invalid-parameter`.
+- Text the printer skips, like the `G` in `^FSG`, is reported with the rule `ignored-text`.
+- Changes to the command characters (`^CC`, `^CT`, `^CD`) are applied while parsing, so `serialize()` always writes the standard `^`, `~` and `,`.

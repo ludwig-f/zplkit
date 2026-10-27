@@ -1,0 +1,105 @@
+---
+title: Types
+description: The types zplkit's options use, like Length, Position and Orientation.
+---
+
+The options tables link here for types they share. Import them from `@zplkit/core`, or from `@zplkit/core/jsx` for JSX.
+
+## Length
+
+```ts
+type Length = { mm: number } | { inches: number } | { dots: number };
+```
+
+A length with its unit, so units can't be mixed up. A bare number is a type error. Make one with:
+
+| Function | Makes |
+| --- | --- |
+| `mm(value)` | Millimeters, converted to dots with the label's `dpmm` |
+| `inches(value)` | Inches, converted to dots with the printer's dpi |
+| `dots(value)` | Printer dots, ZPL's own unit; whole numbers only |
+
+All three throw a `ZplError` for negative numbers.
+
+Inches and millimeters follow the numbers each is usually measured with. Inches use the dpi printers are sold as, so 6 inches at 300 dpi is 1800 dots, as in `^LL1800`. Millimeters use dots per millimeter, so 10 mm at 12 dpmm is 120 dots. The two don't quite agree: 300 dpi is really 11.8 dots per millimeter. At 203 dpi the difference is at most a dot, but at 300 and 600 dpi `inches(4)` is about 1.6 mm shorter than `mm(101.6)`. Use one unit for a label's size and the fields near its edges.
+
+```ts
+label.box({
+  position: { x: mm(5), y: mm(5) },
+  width: mm(50),
+  height: dots(3),
+  thickness: dots(3),
+});
+```
+
+## Position
+
+```ts
+type Position = { x: Length; y: Length };
+```
+
+Where an element starts, measured from the label home (`^LH`), which is the top left corner unless the label sets `home`. `x` is the distance from the left and `y` from the top. JSX elements take `x` and `y` as props instead.
+
+## Orientation
+
+```ts
+enum Orientation {
+  Normal = "N",
+  Rotated90Degrees = "R",
+  Inverted180Degrees = "I",
+  BottomUp270Degrees = "B",
+}
+```
+
+Which way text and barcodes run, turned clockwise. Without one, a field uses the label's default (`setFieldOrientation`, `^FW`), which is `Normal` unless set.
+
+## ZebraFontFamily
+
+```ts
+enum ZebraFontFamily {
+  ZERO = "0",
+  A = "A", B = "B", C = "C", D = "D", E = "E", F = "F", G = "G", H = "H",
+  P = "P", Q = "Q", R = "R", S = "S", T = "T", U = "U", V = "V",
+}
+```
+
+The printer's built-in fonts. `ZERO` is font 0, the scalable font most labels use. The others are bitmap fonts that scale in whole steps. A font name string, like `"0"`, works too. For a TrueType font on the printer, use `font.file` instead.
+
+## Color
+
+```ts
+type Color = "B" | "W";
+```
+
+`"B"` prints black and `"W"` white, for example a white box on a black one.
+
+## StorageDevice
+
+```ts
+type StorageDevice = "R" | "E" | "B" | "A";
+```
+
+Where the printer stores graphics and fonts: `"R"` is memory (cleared when the printer turns off), `"E"` built-in flash, and `"B"` and `"A"` memory cards or USB drives, depending on the printer.
+
+## Graphic
+
+```ts
+type Graphic = { totalBytes: number; bytesPerRow: number; data: string };
+```
+
+A 1 bit image as ZPL hex data. [`ImageConverter`](/docs/api/printer#imageconverter) makes one from a PNG or JPEG.
+
+## TextChildren
+
+```ts
+type TextChildren = TextChild | TextChild[];
+type TextChild = string | number | boolean | null | undefined;
+```
+
+The children of JSX text and barcode elements. Strings and numbers are joined; `false`, `null` and `undefined` are skipped, so conditions work:
+
+```tsx
+<Text x={mm(5)} y={mm(5)}>
+  Order #{order.id} {order.express && "EXPRESS"}
+</Text>
+```

@@ -1,0 +1,168 @@
+---
+title: JSX elements
+description: The JSX elements from @zplkit/core/jsx and their props.
+---
+
+```ts
+import { Label, Text, Box, Code128, build, mm, dots } from "@zplkit/core/jsx";
+```
+
+[JSX](/docs/jsx) shows how to set it up and build labels. Elements take the same options as the [Label](/docs/api/label) methods, with `x` and `y` instead of `position`, and text or barcode data as children.
+
+## build(element)
+
+Turns a `<Label>` element, or a component that returns one, into a [`Label`](/docs/api/label), with `toZPL()`, `lint()` and `commands`. It throws a `ZplError` for anything else, or for text outside a `<Text>`.
+
+## \<Label>
+
+<auto-type-table cwd path="../../packages/zpl/src/jsx.ts" name="LabelProps" />
+
+## \<Text>
+
+<auto-type-table cwd path="../../packages/zpl/src/jsx.ts" name="TextProps" />
+
+## \<Box>
+
+<auto-type-table cwd path="../../packages/zpl/src/jsx.ts" name="BoxProps" />
+
+## Barcodes
+
+### \<Code11>
+
+<auto-type-table cwd path="../../packages/zpl/src/jsx.ts" name="Code11Props" />
+
+### \<Code39>
+
+<auto-type-table cwd path="../../packages/zpl/src/jsx.ts" name="Code39Props" />
+
+### \<Code128>
+
+<auto-type-table cwd path="../../packages/zpl/src/jsx.ts" name="Code128Props" />
+
+### \<Interleaved2of5>
+
+<auto-type-table cwd path="../../packages/zpl/src/jsx.ts" name="Interleaved2of5Props" />
+
+### \<EAN13>
+
+<auto-type-table cwd path="../../packages/zpl/src/jsx.ts" name="EAN13Props" />
+
+### \<EAN8>
+
+<auto-type-table cwd path="../../packages/zpl/src/jsx.ts" name="EAN8Props" />
+
+### \<UpcA>
+
+<auto-type-table cwd path="../../packages/zpl/src/jsx.ts" name="UpcAProps" />
+
+### \<UpcE>
+
+<auto-type-table cwd path="../../packages/zpl/src/jsx.ts" name="UpcEProps" />
+
+### \<UpcEanExtension>
+
+<auto-type-table cwd path="../../packages/zpl/src/jsx.ts" name="UpcEanExtensionProps" />
+
+### \<Code93>
+
+<auto-type-table cwd path="../../packages/zpl/src/jsx.ts" name="Code93Props" />
+
+### \<Codabar>
+
+<auto-type-table cwd path="../../packages/zpl/src/jsx.ts" name="CodabarProps" />
+
+### \<Industrial2of5>
+
+<auto-type-table cwd path="../../packages/zpl/src/jsx.ts" name="Industrial2of5Props" />
+
+### \<Standard2of5>
+
+<auto-type-table cwd path="../../packages/zpl/src/jsx.ts" name="Standard2of5Props" />
+
+### \<LOGMARS>
+
+<auto-type-table cwd path="../../packages/zpl/src/jsx.ts" name="LOGMARSProps" />
+
+### \<MSI>
+
+<auto-type-table cwd path="../../packages/zpl/src/jsx.ts" name="MSIProps" />
+
+### \<Plessey>
+
+<auto-type-table cwd path="../../packages/zpl/src/jsx.ts" name="PlesseyProps" />
+
+### \<Postnet>
+
+<auto-type-table cwd path="../../packages/zpl/src/jsx.ts" name="PostnetProps" />
+
+### \<Planet>
+
+<auto-type-table cwd path="../../packages/zpl/src/jsx.ts" name="PlanetProps" />
+
+### \<IntelligentMail>
+
+<auto-type-table cwd path="../../packages/zpl/src/jsx.ts" name="IntelligentMailProps" />
+
+### \<GS1DataBar>
+
+<auto-type-table cwd path="../../packages/zpl/src/jsx.ts" name="GS1DataBarProps" />
+
+### \<MicroPDF417>
+
+<auto-type-table cwd path="../../packages/zpl/src/jsx.ts" name="MicroPDF417Props" />
+
+### \<PDF417>
+
+<auto-type-table cwd path="../../packages/zpl/src/jsx.ts" name="PDF417Props" />
+
+### \<DataMatrix>
+
+<auto-type-table cwd path="../../packages/zpl/src/jsx.ts" name="DataMatrixProps" />
+
+### \<QrCode>
+
+<auto-type-table cwd path="../../packages/zpl/src/jsx.ts" name="QrCodeProps" />
+
+### \<Aztec>
+
+<auto-type-table cwd path="../../packages/zpl/src/jsx.ts" name="AztecProps" />
+
+### \<MaxiCode>
+
+<auto-type-table cwd path="../../packages/zpl/src/jsx.ts" name="MaxiCodeProps" />
+
+## Images
+
+### \<Graphic>
+
+<auto-type-table cwd path="../../packages/zpl/src/jsx.ts" name="GraphicProps" />
+
+### \<StoredGraphic>
+
+<auto-type-table cwd path="../../packages/zpl/src/jsx.ts" name="StoredGraphicProps" />
+
+## Other elements
+
+### \<Field>
+
+A field with any command, for elements without their own component.
+
+<auto-type-table cwd path="../../packages/zpl/src/jsx.ts" name="FieldProps" />
+
+### \<DefaultFont>
+
+The font (`^CF`) for text that follows and doesn't set one.
+
+<auto-type-table cwd path="../../packages/zpl/src/jsx.ts" name="DefaultFontProps" />
+
+### \<FieldOrientation>
+
+The orientation (`^FW`) of the fields that follow and don't give one.
+
+<auto-type-table cwd path="../../packages/zpl/src/jsx.ts" name="FieldOrientationProps" />
+
+### \<Raw>
+
+Plain ZPL, added as written. Nothing is escaped, so keep user input out.
+
+<auto-type-table cwd path="../../packages/zpl/src/jsx.ts" name="RawProps" />

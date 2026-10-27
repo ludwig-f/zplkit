@@ -1,0 +1,1085 @@
+/*
+ * The ZPL viewer, whose layout the code playground will share: a toolbar,
+ * the editor with its problems on the left, and the label on the printer's
+ * platen on the right. On phones, tabs switch between the editor, the
+ * preview and the problems. Scoped to .playground.
+ */
+.playground,
+.tool-popover {
+  --panel: var(--zk-code);
+  --ink: var(--zk-ink);
+  --muted: var(--zk-muted);
+  --line: var(--zk-rule);
+  --accent: var(--zk-accent);
+  --on-accent: var(--zk-on-accent);
+  --selection: var(--zk-accent-soft);
+  --active-line: var(--zk-surface);
+  --warn: var(--zk-warn);
+  --error: var(--zk-err);
+  --syntax-command: var(--zk-syn-zpl);
+  --syntax-data: var(--zk-syn-str);
+  --syntax-comment: var(--zk-syn-com);
+  --syntax-number: var(--zk-syn-num);
+
+  --font-ui: var(--font-archivo), system-ui, sans-serif;
+  --font-code: var(--font-plex-mono), ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+/* The viewer's own accent, so the two tools are told apart */
+[data-tool="viewer"] {
+  --accent: var(--zk-view);
+  --on-accent: var(--zk-on-view);
+  --selection: var(--zk-view-soft);
+}
+
+.playground {
+  display: grid;
+  /* The toolbar, then the workspace; phones add a row of tabs between */
+  grid-template-rows: auto minmax(0, 1fr);
+  height: calc(100dvh - var(--fd-header-height, 56px));
+  min-height: 560px;
+  background: var(--zk-bg);
+  color: var(--ink);
+  font: 15px/1.5 var(--font-ui);
+}
+
+.playground button,
+.playground select,
+.playground input:not([type="checkbox"]),
+.tool-popover button,
+.tool-popover input:not([type="checkbox"]) {
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--zk-rule-strong);
+  border-radius: 4px;
+  background: var(--zk-raised);
+  color: var(--ink);
+  font: 600 13px var(--font-ui);
+}
+
+.playground select,
+.playground input:not([type="checkbox"]),
+.tool-popover input:not([type="checkbox"]) {
+  padding: 0 8px;
+  font: 500 13px var(--font-code);
+}
+
+.playground button,
+.tool-popover button {
+  cursor: pointer;
+}
+
+.playground button:disabled,
+.tool-popover button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.playground button.primary,
+.tool-popover button.primary {
+  border-color: transparent;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 700;
+}
+
+/* Toolbar */
+
+.playground .toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px max(16px, env(safe-area-inset-right, 0px)) 8px
+    max(16px, env(safe-area-inset-left, 0px));
+  overflow-x: auto;
+  border-bottom: 1px solid var(--line);
+  background: var(--zk-surface);
+}
+
+/* The toolbar scrolls sideways on phones instead of squeezing its controls */
+.playground .toolbar > * {
+  flex: none;
+}
+
+.playground .filename {
+  padding-right: 8px;
+  font: 600 13px var(--font-code);
+  white-space: nowrap;
+}
+
+.playground .divider {
+  flex: none;
+  width: 1px;
+  height: 24px;
+  background: var(--line);
+}
+
+.playground .field,
+.playground .toggle,
+.playground .custom-size {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.playground .custom-size input {
+  width: 72px;
+  font-variant-numeric: tabular-nums;
+}
+
+.playground .toggle input {
+  accent-color: var(--accent);
+}
+
+.playground .segmented,
+.tool-popover .segmented {
+  display: flex;
+  flex: none;
+  overflow: hidden;
+  border: 1px solid var(--zk-rule-strong);
+  border-radius: 4px;
+}
+
+.playground .segmented button,
+.tool-popover .segmented button {
+  height: 34px;
+  padding: 0 10px;
+  border: none;
+  border-right: 1px solid var(--line);
+  border-radius: 0;
+  font: 600 12.5px var(--font-code);
+  outline-offset: -2px;
+}
+
+.playground .segmented button:last-child,
+.tool-popover .segmented button:last-child {
+  border-right: none;
+}
+
+.playground .segmented button[aria-checked="true"],
+.tool-popover .segmented button[aria-checked="true"] {
+  background: var(--ink);
+  color: var(--zk-bg);
+}
+
+.playground .unit {
+  margin-left: -4px;
+  color: var(--muted);
+  font: 500 12.5px var(--font-code);
+}
+
+.playground .spacer {
+  flex: 1;
+}
+
+/* The tool's icon, name and what it's for */
+.playground .tool-title {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+.playground .tool-tile {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 5px;
+}
+
+.playground .tool-tile svg {
+  width: 17px;
+  height: 17px;
+}
+
+.playground .tool-title h1 {
+  margin: 0;
+  font: 800 16px var(--font-ui);
+  font-stretch: 108%;
+}
+
+.playground .tagline {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.playground .field-label {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* Buttons that open a menu, like the template */
+.playground .menu-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 260px;
+}
+
+.playground .menu-button svg {
+  flex: none;
+  width: 15px;
+  height: 15px;
+  color: var(--muted);
+}
+
+.playground .menu-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.playground .edited {
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: var(--zk-surface);
+  color: var(--muted);
+  font: 500 11px var(--font-code);
+}
+
+.playground .export-button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.playground .export-button svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* Menus and popovers, shown outside the page's layout */
+
+.tool-popover .menu-heading {
+  margin: 4px 0 2px;
+  padding: 4px 12px;
+  color: var(--muted);
+  font: 600 11px var(--font-code);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.tool-popover .menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 34px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  font: 500 13.5px var(--font-ui);
+  text-align: left;
+}
+
+.tool-popover .menu-item:hover,
+.tool-popover .menu-item:focus-visible {
+  background: var(--selection);
+  outline: none;
+}
+
+.tool-popover .menu-item svg,
+.tool-popover .menu-spacer {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  visibility: hidden;
+}
+
+.tool-popover .menu-item[aria-current="true"] {
+  font-weight: 700;
+}
+
+.tool-popover .menu-item[aria-current="true"] svg {
+  visibility: visible;
+}
+
+.tool-popover .menu-rule {
+  height: 1px;
+  margin: 6px 0;
+  background: var(--line);
+}
+
+.tool-popover .popover-title {
+  margin: 0;
+  padding: 12px 14px 4px;
+  font: 700 14.5px var(--font-ui);
+}
+
+.tool-popover .popover-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 8px 8px 10px 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.tool-popover .popover-head > div {
+  flex: 1;
+}
+
+.tool-popover .popover-head .popover-title {
+  padding: 4px 0 2px;
+}
+
+.tool-popover .spacer {
+  flex: 1;
+}
+
+.tool-popover .hint {
+  display: block;
+  margin: 0;
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.tool-popover .icon-button {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+}
+
+.tool-popover .icon-button:hover {
+  color: var(--ink);
+}
+
+.tool-popover .icon-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.tool-popover .export-row {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 4px 10px;
+  align-items: center;
+  padding: 12px 14px;
+  border-top: 1px solid var(--line);
+}
+
+.tool-popover .export-icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 5px;
+  background: var(--zk-surface);
+  color: var(--ink);
+}
+
+.tool-popover .export-icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+.tool-popover .export-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.tool-popover .export-text span {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.tool-popover .export-actions {
+  display: flex;
+  flex-wrap: wrap;
+  grid-column: 2;
+  gap: 6px;
+}
+
+.tool-popover .export-actions button {
+  height: 30px;
+  padding: 0 10px;
+  font-size: 12.5px;
+}
+
+.tool-popover .setting {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin: 0;
+  padding: 12px 14px;
+  border: none;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+  text-align: left;
+}
+
+.tool-popover .setting:last-child {
+  border-bottom: none;
+}
+
+.tool-popover .setting-row {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  height: auto;
+}
+
+.tool-popover .setting-title {
+  display: block;
+  margin: 0;
+  font: 700 13.5px var(--font-ui);
+}
+
+.tool-popover .setting-link:hover {
+  background: var(--zk-surface);
+}
+
+.tool-popover .setting-link svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--muted);
+}
+
+.tool-popover .segmented.full button {
+  flex: 1;
+}
+
+/* A switch from a checkbox, so it stays a real input */
+.tool-popover .switch {
+  flex: none;
+  appearance: none;
+  position: relative;
+  width: 34px;
+  height: 20px;
+  margin: 0;
+  border-radius: 10px;
+  background: var(--zk-rule-strong);
+  cursor: pointer;
+}
+
+.tool-popover .switch::after {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--zk-raised);
+  content: "";
+}
+
+.tool-popover .switch:checked {
+  background: var(--accent);
+}
+
+.tool-popover .switch:checked::after {
+  left: 17px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .tool-popover .switch::after {
+    transition: left 120ms;
+  }
+}
+
+.tool-popover .fonts-body {
+  max-height: min(60dvh, 520px);
+  overflow: auto;
+}
+
+.tool-popover .font-error {
+  margin: 0;
+  color: var(--error);
+  font-size: 13px;
+}
+
+/* The View button in the preview's status bar */
+.playground .view-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  margin: -4px -8px -4px 0;
+  padding: 0 8px;
+  font: 600 12px var(--font-ui);
+}
+
+.playground .view-button svg {
+  width: 14px;
+  height: 14px;
+}
+
+.playground .dialog.confirm-dialog {
+  width: min(440px, calc(100vw - 32px));
+}
+
+.playground .dialog.confirm-dialog[open] {
+  grid-template-rows: auto auto;
+}
+
+.playground .confirm-body {
+  padding: 18px 20px 6px;
+}
+
+.playground .confirm-body h2 {
+  margin: 0 0 6px;
+  font: 800 18px var(--font-ui);
+}
+
+.playground .confirm-body p {
+  margin: 0;
+  color: var(--zk-ink-2);
+  font-size: 14px;
+}
+
+.playground .confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 14px 20px 18px;
+}
+
+/* Below 1180 px the tagline makes room for the controls */
+@media (max-width: 1180px) {
+  .playground .tagline {
+    display: none;
+  }
+}
+
+/* Workspace */
+
+.playground .tabs {
+  display: none;
+}
+
+.playground .workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  min-height: 0;
+}
+
+.playground .code {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-height: 0;
+  border-right: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.playground .editor {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.playground .problems {
+  display: flex;
+  flex-direction: column;
+  max-height: 260px;
+  border-top: 1px solid var(--zk-rule-strong);
+  background: var(--zk-surface);
+}
+
+/* Rows animate from 0fr to 1fr, so the list slides open to its own height */
+.playground .problems-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  min-height: 0;
+}
+
+.playground .problems[data-open="true"] .problems-body {
+  grid-template-rows: 1fr;
+}
+
+.playground .problems[data-open="false"] .problems-header {
+  border-bottom-color: transparent;
+}
+
+.playground .problems-body > div {
+  min-height: 0;
+  overflow: auto;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .playground .problems-body {
+    transition: grid-template-rows 200ms ease-out;
+  }
+}
+
+.playground .problems-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--line);
+  background: var(--zk-surface);
+  color: var(--muted);
+  font: 600 11.5px var(--font-code);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.playground ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.playground .problem {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.playground .problem .line {
+  height: auto;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font: 600 12.5px/1.6 var(--font-code);
+  text-align: left;
+}
+
+.playground .problem .line:hover {
+  color: var(--accent);
+}
+
+.playground .problem div {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.playground .problem .rule {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--warn);
+  font: 600 12.5px var(--font-code);
+}
+
+.playground .problem.error .rule {
+  color: var(--error);
+}
+
+/* Diamonds for warnings, squares for errors, so color isn't the only cue */
+.playground .problem .marker {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  background: currentColor;
+  transform: rotate(45deg) scale(0.85);
+}
+
+.playground .problem.error .marker {
+  transform: none;
+}
+
+.playground .problem .message {
+  font-size: 14px;
+}
+
+.playground .clean {
+  margin: 0;
+  padding: 14px 16px;
+  color: var(--zk-ok);
+  font-weight: 600;
+}
+
+.playground .problems-tab {
+  display: none;
+}
+
+/* Preview */
+
+.playground .preview {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background-color: var(--zk-platen);
+  background-image: radial-gradient(var(--zk-dot) 1px, transparent 1.3px);
+  background-size: 8px 8px;
+}
+
+.playground .status {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--line);
+  background: var(--zk-surface);
+  color: var(--muted);
+  font: 500 12.5px var(--font-code);
+}
+
+.playground .status .busy {
+  color: var(--accent);
+}
+
+.playground .blocked {
+  flex: none;
+  margin: 14px 16px 0;
+  padding: 10px 14px;
+  border: 1px solid var(--zk-err-line);
+  border-radius: 6px;
+  background: var(--zk-err-soft);
+  color: var(--error);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.playground .bench-area {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.playground .bench {
+  padding: 24px 20px 40px;
+}
+
+/* A label that wouldn't print is shown dimmed behind a dashed outline */
+.playground .bench-area.dimmed .liner {
+  opacity: 0.45;
+  outline: 2px dashed var(--error);
+  outline-offset: 6px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .playground .bench zpl-preview::part(label) {
+    transition: opacity 120ms;
+  }
+}
+
+.playground .notice {
+  position: fixed;
+  left: 50%;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  padding: 8px 14px;
+  border-radius: 6px;
+  background: var(--ink);
+  color: var(--zk-bg);
+  font-size: 14px;
+  pointer-events: none;
+  z-index: 50;
+}
+
+.playground .notice:empty {
+  display: none;
+}
+
+/* Phones: one panel at a time, picked with tabs */
+@media (max-width: 860px) {
+  .playground .tool-title,
+  .playground .divider,
+  .playground .field-label,
+  .playground .spacer {
+    display: none;
+  }
+
+  .playground .export-button span {
+    display: none;
+  }
+
+  /* Export stays in reach while the rest of the toolbar scrolls */
+  .playground .toolbar .export-button {
+    position: sticky;
+    right: 0;
+    margin-left: auto;
+    box-shadow: -14px 0 10px -6px var(--zk-surface);
+  }
+
+  .playground {
+    grid-template-rows: auto auto minmax(0, 1fr);
+  }
+
+  .playground .tabs {
+    display: flex;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .playground .tabs button {
+    flex: 1;
+    height: 46px;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .playground .tabs button[aria-selected="true"] {
+    color: var(--ink);
+    box-shadow: inset 0 -2px 0 var(--accent);
+  }
+
+  .playground .workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .playground .workspace > section {
+    display: none;
+  }
+
+  .playground[data-tab="Editor"] .code,
+  .playground[data-tab="Code"] .code,
+  .playground[data-tab="Problems"] .problems-tab {
+    display: grid;
+  }
+
+  .playground[data-tab="Preview"] .preview {
+    display: flex;
+  }
+
+  .playground .code {
+    border-right: none;
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  .playground .code .problems {
+    display: none;
+  }
+
+  .playground .problems-tab {
+    align-content: start;
+    overflow: auto;
+    background: var(--zk-surface);
+  }
+
+  .playground .problems-tab button.line {
+    min-height: 44px;
+  }
+}
+
+/* Dialogs: show as code, fonts */
+
+.playground .dialog {
+  width: min(880px, calc(100vw - 32px));
+  max-height: calc(100dvh - 64px);
+  /* Tailwind's reset clears the margin that centers dialogs */
+  margin: auto;
+  padding: 0;
+  border: 1px solid var(--zk-rule-strong);
+  border-radius: 6px;
+  background: var(--zk-bg);
+  color: var(--ink);
+}
+
+.playground .dialog[open] {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.playground .dialog::backdrop {
+  background: color-mix(in srgb, var(--zk-ink) 35%, transparent);
+}
+
+.playground .dialog-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+  background: var(--zk-surface);
+}
+
+.playground .dialog-header h2 {
+  margin: 0 8px 0 0;
+  font: 700 15px var(--font-ui);
+}
+
+.playground .dialog-header .spacer {
+  flex: 1;
+}
+
+.playground .dialog-body {
+  overflow: auto;
+  background: var(--panel);
+}
+
+.playground .dialog-body pre {
+  margin: 0;
+  padding: 16px;
+  font: 13px/1.6 var(--font-code);
+  white-space: pre;
+}
+
+.playground .dialog-error {
+  margin: 0;
+  padding: 16px;
+  color: var(--error);
+}
+
+.playground .dialog-note {
+  margin: 0;
+  padding: 10px 16px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.playground .dialog-note a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.playground .fonts-dialog {
+  width: min(640px, calc(100vw - 32px));
+}
+
+.tool-popover .fonts-body {
+  display: grid;
+  gap: 20px;
+  padding: 16px;
+}
+
+.tool-popover .fonts-body p {
+  margin: 0;
+  max-width: 68ch;
+}
+
+.tool-popover .fonts-body section {
+  display: grid;
+  gap: 8px;
+}
+
+.tool-popover .fonts-body h3 {
+  margin: 0;
+  font: 700 14px var(--font-ui);
+}
+
+.tool-popover .fonts-body .hint {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.tool-popover .fonts-body code {
+  font: 12.5px var(--font-code);
+}
+
+.tool-popover .font-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.tool-popover .font-row .font-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tool-popover .font-row .font-path {
+  font-weight: 600;
+}
+
+.tool-popover .font-row input {
+  width: 180px;
+  text-transform: uppercase;
+}
+
+/* Loading: the page's own layout with placeholder lines and a blank label */
+
+.playground.skeleton .skeleton-lines {
+  padding: 12px 0;
+  font: 14px/1.65 var(--font-code);
+}
+
+.playground.skeleton .skeleton-line {
+  display: flex;
+  align-items: center;
+  height: 1.65em;
+}
+
+/* Placed like CodeMirror's line numbers, lint column and line padding */
+.playground.skeleton .skeleton-number {
+  flex: none;
+  box-sizing: border-box;
+  width: 25px;
+  padding: 0 3px 0 5px;
+  color: var(--muted);
+  text-align: right;
+}
+
+.playground.skeleton .skeleton-bar,
+.playground.skeleton .skeleton-paper {
+  animation: skeleton-pulse 1.6s ease-in-out infinite alternate;
+}
+
+.playground.skeleton .skeleton-bar {
+  max-width: calc(100% - 70px);
+  margin-left: 25px;
+  height: 0.7em;
+  border-radius: 3px;
+  background: var(--zk-rule);
+}
+
+/*
+ * A blank 4 by 6 inch label on its liner, the size most labels start at,
+ * with room for the rulers as in the bench
+ */
+.playground.skeleton .skeleton-liner {
+  width: min(100%, 662px);
+}
+
+.playground.skeleton .skeleton-frame {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  grid-template-rows: 22px auto;
+  row-gap: 6px;
+}
+
+.playground.skeleton .skeleton-frame::before {
+  grid-column: 2;
+  border-bottom: 1px solid var(--zk-muted);
+  content: "";
+  opacity: 0.5;
+}
+
+.playground.skeleton .skeleton-paper {
+  grid-column: 2;
+  grid-row: 2;
+  aspect-ratio: 101.6 / 152.4;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--zk-paper) 18%, transparent);
+}
+
+@keyframes skeleton-pulse {
+  from {
+    opacity: 0.55;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .playground.skeleton .skeleton-bar,
+  .playground.skeleton .skeleton-paper {
+    animation: none;
+  }
+}

@@ -1,41 +1,18 @@
 {
-  "name": "node-zpl",
+  "name": "zplkit-monorepo",
+  "private": true,
   "type": "module",
-  "version": "1.0.5",
-  "description": "ZPL generator for TypeScript",
-  "types": "build/index.d.ts",
-  "module": "build/index.js",
-  "main": "build/index.js",
-  "exports": {
-    ".": {
-      "import": "./build/index.js",
-      "require": "./build/index.js"
-    }
-  },
-  "repository": "https://github.com/ludwig-f/node-zpl",
+  "repository": "https://github.com/ludwig-f/zplkit",
   "license": "MIT",
-  "keywords": [
-    "zpl",
-    "zpl2",
-    "label",
-    "printer",
-    "zebra",
-    "typescript",
-    "ts",
-    "node",
-    "nodejs"
-  ],
+  "packageManager": "pnpm@11.1.2",
   "scripts": {
-    "build": "tsc",
-    "fix": "prettier \"src/**/*.ts\" --write",
-    "lint": "eslint src --ext .ts",
-    "test": "vitest",
-    "watch": "tsc -w",
-    "version": "standard-version",
-    "prepare": "husky"
-  },
-  "engines": {
-    "node": ">=16"
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "commands": "node scripts/commands.mjs",
+    "lint": "eslint packages/*/src apps/site/app apps/site/components apps/site/lib apps/site/playground --ext .ts,.tsx",
+    "fix": "prettier \"packages/*/src/**/*.{ts,tsx}\" \"packages/render/scripts/*.mjs\" \"apps/site/{app,components,lib,playground}/**/*.{ts,tsx,css}\" --write",
+    "prepare": "husky",
+    "format:check": "prettier \"packages/*/src/**/*.{ts,tsx}\" \"packages/render/scripts/*.mjs\" \"apps/site/{app,components,lib,playground}/**/*.{ts,tsx,css}\" --check"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^7.2.0",
@@ -46,30 +23,17 @@
     "husky": "^9.0.11",
     "lint-staged": "^15.2.2",
     "prettier": "^2.1.1",
-    "typescript": "^5.4.2",
-    "vite": "^5.1.5",
-    "vitest": "^1.3.1"
+    "typescript": "~5.9.3"
   },
-  "files": [
-    "build",
-    "!**/*.spec.*",
-    "!**/*.json",
-    "CHANGELOG.md",
-    "LICENSE",
-    "README.md"
-  ],
   "config": {
     "commitizen": {
       "path": "cz-conventional-changelog"
     }
   },
   "lint-staged": {
-    "*.ts": [
+    "*.{ts,tsx}": [
       "eslint --fix",
       "prettier --write"
     ]
-  },
-  "dependencies": {
-    "jimp": "^0.22.12"
   }
 }

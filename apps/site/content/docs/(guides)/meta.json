@@ -1,0 +1,13 @@
+{
+  "title": "Guides",
+  "pages": [
+    "jsx",
+    "building-labels",
+    "parsing",
+    "converting",
+    "linting",
+    "preview",
+    "rendering",
+    "printing"
+  ]
+}

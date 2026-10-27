@@ -1,0 +1,127 @@
+---
+title: Preview
+description: Show ZPL as images in the browser with the <zpl-preview> web component.
+---
+
+`<zpl-preview>` renders ZPL to images in the browser with [`@zplkit/render`](/docs/rendering). Label data never leaves the page. Because it's a standard web component, it works in plain HTML and every framework.
+
+```bash
+npm install @zplkit/preview
+```
+
+```html
+<script type="module">
+  import "@zplkit/preview";
+</script>
+
+<zpl-preview zpl="^XA^PW400^LL200^FO20,20^A0,40^FDHello^FS^XZ"></zpl-preview>
+```
+
+The `zpl` property also accepts a `Label` from zplkit, or anything with a `toZPL()` method.
+
+## Attributes
+
+| Attribute         | Default                    | Description                                                                 |
+| ----------------- | -------------------------- | --------------------------------------------------------------------------- |
+| `zpl`             |                            | ZPL to show                                                                 |
+| `width`, `height` | `^PW`/`^LL`, else 4 × 6 in | Label size in millimeters                                                   |
+| `dpmm`            | 8                          | Dots per millimeter: 6, 8, 12 or 24                                         |
+| `smoothing`       | 0.4                        | Edge smoothing, from 0 (the printer's exact dots) to 1 (fully anti-aliased) |
+| `fade`            |                            | Fade labels in when they first appear, instead of popping in                |
+
+ZPL with several labels shows one image per label.
+
+Two properties take font files as `Uint8Array`s: `fonts`, for fonts stored on the printer by path like `"E:ARIAL.TTF"`, and `font0`, to draw font 0 with your own font instead of the open-licensed stand-in. See [rendering](/docs/rendering#accuracy) for why.
+
+## Events
+
+| Event              | `event.detail`                                  | Fired when                                                |
+| ------------------ | ----------------------------------------------- | --------------------------------------------------------- |
+| `zpl-render-start` | `zpl`                                           | A render starts, for example to show a loading state      |
+| `zpl-render`       | `images`, `width`, `height`, `dpmm`, `duration` | The labels are shown                                      |
+| `zpl-error`        | `error`                                         | The ZPL can't be shown; the element shows the message too |
+
+`images` are PNG data URLs, one per label, ready to show or download. `width` and `height` are the label size in millimeters that was used, from the attributes or `^PW` and `^LL`, and `duration` is how long the render took in milliseconds.
+
+```ts
+const preview = document.querySelector("zpl-preview")!;
+preview.addEventListener("zpl-render-start", () => spinner.show());
+preview.addEventListener("zpl-render", (event) => {
+  spinner.hide();
+  console.log(
+    `${event.detail.images.length} labels in ${event.detail.duration} ms`
+  );
+});
+```
+
+The events are typed, so `event.detail` is known in TypeScript once `@zplkit/preview` is imported.
+
+## Frameworks
+
+### React
+
+React 19 sets props on custom elements as properties, so `zpl` can be a `Label`. Import the React entry to register the element and get typed props:
+
+```tsx
+import "@zplkit/preview/react";
+
+<zpl-preview
+  zpl={label}
+  dpmm={8}
+  onzpl-render={(event) => console.log(event.detail.images)}
+/>;
+```
+
+### Vue
+
+Tell Vue that `zpl-preview` is a custom element (`compilerOptions.isCustomElement`), then bind the property:
+
+```vue
+<zpl-preview :zpl.prop="label" dpmm="8" @zpl-render="onRender" />
+```
+
+### Svelte
+
+```svelte
+<zpl-preview zpl={label} dpmm={8} on:zpl-render={onRender}></zpl-preview>
+```
+
+### Angular
+
+Add `CUSTOM_ELEMENTS_SCHEMA` to the component's `schemas`:
+
+```html
+<zpl-preview
+  [zpl]="label"
+  dpmm="8"
+  (zpl-render)="onRender($event)"
+></zpl-preview>
+```
+
+## Loading the renderer
+
+The renderer, with its fonts and barcode encoders, loads the first time a preview renders, so bundlers put it in a separate chunk.
+
+`configure({ render })` replaces it, for example with one that calls your own service:
+
+```ts
+import { configure } from "@zplkit/preview";
+
+configure({
+  render: async (zpl, { widthMm, heightMm, dpmm, grayscale }) => {
+    // Return one base64-encoded PNG per label
+  },
+});
+```
+
+## Styling
+
+The label images, their container and the error message are exposed as CSS parts: `::part(label)`, `::part(labels)` and `::part(error)`.
+
+With `fade`, labels fade in over 200 ms the first time they appear, and later changes to the ZPL replace them without fading. Set `--zpl-fade-duration` to change how long it takes. People who prefer reduced motion see them without the fade.
+
+```css
+zpl-preview {
+  --zpl-fade-duration: 400ms;
+}
+```

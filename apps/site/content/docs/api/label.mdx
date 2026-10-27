@@ -1,0 +1,656 @@
+---
+title: Label
+description: The Label builder from @zplkit/core, its methods and their options.
+---
+
+```ts
+import { Label, inches, mm, dots, Orientation, ZebraFontFamily } from "@zplkit/core";
+```
+
+`Label` builds one label as a list of ZPL commands. Each drawing method adds a field and returns the label, so calls chain. [Method calls](/docs/building-labels) introduces it; this page lists every method and option.
+
+## new Label(options)
+
+```ts
+new Label(options: LabelOptions): Label
+```
+
+```ts
+const label = new Label({ width: inches(4), height: inches(6), dpmm: 8 });
+```
+
+<auto-type-table cwd path="../../packages/zpl/src/options.ts" name="LabelOptions" />
+
+## Methods
+
+| Method | ZPL | Adds |
+| --- | --- | --- |
+| [`text`](#text) | `^A`, `^FD` | Text |
+| [`box`](#box) | `^GB` | A box or line |
+| [`graphic`](#graphic) | `^GF` | An image |
+| [`storedGraphic`](#storedgraphic) | `^XG` | An image stored on the printer |
+| [`field`](#field) | any | A field with any command |
+| [Barcodes](#barcodes) | `^B…` | One method per barcode |
+| [`setDefaultFont`](#setdefaultfont) | `^CF` | The default font |
+| [`setFieldOrientation`](#setfieldorientation) | `^FW` | The default orientation |
+| [`toZPL`](#output) | | The finished ZPL |
+| [`lint`](#output) | | Problems the printer won't report |
+
+## Drawing
+
+### text
+
+```ts
+label.text(options: TextOptions): this
+```
+
+Adds text in one of the printer's fonts or a font file on the printer. Characters ZPL would read as commands are escaped.
+
+```ts
+label.text({
+  position: { x: mm(5), y: mm(5) },
+  text: "Harbor Parts Co.",
+  font: { height: mm(5) },
+});
+```
+
+<auto-type-table cwd path="../../packages/zpl/src/options.ts" name="TextOptions" />
+
+`font` takes:
+
+<auto-type-table cwd path="../../packages/zpl/src/options.ts" name="FontOptions" />
+
+### box
+
+```ts
+label.box(options: BoxOptions): this
+```
+
+Adds a box, or a line when one side is as thin as the border.
+
+```ts
+// A 0.5 mm rule across the label
+label.box({
+  position: { x: mm(5), y: mm(30) },
+  width: mm(91),
+  height: mm(0.5),
+  thickness: mm(0.5),
+});
+```
+
+<auto-type-table cwd path="../../packages/zpl/src/options.ts" name="BoxOptions" />
+
+### graphic
+
+```ts
+label.graphic(options: GraphicOptions): this
+```
+
+Adds an image converted with [`ImageConverter`](/docs/api/printer#imageconverter).
+
+<auto-type-table cwd path="../../packages/zpl/src/options.ts" name="GraphicOptions" />
+
+### storedGraphic
+
+```ts
+label.storedGraphic(options: StoredGraphicOptions): this
+```
+
+Prints an image stored on the printer with [`PrinterSetup.storeGraphic`](/docs/api/printer#storegraphicoptions), without sending it again.
+
+<auto-type-table cwd path="../../packages/zpl/src/options.ts" name="StoredGraphicOptions" />
+
+### field
+
+```ts
+label.field(options: FieldOptions): this
+```
+
+Adds a field with any command, for elements without their own method. The command is added as written, and the data is escaped.
+
+```ts
+label.field({
+  position: { x: mm(5), y: mm(5) },
+  command: "^B8N,100,Y,N",
+  data: "1234567",
+});
+```
+
+<auto-type-table cwd path="../../packages/zpl/src/options.ts" name="FieldOptions" />
+
+## Barcodes
+
+The linear barcodes take these options. The 2D codes take `position`, `data` and `orientation`, plus the options listed with them.
+
+<auto-type-table cwd path="../../packages/zpl/src/options.ts" name="LinearBarcodeOptions" />
+
+### code128
+
+```ts
+label.code128(options: Code128Options): this
+```
+
+Code 128, the general-purpose barcode for letters, digits and punctuation. Shipping and logistics labels use it most. Writes `^BC`.
+
+```ts
+label.code128({
+  position: { x: mm(5), y: mm(5) },
+  data: "ORD-10442",
+  height: mm(12),
+});
+```
+
+Besides the common options:
+
+<auto-type-table cwd path="../../packages/zpl/src/options.ts" name="Code128OptionsOwn" type="Omit<Code128Options, keyof LinearBarcodeOptions>" />
+
+### code39
+
+```ts
+label.code39(options: Code39Options): this
+```
+
+Code 39: capital letters, digits, space and `- . $ / + %`. Wider than Code 128 for the same data. Writes `^B3`.
+
+```ts
+label.code39({
+  position: { x: mm(5), y: mm(5) },
+  data: "PART-77",
+  checkDigit: true,
+});
+```
+
+Besides the common options:
+
+<auto-type-table cwd path="../../packages/zpl/src/options.ts" name="Code39OptionsOwn" type="Omit<Code39Options, keyof LinearBarcodeOptions>" />
+
+### code93
+
+```ts
+label.code93(options: Code93Options): this
+```
+
+Code 93, a denser Code 39 with two check characters, which the printer always adds. Writes `^BA`.
+
+```ts
+label.code93({
+  position: { x: mm(5), y: mm(5) },
+  data: "PART-77",
+});
+```
+
+Besides the common options:
+
+<auto-type-table cwd path="../../packages/zpl/src/options.ts" name="Code93OptionsOwn" type="Omit<Code93Options, keyof LinearBarcodeOptions>" />
+
+### code11
+
+```ts
+label.code11(options: Code11Options): this
+```
+
+Code 11: digits and dashes, used on telecom equipment. Writes `^B1`.
+
+```ts
+label.code11({
+  position: { x: mm(5), y: mm(5) },
+  data: "123-45",
+});
+```
+
+Besides the common options:
+
+<auto-type-table cwd path="../../packages/zpl/src/options.ts" name="Code11OptionsOwn" type="Omit<Code11Options, keyof LinearBarcodeOptions>" />
+
+### codabar
+
+```ts
+label.codabar(options: CodabarOptions): this
+```
+
+ANSI Codabar: digits and `- $ : / . +` between a start and a stop letter, A to D. Writes `^BK`.
+
+```ts
+label.codabar({
+  position: { x: mm(5), y: mm(5) },
+  data: "31117013206375",
+  start: "B",
+  stop: "D",
+});
+```
+
+Besides the common options:
+
+<auto-type-table cwd path="../../packages/zpl/src/options.ts" name="CodabarOptionsOwn" type="Omit<CodabarOptions, keyof LinearBarcodeOptions>" />
+
+### ean13
+
+```ts
+label.ean13(options: Ean13Options): this
+```
+
+EAN-13 for retail products. Pass 12 digits; the printer adds the check digit. Writes `^BE`.
+
+```ts
+label.ean13({
+  position: { x: mm(5), y: mm(5) },
+  data: "590123412345",
+});
+```
+
+It takes only the options above.
+
+### ean8
+
+```ts
+label.ean8(options: Ean8Options): this
+```
+
+EAN-8 for small retail packages. Pass 7 digits; the printer adds the check digit. Writes `^B8`.
+
+```ts
+label.ean8({
+  position: { x: mm(5), y: mm(5) },
+  data: "9638507",
+});
+```
+
+It takes only the options above.
+
+### upcA
+
+```ts
+label.upcA(options: UpcAOptions): this
+```
+
+UPC-A, the 12 digit retail code used in North America. Pass 11 digits; the printer adds the check digit. Writes `^BU`.
+
+```ts
+label.upcA({
+  position: { x: mm(5), y: mm(5) },
+  data: "03600029145",
+});
+```
+
+Besides the common options:
+
+<auto-type-table cwd path="../../packages/zpl/src/options.ts" name="UpcAOptionsOwn" type="Omit<UpcAOptions, keyof LinearBarcodeOptions>" />
+
+### upcE
+
+```ts
+label.upcE(options: UpcEOptions): this
+```
+
+UPC-E, a UPC-A number compressed to 6 digits for small packages. Pass the UPC-A number without its check digit: 10 digits, or 11 starting with the number system. Writes `^B9`.
+
+```ts
+label.upcE({
+  position: { x: mm(5), y: mm(5) },
+  data: "1230000045",
+});
+```
+
+Besides the common options:
+
+<auto-type-table cwd path="../../packages/zpl/src/options.ts" name="UpcEOptionsOwn" type="Omit<UpcEOptions, keyof LinearBarcodeOptions>" />
+
+### upcEanExtension
+
+```ts
+label.upcEanExtension(options: UpcEanExtensionOptions): this
+```
+
+The 2 or 5 digit add-on printed to the right of a UPC or EAN code, for example a magazine's issue number. Give it its own position, a little lower and shorter than the main code. Its digits print above the bars by default. Writes `^BS`.
+
+```ts
+label.upcEanExtension({
+  position: { x: mm(5), y: mm(5) },
+  data: "04414",
+});
+```
+
+It takes only the options above.
+
+### interleaved2of5
+
+```ts
+label.interleaved2of5(options: Interleaved2of5Options): this
+```
+
+Interleaved 2 of 5: digits in pairs, common on cartons. The printer adds a leading zero to an odd number of digits. Writes `^B2`.
+
+```ts
+label.interleaved2of5({
+  position: { x: mm(5), y: mm(5) },
+  data: "10012345678902",
+});
+```
+
+Besides the common options:
+
+<auto-type-table cwd path="../../packages/zpl/src/options.ts" name="Interleaved2of5OptionsOwn" type="Omit<Interleaved2of5Options, keyof LinearBarcodeOptions>" />
+
+### industrial2of5
+
+```ts
+label.industrial2of5(options: Industrial2of5Options): this
+```
+
+Industrial 2 of 5: digits, for systems that still read it. Writes `^BI`.
+
+```ts
+label.industrial2of5({
+  position: { x: mm(5), y: mm(5) },
+  data: "123456",
+});
+```
+
+It takes only the options above.
+
+### standard2of5
+
+```ts
+label.standard2of5(options: Standard2of5Options): this
+```
+
+Standard 2 of 5: digits, for systems that still read it. Writes `^BJ`.
+
+```ts
+label.standard2of5({
+  position: { x: mm(5), y: mm(5) },
+  data: "123456",
+});
+```
+
+It takes only the options above.
+
+### logmars
+
+```ts
+label.logmars(options: LogmarsOptions): this
+```
+
+LOGMARS, Code 39 with a check digit, for U.S. Department of Defense labels. It always prints its text. Writes `^BL`.
+
+```ts
+label.logmars({
+  position: { x: mm(5), y: mm(5) },
+  data: "12AB",
+});
+```
+
+It takes the options above, except `printHri`.
+
+### msi
+
+```ts
+label.msi(options: MsiOptions): this
+```
+
+MSI: digits, used on shelf labels. One Mod 10 check digit by default. Writes `^BM`.
+
+```ts
+label.msi({
+  position: { x: mm(5), y: mm(5) },
+  data: "123456",
+  checkDigits: "C",
+});
+```
+
+Besides the common options:
+
+<auto-type-table cwd path="../../packages/zpl/src/options.ts" name="MsiOptionsOwn" type="Omit<MsiOptions, keyof LinearBarcodeOptions>" />
+
+### plessey
+
+```ts
+label.plessey(options: PlesseyOptions): this
+```
+
+Plessey: digits and A to F, used on shelf labels. The printer adds an 8 bit check. Writes `^BP`.
+
+```ts
+label.plessey({
+  position: { x: mm(5), y: mm(5) },
+  data: "12345",
+});
+```
+
+Besides the common options:
+
+<auto-type-table cwd path="../../packages/zpl/src/options.ts" name="PlesseyOptionsOwn" type="Omit<PlesseyOptions, keyof LinearBarcodeOptions>" />
+
+### postnet
+
+```ts
+label.postnet(options: PostnetOptions): this
+```
+
+USPS POSTNET: a ZIP code of 5, 9 or 11 digits as tall and short bars. The printer adds the check digit, and doesn't print the digits unless `printHri` is set. Writes `^BZ`.
+
+```ts
+label.postnet({
+  position: { x: mm(5), y: mm(5) },
+  data: "12345",
+  height: dots(40),
+});
+```
+
+It takes the linear barcode options above, with `printHri` off by default.
+
+### planet
+
+```ts
+label.planet(options: PlanetOptions): this
+```
+
+USPS PLANET: 11 or 13 digits as tall and short bars. Writes `^B5`.
+
+```ts
+label.planet({
+  position: { x: mm(5), y: mm(5) },
+  data: "12345678901",
+  height: dots(40),
+});
+```
+
+It takes the linear barcode options above, with `printHri` off by default.
+
+### intelligentMail
+
+```ts
+label.intelligentMail(options: IntelligentMailOptions): this
+```
+
+USPS Intelligent Mail: a 20 digit tracking code followed by a routing code of 0, 5, 9 or 11 digits. Writes `^BZ`.
+
+```ts
+label.intelligentMail({
+  position: { x: mm(5), y: mm(5) },
+  data: "00123123456123456789",
+  height: dots(40),
+});
+```
+
+It takes `position`, `data`, `orientation` and `height`, and never prints its digits.
+
+### gs1DataBar
+
+```ts
+label.gs1DataBar(options: Gs1DataBarOptions): this
+```
+
+GS1 DataBar. The first five types take a GTIN of up to 13 digits; Expanded takes GS1 element strings without parentheses, like `010001234567890517251231`. Composite symbols, with a 2D part after a `|`, aren't drawn by the renderer yet. Writes `^BR`.
+
+```ts
+label.gs1DataBar({
+  position: { x: mm(5), y: mm(5) },
+  data: "12345678901",
+  type: "stacked",
+});
+```
+
+Besides the common options:
+
+<auto-type-table cwd path="../../packages/zpl/src/options.ts" name="Gs1DataBarOptionsOwn" type="Omit<Gs1DataBarOptions, keyof BarcodeOptions>" />
+
+### pdf417
+
+```ts
+label.pdf417(options: Pdf417Options): this
+```
+
+PDF417, a stacked 2D code for a few hundred characters, used on shipping labels and IDs. Writes `^B7`.
+
+```ts
+label.pdf417({
+  position: { x: mm(5), y: mm(5) },
+  data: "SHIP 10442 TO AMARA OKAFOR",
+  columns: 4,
+});
+```
+
+Besides the common options:
+
+<auto-type-table cwd path="../../packages/zpl/src/options.ts" name="Pdf417OptionsOwn" type="Omit<Pdf417Options, keyof BarcodeOptions>" />
+
+### microPdf417
+
+```ts
+label.microPdf417(options: MicroPdf417Options): this
+```
+
+MicroPDF417, a smaller PDF417 for little data. The mode picks its columns, rows and error correction; the [^BF page](/docs/commands/BF) lists them. Writes `^BF`.
+
+```ts
+label.microPdf417({
+  position: { x: mm(5), y: mm(5) },
+  data: "ABC123",
+  mode: 3,
+});
+```
+
+Besides the common options:
+
+<auto-type-table cwd path="../../packages/zpl/src/options.ts" name="MicroPdf417OptionsOwn" type="Omit<MicroPdf417Options, keyof BarcodeOptions>" />
+
+### qrCode
+
+```ts
+label.qrCode(options: QrCodeOptions): this
+```
+
+QR code. The error correction level is added to the data as ZPL requires. Writes `^BQ`.
+
+```ts
+label.qrCode({
+  position: { x: mm(5), y: mm(5) },
+  data: "https://example.com/orders/10442",
+  moduleSize: dots(5),
+});
+```
+
+Besides the common options:
+
+<auto-type-table cwd path="../../packages/zpl/src/options.ts" name="QrCodeOptionsOwn" type="Omit<QrCodeOptions, keyof BarcodeOptions>" />
+
+### dataMatrix
+
+```ts
+label.dataMatrix(options: DataMatrixOptions): this
+```
+
+Data Matrix, the small square code used to mark parts and medicine. `moduleSize` is required. Writes `^BX`.
+
+```ts
+label.dataMatrix({
+  position: { x: mm(5), y: mm(5) },
+  data: "SN-10442",
+  moduleSize: dots(4),
+});
+```
+
+Besides the common options:
+
+<auto-type-table cwd path="../../packages/zpl/src/options.ts" name="DataMatrixOptionsOwn" type="Omit<DataMatrixOptions, keyof BarcodeOptions>" />
+
+### aztec
+
+```ts
+label.aztec(options: AztecOptions): this
+```
+
+Aztec code, a square code with a bullseye in the middle, used on tickets. Writes `^BO`.
+
+```ts
+label.aztec({
+  position: { x: mm(5), y: mm(5) },
+  data: "TICKET 10442",
+});
+```
+
+Besides the common options:
+
+<auto-type-table cwd path="../../packages/zpl/src/options.ts" name="AztecOptionsOwn" type="Omit<AztecOptions, keyof BarcodeOptions>" />
+
+### maxiCode
+
+```ts
+label.maxiCode(options: MaxiCodeOptions): this
+```
+
+MaxiCode, the fixed-size code on UPS parcels. In modes 2 and 3 the data starts with the class of service, country code and postal code. Writes `^BD`.
+
+```ts
+label.maxiCode({
+  position: { x: mm(5), y: mm(5) },
+  data: "001840100014000012345",
+  mode: 2,
+});
+```
+
+Besides the common options:
+
+<auto-type-table cwd path="../../packages/zpl/src/options.ts" name="MaxiCodeOptionsOwn" type="Omit<MaxiCodeOptions, keyof BarcodeOptions>" />
+
+## Settings
+
+### setDefaultFont
+
+```ts
+label.setDefaultFont(options: DefaultFontOptions): this
+```
+
+Sets the font (`^CF`) for text that doesn't set one.
+
+<auto-type-table cwd path="../../packages/zpl/src/options.ts" name="DefaultFontOptions" />
+
+### setFieldOrientation
+
+```ts
+label.setFieldOrientation(orientation: Orientation): this
+```
+
+Sets the orientation (`^FW`) of the fields that follow and don't give one.
+
+## Output
+
+| Method | Returns |
+| --- | --- |
+| `toZPL()` | The ZPL, closed with `^XZ` if it isn't already |
+| `lint()` | Problems the printer won't report, as [`LintDiagnostic`](/docs/api/parsing#lintdiagnostic)s |
+| `validate(strict?)` | Nothing; throws a `ZplError` for unclosed fields, and with `strict` (the default) for unknown commands |
+| `commands` | The label's command nodes |
+
+## Lower level
+
+| Method | Adds |
+| --- | --- |
+| `add(...commands)` | Typed command nodes, as written. Nothing is escaped. |
+| `raw(zpl)` | Plain ZPL, as written. Nothing is escaped, so keep user input out. |
+| `open()`, `close()` | `^XA` and `^XZ`, for several formats in one label |
+
+## Types
+
+`Length`, `Position`, `Orientation` and the other shared types are described in [Types](/docs/api/types).

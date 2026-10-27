@@ -1,0 +1,67 @@
+---
+title: "@zplkit/print"
+description: Send labels to Zebra printers and read their status.
+---
+
+```ts
+import { Printer } from "@zplkit/print";
+import { connectNetworkPrinter } from "@zplkit/print/network";
+import { connectUsbPrinter } from "@zplkit/print/usb";
+import { connectBluetoothPrinter } from "@zplkit/print/bluetooth";
+```
+
+[Printing](/docs/printing) shows how to use it. It's experimental: built from Zebra's documentation and tested against stand-ins, not yet against real printers.
+
+## connectNetworkPrinter
+
+```ts
+connectNetworkPrinter(host: string, options?: NetworkOptions): Promise<Printer>
+```
+
+Connects to a network printer by IP address or host name. Node, Bun and Deno only.
+
+<auto-type-table cwd path="../../packages/print/src/network.ts" name="NetworkOptions" />
+
+## connectUsbPrinter
+
+```ts
+connectUsbPrinter(device?: USBDevice): Promise<Printer>
+```
+
+Connects to a USB printer with WebUSB. Without a device, the browser asks which printer to use, so call it from a click. On Windows the system's printer driver usually claims the printer first.
+
+## connectBluetoothPrinter
+
+```ts
+connectBluetoothPrinter(device?: BluetoothDevice, options?: BluetoothOptions): Promise<Printer>
+```
+
+Connects to a printer over Bluetooth LE with Web Bluetooth, through Zebra's Bluetooth LE Parser Service. Without a device, the browser asks which printer to use. Bluetooth LE is slow, about 80 bytes per second in Zebra's measurements.
+
+<auto-type-table cwd path="../../packages/print/src/bluetooth.ts" name="BluetoothOptions" />
+
+## Printer
+
+```ts
+new Printer(connection: Connection): Printer
+```
+
+| Method | Does |
+| --- | --- |
+| `send(zpl)` | Sends a `Label`, `PrintJob`, anything with `toZPL()`, or a ZPL string, as UTF-8 |
+| `status(options?)` | Asks for the printer's status with `~HS`; resolves with a `PrinterStatus`, or `NoReply` |
+| `close()` | Closes the connection |
+
+### PrinterStatus
+
+<auto-type-table cwd path="../../packages/print/src/status.ts" name="PrinterStatus" />
+
+### NoReply
+
+`{ ready: false, noReply: true }`: the printer didn't answer in time. Printers don't answer `~HS` while they're out of media or ribbon, the head is open, the rewinder is full or the head is too hot, so this usually means one of those.
+
+### Connection
+
+Make a `Printer` for any other connection, like a serial port, from an object with these methods:
+
+<auto-type-table cwd path="../../packages/print/src/printer.ts" name="Connection" />

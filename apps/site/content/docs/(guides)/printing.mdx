@@ -1,0 +1,120 @@
+---
+title: Printing
+description: Send labels to Zebra printers and store graphics on them.
+---
+
+zplkit produces ZPL text; sending it to a printer is up to you. The printer's firmware does the drawing.
+
+## Sending ZPL
+
+[`@zplkit/print`](/docs/api/print) sends labels and reads the printer's status, over the network from Node, or over USB and Bluetooth from the browser:
+
+```ts
+import { connectNetworkPrinter } from "@zplkit/print/network";
+
+const printer = await connectNetworkPrinter("192.168.1.50");
+await printer.send(label);
+console.log(await printer.status()); // { ready: true, paperOut: false, … }
+await printer.close();
+```
+
+<Callout type="warn" title="Experimental">
+  `@zplkit/print` is built from Zebra's documentation and tested against stand-ins, not yet against real printers. Please [open an issue](https://github.com/ludwig-f/zplkit/issues) with your printer's model and what happened.
+</Callout>
+
+| Connection | Import | Where |
+| --- | --- | --- |
+| Network, TCP port 9100 | `@zplkit/print/network` | Node, Bun and Deno |
+| USB, with WebUSB | `@zplkit/print/usb` | Chrome and Edge; on Windows the printer driver usually gets in the way |
+| Bluetooth LE | `@zplkit/print/bluetooth` | Chrome and Edge, for printers with Zebra's Bluetooth LE service; slow, so best for text |
+
+Without it, ZPL is plain text: networked printers take it on TCP port 9100, and print servers usually pass it through untouched. Browsers can't open TCP connections, so web apps send labels to network printers through a server or Zebra's Browser Print app.
+
+## Resolution
+
+Positions in ZPL are in dots, and dot size depends on the printhead. The same ZPL prints at different physical sizes on different printers, so the label's `dpmm` has to match the printer you send it to.
+
+| dpmm | dpi | 1 mm |
+| --- | --- | --- |
+| 6 | 152 | 6 dots |
+| 8 | 203 | 8 dots |
+| 12 | 300 | 12 dots |
+| 24 | 600 | 24 dots |
+
+## `^` and `~` commands
+
+Format commands start with `^`. The printer collects them between `^XA` and `^XZ` and prints them as one label. Control commands start with `~` and act as soon as they arrive, like `~SD` for print darkness. That's why printer settings live in `PrinterSetup` rather than `Label`:
+
+```ts
+import { PrinterSetup } from "@zplkit/core";
+
+const setup = new PrinterSetup().setDarkness(20).toZPL();
+```
+
+Settings that apply to one label, like how many copies print or its darkness, are [label options](/docs/building-labels#print-settings) instead.
+
+## Print jobs
+
+A `PrintJob` puts setup and labels together in the order the printer should get them, so they go out as one piece of ZPL:
+
+```ts
+import { Label, PrinterSetup, PrintJob, mm } from "@zplkit/core";
+
+const job = new PrintJob(
+  new PrinterSetup().setDarkness(20),
+  new Label({ width: mm(57), height: mm(19), dpmm: 12, copies: 2 }),
+  new Label({ width: mm(57), height: mm(19), dpmm: 12 })
+);
+
+socket.end(job.toZPL());
+```
+
+`job.lint()` checks the whole job, including printer commands that ended up inside a label. A job works anywhere ZPL does, including [`<zpl-preview>`](/docs/preview), which shows one image per label.
+
+## Storing graphics
+
+Send an image once and recall it by name in every label, instead of including it each time:
+
+```ts
+import { readFileSync } from "node:fs";
+import { Label, PrinterSetup, PrintJob, mm, dots } from "@zplkit/core";
+import { ImageConverter } from "@zplkit/core/image";
+
+const graphic = await new ImageConverter().toZPL(readFileSync("logo.png"));
+
+// Once: store it in the printer's RAM (R:) or flash (E:)
+const setup = new PrinterSetup().storeGraphic({ name: "LOGO", graphic, device: "E" });
+
+// In every label
+const label = new Label({ width: mm(57), height: mm(19), dpmm: 12 })
+  .storedGraphic({ position: { x: dots(0), y: dots(0) }, name: "LOGO", device: "E" });
+
+// The first time, send both together
+new PrintJob(setup, label).toZPL();
+```
+
+Graphics in RAM are lost when the printer turns off; flash keeps them.
+
+## Storing fonts
+
+TrueType fonts can be stored the same way, then used by file name:
+
+```ts
+const setup = new PrinterSetup()
+  .storeFont({ name: "ARIAL", data: readFileSync("arial.ttf"), device: "E" })
+  .toZPL();
+
+new Label({ width: mm(57), height: mm(19), dpmm: 12 })
+  .text({
+    position: { x: dots(0), y: dots(0) },
+    text: "Hello",
+    font: { file: "E:ARIAL.TTF", height: mm(4) },
+  });
+// ^A@,48,,E:ARIAL.TTF
+```
+
+The font's em is the height you give, and the width stretches it. Check the font's license allows embedding before sending it to printers. Fonts already on the printer, like Zebra's own, are used by file name too.
+
+## Fonts
+
+Font 0 is Zebra's licensed CG Triumvirate Bold Condensed, and fonts A to H are built-in bitmap fonts. Previews use lookalikes, so text can come out slightly wider or narrower on the real printer. Leave some room at the end of lines that need to fit.

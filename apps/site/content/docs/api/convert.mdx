@@ -1,0 +1,24 @@
+---
+title: Converting
+description: convert() from @zplkit/core/convert, and its options.
+---
+
+```ts
+import { convert } from "@zplkit/core/convert";
+```
+
+[Converting ZPL to code](/docs/converting) explains what the converted code looks like.
+
+## convert
+
+```ts
+convert(zpl: string, options?: ConvertOptions): string
+```
+
+Turns ZPL into zplkit code that builds the same labels, as JSX or Label method calls. Takes `ConvertOptions`:
+
+<auto-type-table
+  cwd
+  path="../../packages/zpl/src/convert.ts"
+  name="ConvertOptions"
+/>

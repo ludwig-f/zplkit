@@ -1,0 +1,78 @@
+---
+title: JSX
+description: Build labels as JSX, in React projects or on their own.
+---
+
+JSX is the easiest way to build a label: the code is laid out like the label, and conditions and lists are plain JavaScript. `build()` returns a `Label` with `toZPL()`, `lint()` and `commands`.
+
+```tsx
+import { Label, Text, Box, Code128, build, inches, mm, dots } from "@zplkit/core/jsx";
+
+const order = { id: 10442, express: true };
+
+const label = build(
+  <Label width={inches(4)} height={inches(2)} dpmm={8}>
+    <Text x={mm(5)} y={mm(5)} height={mm(7)}>
+      Order #{order.id}
+    </Text>
+    <Box x={mm(5)} y={mm(16)} width={mm(91)} height={dots(3)} thickness={dots(3)} />
+    <Code128 x={mm(5)} y={mm(20)} height={mm(13)}>
+      {`ORD-${order.id}`}
+    </Code128>
+    {order.express && (
+      <Text x={mm(66)} y={mm(5)} height={mm(7)}>
+        EXPRESS
+      </Text>
+    )}
+  </Label>
+);
+
+label.toZPL();
+```
+
+Lengths take a unit, `mm()` or `dots()`, as described in [units](/docs/building-labels#units). Text and barcode data go in children and are escaped for you. `false`, `null` and `undefined` children are skipped, and lists from `.map()` work.
+
+There's an element for text, boxes, images and each barcode, plus `<Field>` for any other command and `<Raw>` for plain ZPL. The [API reference](/docs/api/jsx) lists them all with their props. Elements can be reused in labels with different resolutions, since millimeters are converted when the label is built.
+
+Prefer plain function calls, or not using JSX in your project? The same labels can be built with [method calls](/docs/building-labels).
+
+## Your own components
+
+Components are plain functions that return elements:
+
+```tsx
+// Position in millimeters, so lines can be placed relative to it
+const ReturnAddress = (props: { x: number; y: number }) => (
+  <>
+    <Text x={mm(props.x)} y={mm(props.y)} height={mm(3)}>Harbor Parts Co.</Text>
+    <Text x={mm(props.x)} y={mm(props.y + 4)} height={mm(3)}>1000 Shipping Lane</Text>
+  </>
+);
+
+// <ReturnAddress x={5} y={40} />
+```
+
+`build()` also accepts a component that returns a `<Label>`, like `build(<ShippingLabel order={order} />)`.
+
+## Setup
+
+### React projects
+
+No setup is needed. Label elements also work when compiled by React's JSX runtime, so labels can live next to your React components. Label components are plain functions that `build()` calls, not React components, so hooks and context don't work inside them.
+
+### Without React
+
+Tell TypeScript or your bundler to use zplkit's JSX runtime:
+
+```json title="tsconfig.json"
+{
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "@zplkit/core"
+  }
+}
+```
+
+### Other frameworks
+
+In frameworks whose templates aren't JSX, like Vue, Svelte or Angular, use the [method calls](/docs/building-labels) in a `.ts` file. If your build tool compiles `.tsx` files (Vite does), you can also keep labels in a `.tsx` file that starts with `/** @jsxImportSource @zplkit/core */`.
