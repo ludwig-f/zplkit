@@ -53,6 +53,16 @@ const serializeCommand = (command: Command): string => {
       return `^LT${params(command.offset)}`;
     case "LabelReverse":
       return `^LR${yn(command.reverse)}`;
+    case "SerialNumber":
+      return `^SN${params(
+        command.start,
+        command.increment,
+        command.leadingZeros === undefined
+          ? undefined
+          : yn(command.leadingZeros)
+      )}`;
+    case "SerializationField":
+      return `^SF${params(command.mask, command.increment)}`;
     case "MeasurementUnits":
       return `^MU${params(command.unit, command.baseDpi, command.targetDpi)}`;
     case "PrintMirror":

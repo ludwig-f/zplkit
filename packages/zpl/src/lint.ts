@@ -338,6 +338,10 @@ const lint = (
         }
         break;
       }
+      case "SerialNumber":
+        // ^SN is the field's data
+        if (field) field.hasData = true;
+        break;
       case "FieldSeparator":
         if (!field) {
           report(

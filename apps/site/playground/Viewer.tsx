@@ -6,7 +6,7 @@ import "./styles.css";
 import { PopoverClose } from "fumadocs-ui/components/ui/popover";
 import Editor from "./Editor";
 import ProblemList from "./ProblemList";
-import { Code, ImageDown, Link2 } from "lucide-react";
+import { Code, FileArchive, ImageDown, Link2 } from "lucide-react";
 import { convert } from "@zplkit/core/convert";
 import type { ConvertOptions } from "@zplkit/core/convert";
 import Bench from "./Bench";
@@ -52,6 +52,12 @@ const fromExample = (index: number): Saved => {
 };
 
 const labelCount = (count: number) => `${count} label${count === 1 ? "" : "s"}`;
+
+/** Labels the preview shows; the rest can be downloaded as a .zip */
+const PREVIEW_LABELS = 5;
+
+/** Most labels in one .zip, as many as the renderer draws at once */
+const ZIP_LABELS = 10_000;
 
 /**
  * The label as playground code: convert()'s JSX, with the label as the
@@ -179,6 +185,8 @@ export default function Viewer() {
   // A template waiting for the visitor to confirm replacing their edits
   const [pending, setPending] = useState<number | "blank">();
   const [images, setImages] = useState<string[]>([]);
+  /** Different labels in all, also those the preview doesn't show */
+  const [labelTotal, setLabelTotal] = useState<number>();
   const [notice, setNotice] = useState<string>();
   const [tab, setTab] = useState<Tab>("Editor");
   const [showCode, setShowCode] = useState(false);
@@ -333,6 +341,50 @@ export default function Viewer() {
         images.length === 1 ? `${name}.png` : `${name}-${index + 1}.png`;
       link.click();
     });
+  };
+
+  /** Every label as a PNG, in one .zip, with the printer's exact dots */
+  const downloadAll = async () => {
+    setNotice(`Rendering ${labelCount(labelTotal ?? 0)}…`);
+    try {
+      const [{ renderPrinted }, { zipSync }] = await Promise.all([
+        import("@zplkit/render"),
+        import("fflate"),
+      ]);
+      const labels = await renderPrinted(zpl, {
+        widthMm: labelSize.width,
+        heightMm: labelSize.height,
+        dpmm,
+        grayscale: false,
+        fonts: fonts.fonts,
+        font0: fonts.font0?.bytes,
+        limit: ZIP_LABELS,
+      });
+      const digits = String(labels.length).length;
+      const files = Object.fromEntries(
+        labels.map(({ png }, index) => [
+          `${name}-${String(index + 1).padStart(digits, "0")}.png`,
+          Uint8Array.from(atob(png), (char) => char.charCodeAt(0)),
+        ])
+      );
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(
+        // PNGs are compressed already, so they're stored as they are
+        new Blob([zipSync(files, { level: 0 }) as BlobPart], {
+          type: "application/zip",
+        })
+      );
+      link.download = `${name}.zip`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+      setNotice(`Downloaded ${labelCount(labels.length)}`);
+    } catch (cause) {
+      setNotice(
+        `The labels couldn't be rendered: ${
+          cause instanceof Error ? cause.message : String(cause)
+        }`
+      );
+    }
   };
 
   /** The ^FO that puts a field at a position, from the label home */
@@ -495,6 +547,22 @@ export default function Viewer() {
                 </button>
               ),
             },
+            ...((labelTotal ?? 0) > images.length
+              ? [
+                  {
+                    icon: <FileArchive />,
+                    title: "All labels",
+                    detail: `${labelCount(
+                      Math.min(labelTotal!, ZIP_LABELS)
+                    )} as PNGs in a .zip`,
+                    actions: (
+                      <button type="button" onClick={downloadAll}>
+                        Download ZIP
+                      </button>
+                    ),
+                  },
+                ]
+              : []),
           ]}
         />
       </div>
@@ -583,16 +651,19 @@ export default function Viewer() {
                 smoothing={smoothing}
                 fonts={fonts.fonts}
                 font0={fonts.font0?.bytes}
+                maxLabels={PREVIEW_LABELS}
                 fade
                 onzpl-render-start={() =>
                   setRender((current) => ({ ...current, busy: true }))
                 }
                 onzpl-render={(event) => {
                   setImages(event.detail.images);
+                  setLabelTotal(event.detail.labels);
                   setRender({ busy: false, ms: event.detail.duration });
                 }}
                 onzpl-error={() => {
                   setImages([]);
+                  setLabelTotal(undefined);
                   setRender({ busy: false });
                 }}
               />

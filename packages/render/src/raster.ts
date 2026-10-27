@@ -26,6 +26,8 @@ type Sampling = "center" | "coverage";
 class Raster {
   /** Ink per dot from 0 to 1, row by row */
   readonly ink: Float32Array;
+  /** How many times the label prints in a row, from ^PQ */
+  copies = 1;
 
   constructor(
     readonly width: number,

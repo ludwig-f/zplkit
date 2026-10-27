@@ -55,6 +55,30 @@ suite("configure({ render })", () => {
     });
   });
 
+  test("asks for one label more than it shows", async () => {
+    const element = create();
+    element.maxLabels = 3;
+    element.zpl = "^XA^XZ";
+    await tick();
+
+    expect(calls[0].options.limit).toBe(4);
+  });
+
+  test("says there are more labels when a renderer returns too many", async () => {
+    const element = create();
+    element.maxLabels = 1;
+    element.smoothing = 0;
+    element.zpl = "^XA^XZ^XA^XZ";
+    await tick();
+    calls[0].resolve(["bmV3", "bmV3"]);
+    await tick();
+
+    expect(shownImages(element)).toHaveLength(1);
+    expect(
+      element.shadowRoot!.querySelector('[part="more"]')!.textContent
+    ).toBe("More labels");
+  });
+
   test("asks for grayscale output unless smoothing is 0", async () => {
     const smoothed = create();
     smoothed.zpl = "^XA^XZ";

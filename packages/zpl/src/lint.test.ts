@@ -293,6 +293,17 @@ suite("lint", () => {
       ]);
     });
 
+    test("a serial number is a barcode's data", () => {
+      expect(
+        lintLabel(
+          { type: "FieldOrigin", x: 10, y: 10 },
+          { type: "Code128" },
+          { type: "SerialNumber", start: "001" },
+          { type: "FieldSeparator" }
+        )
+      ).toStrictEqual([]);
+    });
+
     test("GS1 DataBar Expanded data with parentheses", () => {
       const diagnostics = lintLabel(
         { type: "FieldOrigin", x: 10, y: 10 },

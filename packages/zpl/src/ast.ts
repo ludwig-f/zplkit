@@ -46,6 +46,24 @@ type MeasurementUnits = Node<
   "MeasurementUnits",
   { unit?: "D" | "I" | "M"; baseDpi?: number; targetDpi?: number }
 >;
+/**
+ * `^SNv,n,z`: field data that counts up on each copy ^PQ prints. The last
+ * run of digits in v counts by n; z Y keeps its leading zeros, N prints them
+ * as spaces.
+ */
+type SerialNumber = Node<
+  "SerialNumber",
+  { start?: string; increment?: number; leadingZeros?: boolean }
+>;
+/**
+ * `^SFa,b`: counts up the ^FD data on each copy. The mask a lines up with
+ * the data: d decimal, h hex, o octal, a letters, n letters and digits, %
+ * left as it is. The increment b lines up with the mask's end.
+ */
+type SerializationField = Node<
+  "SerializationField",
+  { mask?: string; increment?: string }
+>;
 /** `^LRa` */
 type LabelReverse = Node<"LabelReverse", { reverse: boolean }>;
 /** `^CIa` */
@@ -625,6 +643,8 @@ type Command =
   | LabelReverse
   | PrintMirror
   | MeasurementUnits
+  | SerialNumber
+  | SerializationField
   | ChangeEncoding
   | DefaultFont
   | FieldOrientation
@@ -704,6 +724,8 @@ export type {
   LabelReverse,
   PrintMirror,
   MeasurementUnits,
+  SerialNumber,
+  SerializationField,
   ChangeEncoding,
   DefaultFont,
   FieldOrientation,

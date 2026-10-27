@@ -1,6 +1,8 @@
 import { parse } from "@zplkit/core";
 import { Raster, fillPath } from "./raster.js";
 import { boxPath, circlePath, diagonalPath, ellipsePath } from "./shapes.js";
+import { countCopies } from "./copies.js";
+import { expandFormats } from "./formats.js";
 import { layout } from "./layout.js";
 import { drawText, textWidth } from "./text.js";
 import { drawBarcode, drawPlaceholder } from "./barcode.js";
@@ -31,6 +33,11 @@ type RenderOptions = {
    * open-licensed stand-in, like the printer's own if you have a license
    */
   font0?: Uint8Array;
+  /**
+   * Render only the first labels, counting each different copy, for
+   * previews of many serialized labels
+   */
+  limit?: number;
 };
 
 type TextElement = Extract<Element, { kind: "text" }>;
@@ -182,6 +189,12 @@ const drawReversed = (raster: Raster, element: Element, dpmm: number): void => {
 const MAX_DOTS = 100_000_000;
 
 /**
+ * Most different labels to render without a limit, so ^PQ with ^SN can't
+ * ask for millions of images by accident
+ */
+const MAX_LABELS = 10_000;
+
+/**
  * Render each label in ZPL (or parsed commands) to a raster of ink coverage.
  * Labels without ^PW use the full width; narrower print widths are centered,
  * like printers do.
@@ -200,10 +213,20 @@ const renderLabels = (
     );
   }
 
+  if (options.limit === undefined) {
+    const { labels } = countCopies(expandFormats(commands));
+    if (labels > MAX_LABELS) {
+      throw new RangeError(
+        `The ZPL prints ${labels} different labels, more than ${MAX_LABELS} at once. Pass a limit to render the first ones.`
+      );
+    }
+  }
+
   return layout(commands, {
     fonts: options.fonts,
     font0: options.font0,
     dpmm: options.dpmm,
+    limit: options.limit,
   }).map((label) => {
     const printWidth = Math.min(width, label.printWidth ?? width);
     const printed = new Raster(printWidth, height, sampling);
@@ -224,6 +247,7 @@ const renderLabels = (
     // Upside down: turning the print area half a turn reverses its dots
     if (label.inverted) printed.ink.reverse();
 
+    printed.copies = label.copies;
     if (printWidth === width) return printed;
 
     // Center the printed area on the label
@@ -235,6 +259,7 @@ const renderLabels = (
         y * width + offset
       );
     }
+    raster.copies = label.copies;
     return raster;
   });
 };
