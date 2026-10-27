@@ -115,6 +115,16 @@ const commandCases: [Command, string][] = [
   [{ type: "Ean13", orientation: "R", height: 50 }, "^BER,50"],
   [{ type: "PrintQuantity", quantity: 2 }, "^PQ2"],
   [
+    { type: "SerialNumber", start: "001", increment: 1, leadingZeros: true },
+    "^SN001,1,Y",
+  ],
+  [{ type: "SerialNumber", start: "010", increment: -3 }, "^SN010,-3"],
+  [{ type: "SerialNumber" }, "^SN"],
+  [
+    { type: "SerializationField", mask: "%%dddd", increment: "1" },
+    "^SF%%dddd,1",
+  ],
+  [
     {
       type: "PrintQuantity",
       quantity: 10,

@@ -1,3 +1,6 @@
+import { parse } from "@zplkit/core";
+import { countCopies } from "./copies.js";
+import { expandFormats } from "./formats.js";
 import { encodePng } from "./png.js";
 import { renderLabels } from "./render.js";
 import type { RenderOptions } from "./render.js";
@@ -16,8 +19,45 @@ type RenderZplOptions = Omit<RenderOptions, "antialias"> & {
   grayscale: boolean;
 };
 
+/** A rendered label, and how many times it prints in a row */
+type PrintedLabel = {
+  /** Base64-encoded PNG */
+  png: string;
+  /** From ^PQ: copies that are all the same are drawn once */
+  copies: number;
+};
+
 /**
- * Render ZPL to one base64-encoded PNG per label. The signature matches what
+ * Render ZPL to one base64-encoded PNG per different label, with how many
+ * times each prints. Serialized labels (^SN, ^SF) are drawn for each copy;
+ * use `limit` to draw only the first.
+ */
+const renderPrinted = async (
+  zpl: string,
+  options: RenderZplOptions
+): Promise<PrintedLabel[]> => {
+  const rasters = renderLabels(zpl, {
+    ...options,
+    antialias: options.grayscale,
+  });
+  return Promise.all(
+    rasters.map(async (raster) => ({
+      png: toBase64(await encodePng(raster)),
+      copies: raster.copies,
+    }))
+  );
+};
+
+/**
+ * How many different labels ZPL renders to, and how many it prints with
+ * ^PQ's copies, without drawing them
+ */
+const countLabels = (zpl: string): { labels: number; printed: number } =>
+  countCopies(expandFormats(parse(zpl).commands));
+
+/**
+ * Render ZPL to one base64-encoded PNG per different label: copies with
+ * ^PQ that are all the same are drawn once. The signature matches what
  * @zplkit/preview expects from a renderer, so it can be passed to
  * `configure({ render: renderZpl })`.
  */
@@ -34,9 +74,9 @@ const renderZpl = async (
   );
 };
 
-export type { RenderOptions, RenderZplOptions };
+export type { RenderOptions, RenderZplOptions, PrintedLabel };
 export type { Path, Point, Color, Sampling } from "./raster.js";
 export type { Element, LabelLayout, LayoutOptions } from "./layout.js";
-export { renderZpl, renderLabels, encodePng };
+export { renderZpl, renderPrinted, renderLabels, countLabels, encodePng };
 export { Raster, fillPath } from "./raster.js";
 export { layout } from "./layout.js";

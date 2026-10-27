@@ -225,6 +225,17 @@ const parsers: Record<string, CommandParser> = {
     type: "LabelTop",
     offset: p.number(0, "offset"),
   })),
+  "^SN": withParams("^SN", (p) => ({
+    type: "SerialNumber",
+    start: p.string(0),
+    increment: p.number(1, "increment"),
+    leadingZeros: p.yesNo(2, "leadingZeros"),
+  })),
+  "^SF": withParams("^SF", (p) => ({
+    type: "SerializationField",
+    mask: p.string(0),
+    increment: p.string(1),
+  })),
   "^MU": withParams("^MU", (p) => ({
     type: "MeasurementUnits",
     unit: p.oneOf(0, "unit", ["D", "I", "M"] as const),

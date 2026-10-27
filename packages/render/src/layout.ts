@@ -6,7 +6,9 @@
  */
 import { decodeObjectData } from "./data.js";
 import { FontFiles, parseFontFile } from "./font-files.js";
+import { expandCopies } from "./copies.js";
 import { expandFormats } from "./formats.js";
+import { hasUncountedMask } from "./serial.js";
 import { decodeGraphicData } from "./graphics.js";
 import { measuredFields } from "@zplkit/core/internal";
 import type { Command } from "@zplkit/core";
@@ -125,6 +127,8 @@ type LabelLayout = {
   inverted?: boolean;
   /** ^PMY: the label prints as its mirror image */
   mirrored?: boolean;
+  /** How many times the label prints in a row, from ^PQ */
+  copies: number;
   elements: Element[];
   /** Commands that were understood but aren't drawn yet */
   unsupported: number[];
@@ -304,6 +308,8 @@ type LayoutOptions = {
   font0?: Uint8Array;
   /** Dots per millimeter, for ^MU's millimeters and inches. 8 if not given. */
   dpmm?: number;
+  /** Lay out only the first labels, counting each different copy */
+  limit?: number;
 };
 
 /**
@@ -375,7 +381,11 @@ const layout = (
     return typeface ? { ...setting, typeface } : { ...setting, font: "0" };
   };
 
-  for (const { command: written, index } of expandFormats(commands)) {
+  const { items, copies } = expandCopies(
+    expandFormats(commands),
+    options.limit
+  );
+  for (const { command: written, index } of items) {
     if (written.type === "MeasurementUnits") {
       unit = written.unit ?? unit;
       continue;
@@ -424,7 +434,11 @@ const layout = (
     }
 
     if (command.type === "StartFormat") {
-      label = { elements: [], unsupported: [] };
+      label = {
+        elements: [],
+        unsupported: [],
+        copies: copies[labels.length] ?? 1,
+      };
       labels.push(label);
       home = { x: 0, y: 0 };
       labelReverse = false;
@@ -499,6 +513,12 @@ const layout = (
         break;
       case "PrintMirror":
         mirror = command.mirror;
+        break;
+      case "SerializationField":
+        // Letters aren't counted yet
+        if (command.mask && hasUncountedMask(command.mask)) {
+          label.unsupported.push(index);
+        }
         break;
       case "FieldOrigin":
         field = {
