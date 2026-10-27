@@ -258,8 +258,9 @@ html > body[data-scroll-locked] {
 
 /* The hero labels feeding out of the printer on their liner, in steps */
 @keyframes feed {
+  /* The liner holds two labels, so half its height is about one label */
   from {
-    transform: translateY(-80%);
+    transform: translateY(-50%);
   }
   to {
     transform: translateY(0);
