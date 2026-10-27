@@ -22,6 +22,15 @@ export const metadata: Metadata = {
   title: { default: "zplkit", template: "%s | zplkit" },
   description:
     "Build, parse, lint and preview ZPL for Zebra label printers in TypeScript, with typed method calls or JSX.",
+  // Data Matrix codes from lib/icon.ts; browsers pick the size for the screen
+  icons: {
+    icon: [16, 32].map((size) => ({
+      url: `/icons/${size}.png`,
+      sizes: `${size}x${size}`,
+      type: "image/png",
+    })),
+    apple: "/icons/180.png",
+  },
 };
 
 export default function Layout({ children }: LayoutProps<"/">) {
