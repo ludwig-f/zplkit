@@ -5,7 +5,7 @@
 
 Build, parse and lint ZPL, the language Zebra label printers speak, from TypeScript.
 
-- **JSX and a typed builder**: write labels as JSX components or with method calls, in millimeters or dots, with field data escaped for you.
+- **JSX and a typed builder**: write labels as JSX components or with method calls, in millimeters, inches or dots, with field data escaped for you.
 - **Parser**: read existing ZPL into typed commands and write it back unchanged.
 - **Linter**: catch the mistakes printers stay quiet about, like values they clamp and labels that never print.
 - **No runtime dependencies** except two small image decoders, used only by `ImageConverter`.
