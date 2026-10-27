@@ -130,6 +130,11 @@ type GraphicCircle = Node<
   "GraphicCircle",
   { diameter?: number; thickness?: number; color?: Color }
 >;
+/** `^GEw,h,t,c` */
+type GraphicEllipse = Node<
+  "GraphicEllipse",
+  { width?: number; height?: number; thickness?: number; color?: Color }
+>;
 /** `^GDw,h,t,c,o` */
 type GraphicDiagonal = Node<
   "GraphicDiagonal",
@@ -618,6 +623,7 @@ type Command =
   | Comment
   | GraphicBox
   | GraphicCircle
+  | GraphicEllipse
   | GraphicDiagonal
   | GraphicField
   | RecallGraphic
@@ -692,6 +698,7 @@ export type {
   Comment,
   GraphicBox,
   GraphicCircle,
+  GraphicEllipse,
   GraphicDiagonal,
   GraphicField,
   RecallGraphic,

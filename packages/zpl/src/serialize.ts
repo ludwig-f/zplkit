@@ -111,6 +111,13 @@ const serializeCommand = (command: Command): string => {
       )}`;
     case "GraphicCircle":
       return `^GC${params(command.diameter, command.thickness, command.color)}`;
+    case "GraphicEllipse":
+      return `^GE${params(
+        command.width,
+        command.height,
+        command.thickness,
+        command.color
+      )}`;
     case "GraphicDiagonal":
       return `^GD${params(
         command.width,

@@ -154,6 +154,75 @@ describe("renderLabels", () => {
     });
   });
 
+  describe("ellipses", () => {
+    test("draw the line inside the width and height", () => {
+      expect(
+        art(render("^FO10,10^GE30,16,3^FS"), 10, 10, 39, 25)
+      ).toStrictEqual([
+        "..........##########..........",
+        "......##################......",
+        "....######################....",
+        "...#######..........#######...",
+        "..####..................####..",
+        ".####....................####.",
+        "####......................####",
+        "###........................###",
+        "###........................###",
+        "####......................####",
+        ".####....................####.",
+        "..####..................####..",
+        "...#######..........#######...",
+        "....######################....",
+        "......##################......",
+        "..........##########..........",
+      ]);
+    });
+
+    test("fill when the line is as thick as the ellipse", () => {
+      expect(
+        art(render("^FO10,10^GE20,12,12^FS"), 10, 10, 29, 21)
+      ).toStrictEqual([
+        "......########......",
+        "...##############...",
+        "..################..",
+        ".##################.",
+        "####################",
+        "####################",
+        "####################",
+        "####################",
+        ".##################.",
+        "..################..",
+        "...##############...",
+        "......########......",
+      ]);
+    });
+
+    test("are as wide as they are tall like ^GC", () => {
+      expect(render("^FO10,10^GE20,20,3^FS").ink).toStrictEqual(
+        render("^FO10,10^GC20,3^FS").ink
+      );
+    });
+
+    test("default to a 3 dot ring", () => {
+      expect(art(render("^FO10,10^GE^FS"), 10, 10, 12, 12)).toStrictEqual([
+        "###",
+        "#.#",
+        "###",
+      ]);
+    });
+
+    test("^FT places the bottom-left corner", () => {
+      expect(dots(render("^FT10,40^GE30,16,3^FS")).y).toStrictEqual([24, 39]);
+    });
+
+    test("can be white", () => {
+      // A white ellipse clears the dots a black one would print
+      const white = render("^FO10,10^GB30,30,30^FS^FO12,12^GE20,10,10,W^FS");
+      const black = render("^FO12,12^GE20,10,10^FS");
+      expect(dots(white).count).toBe(900 - dots(black).count);
+    });
+  });
+
   describe("diagonal lines", () => {
     test("lean right by default", () => {
       expect(

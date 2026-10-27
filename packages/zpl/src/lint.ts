@@ -63,6 +63,11 @@ const ranges: {
     ["diameter", "diameter", 3, 4095],
     ["thickness", "thickness", 2, 4095],
   ],
+  GraphicEllipse: [
+    ["width", "width", 3, 4095],
+    ["height", "height", 3, 4095],
+    ["thickness", "thickness", 2, 4095],
+  ],
   GraphicDiagonal: [
     ["width", "width", 3, 32000],
     ["height", "height", 3, 32000],
@@ -88,6 +93,7 @@ const codes: { [T in Command["type"]]?: string } = {
   LabelLength: "^LL",
   GraphicBox: "^GB",
   GraphicCircle: "^GC",
+  GraphicEllipse: "^GE",
   GraphicDiagonal: "^GD",
   BarcodeDefaults: "^BY",
   SetDarkness: "~SD",

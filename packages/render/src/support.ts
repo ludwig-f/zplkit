@@ -42,6 +42,7 @@ const renderedCommands: readonly string[] = [
   "^GB",
   "^GC",
   "^GD",
+  "^GE",
   "^GF",
   "^GS",
   "~DG",

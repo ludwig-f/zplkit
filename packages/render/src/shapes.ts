@@ -79,26 +79,46 @@ const boxPath = (
   return [outer, inner.reverse()];
 };
 
+/**
+ * ^GE: a ring whose line grows inward from the width and height, as thick
+ * across as it is up and down
+ */
+const ellipsePath = (
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  thickness: number
+): Path => {
+  const rx = width / 2;
+  const ry = height / 2;
+  const cx = x + rx;
+  const cy = y + ry;
+  // A circle's points, squashed into the ellipse
+  const ellipse = (radiusX: number, radiusY: number): Point[] => {
+    const r = Math.max(radiusX, radiusY);
+    return [0, 1, 2, 3].flatMap((quarter) =>
+      arc(0, 0, r, (quarter * Math.PI) / 2).map(
+        ([px, py]) =>
+          [cx + (px * radiusX) / r, cy + (py * radiusY) / r] as const
+      )
+    );
+  };
+
+  const innerX = rx - thickness;
+  const innerY = ry - thickness;
+  return innerX > 0 && innerY > 0
+    ? [ellipse(rx, ry), ellipse(innerX, innerY).reverse()]
+    : [ellipse(rx, ry)];
+};
+
 /** ^GC: a ring whose line grows inward from the diameter */
 const circlePath = (
   x: number,
   y: number,
   diameter: number,
   thickness: number
-): Path => {
-  const r = diameter / 2;
-  const cx = x + r;
-  const cy = y + r;
-  const circle = (radius: number): Point[] => [
-    ...arc(cx, cy, radius, 0),
-    ...arc(cx, cy, radius, Math.PI / 2),
-    ...arc(cx, cy, radius, Math.PI),
-    ...arc(cx, cy, radius, (3 * Math.PI) / 2),
-  ];
-
-  const innerR = r - thickness;
-  return innerR > 0 ? [circle(r), circle(innerR).reverse()] : [circle(r)];
-};
+): Path => ellipsePath(x, y, diameter, diameter, thickness);
 
 /**
  * ^GD: a parallelogram whose rows are as wide as the line thickness. R leans
@@ -130,4 +150,4 @@ const diagonalPath = (
         ],
       ];
 
-export { boxPath, circlePath, diagonalPath };
+export { boxPath, circlePath, diagonalPath, ellipsePath };
