@@ -34,11 +34,12 @@ class Params {
   ) {}
 
   get length(): number {
-    return this.values.filter((value) => value !== "").length;
+    return this.values.filter((value) => value.trim() !== "").length;
   }
 
+  /** A parameter, without the spaces printers ignore around it */
   string(index: number): string | undefined {
-    const value = this.values[index];
+    const value = this.values[index]?.trim();
     return value === undefined || value === "" ? undefined : value;
   }
 
