@@ -256,11 +256,11 @@ html > body[data-scroll-locked] {
   border-radius: 3px;
 }
 
-/* The hero labels feeding out of the printer on their liner, in steps */
+/* The hero labels feeding out of the printer on their liner, one label in steps */
 @keyframes feed {
-  /* The liner holds two labels, so half its height is about one label */
+  /* One label pitch, set where it's used */
   from {
-    transform: translateY(-50%);
+    transform: translateY(calc(-1 * var(--pitch, 50%)));
   }
   to {
     transform: translateY(0);

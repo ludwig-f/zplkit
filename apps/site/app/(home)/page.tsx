@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { Label, inches, lint, mm, parse } from "@zplkit/core";
 import { Code128, Label as LabelElement, Text, build } from "@zplkit/core/jsx";
 import { renderLabel } from "@/lib/render-label";
@@ -179,7 +179,16 @@ const Output = ({
   </div>
 );
 
-/** A label on its liner, on the printer's dotted platen */
+/** Space between labels on the liner, in pixels */
+const LABEL_GAP = 14;
+
+/** How much of the next label shows below the printer's exit */
+const PEEK = 12;
+
+/**
+ * The first label on its liner, coming out of the printer, with the next
+ * one, still blank, at the exit
+ */
 const Platen = ({
   src,
   width,
@@ -189,41 +198,42 @@ const Platen = ({
   src: string;
   width: number;
   alt: string;
-  /** Feed the labels out of the printer once when the page loads */
+  /** Feed the liner out by one label when the page loads */
   feed?: boolean;
 }) => {
   const radius = Math.round((12 * width) / 400);
   const height = Math.round(
     width * (shippingLabelSize.heightMm / shippingLabelSize.widthMm)
   );
+  const paper = {
+    width,
+    height,
+    borderRadius: radius,
+    boxShadow: "0 0 0 1px var(--zk-label-edge)",
+  };
   return (
-    // The liner carries both labels, so they feed out together
     <div
-      className={`flex flex-col items-center gap-3.5 bg-liner px-3.5 pt-[26px] shadow-[0_1px_0_var(--zk-rule-strong),0_10px_30px_-14px_rgb(0_0_0/0.35)]${
+      className={`flex flex-col items-center self-start bg-liner px-3.5 pb-[26px] shadow-[0_1px_0_var(--zk-rule-strong),0_10px_30px_-14px_rgb(0_0_0/0.35)]${
         feed ? " motion-safe:animate-[feed_1.1s_steps(12,end)_both]" : ""
       }`}
+      style={
+        {
+          gap: LABEL_GAP,
+          // Only the bottom of the next label is out of the printer
+          marginTop: -(height - PEEK),
+          // One label and the gap after it, how far the feed moves
+          "--pitch": `${height + LABEL_GAP}px`,
+        } as CSSProperties
+      }
     >
+      <div aria-hidden="true" className="bg-paper" style={paper} />
       <img
         src={src}
         alt={alt}
         width={width}
         height={height}
         className="label-dim block bg-paper"
-        style={{
-          borderRadius: radius,
-          boxShadow: "0 0 0 1px var(--zk-label-edge)",
-        }}
-      />
-      {/* The next label on the roll, running off the bottom of the frame */}
-      <div
-        aria-hidden="true"
-        className="bg-paper"
-        style={{
-          width,
-          height,
-          borderRadius: radius,
-          boxShadow: "0 0 0 1px var(--zk-label-edge)",
-        }}
+        style={paper}
       />
     </div>
   );
