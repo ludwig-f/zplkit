@@ -481,9 +481,18 @@ const layoutBlock = (
         );
         break;
       case "C": {
-        // Centering counts a space after the line, unless \& ended it
-        const counted = line.trailingSpace || (last && !line.broken);
-        start = Math.round((block.width - advance - (counted ? space : 0)) / 2);
+        // Centering counts the space after a wrapped line, but doesn't
+        // start before the block. The last line counts one too, unless \&
+        // ended it or it wouldn't fit.
+        if (line.trailingSpace) {
+          start = Math.max(0, Math.round((block.width - advance - space) / 2));
+        } else {
+          const counted =
+            last && !line.broken && advance + space <= block.width;
+          start = Math.round(
+            (block.width - advance - (counted ? space : 0)) / 2
+          );
+        }
         break;
       }
     }
