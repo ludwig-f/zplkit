@@ -59,7 +59,7 @@ Labels can also be written as JSX. It compiles to the same commands as the build
 ```
 
 ```tsx
-import { Label, Text, Box, Code128, build, mm, dots } from "@zplkit/core/jsx";
+import { Label, Text, Box, Code128, build, inches, mm, dots } from "@zplkit/core/jsx";
 import type { Length } from "@zplkit/core";
 
 const order = { id: 10442, barcode: "10442-B3", express: true };
@@ -69,7 +69,7 @@ const ReturnAddress = (props: { x: Length; y: Length }) => (
 );
 
 const zpl = build(
-  <Label width={mm(101.6)} height={mm(50.8)} dpmm={8}>
+  <Label width={inches(4)} height={inches(2)} dpmm={8}>
     <ReturnAddress x={mm(5)} y={mm(5)} />
     <Text x={mm(5)} y={mm(14)} height={mm(4)}>
       Order #{order.id}
