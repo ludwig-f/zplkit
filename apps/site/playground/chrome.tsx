@@ -54,15 +54,20 @@ export function TemplateMenu({
 }) {
   return (
     <div className="field template">
-      <span className="field-label">Template</span>
+      <span className="field-label" id={`${tool}-template`}>
+        Template
+      </span>
       <Popover>
-        <PopoverTrigger className="menu-button" aria-label="Template">
-          <span className="menu-value">
+        <PopoverTrigger
+          className="menu-button"
+          aria-labelledby={`${tool}-template ${tool}-template-value`}
+        >
+          <span className="menu-value" id={`${tool}-template-value`}>
             {current === undefined ? "Your label" : templates[current]}
+            {edited && current !== undefined && (
+              <span className="edited">edited</span>
+            )}
           </span>
-          {edited && current !== undefined && (
-            <span className="edited">edited</span>
-          )}
           <ChevronDown aria-hidden="true" />
         </PopoverTrigger>
         <PopoverContent align="start" {...popover(tool, "w-[240px] py-1.5")}>
@@ -100,14 +105,22 @@ export type ExportRow = {
 
 /** Every way to take the label with you: a link, code, ZPL or images */
 export function ExportMenu({ tool, rows }: { tool: Tool; rows: ExportRow[] }) {
+  const [open, setOpen] = useState(false);
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger className="primary export-button" aria-label="Export">
         <Upload aria-hidden="true" />
         <span>Export</span>
         <ChevronDown aria-hidden="true" />
       </PopoverTrigger>
-      <PopoverContent align="end" {...popover(tool)}>
+      <PopoverContent
+        align="end"
+        {...popover(tool)}
+        // An action closes the menu, so the notice it shows is in view
+        onClick={(event) => {
+          if ((event.target as HTMLElement).closest("button")) setOpen(false);
+        }}
+      >
         <p className="popover-title">Export</p>
         {rows.map((row) => (
           <div key={row.title} className="export-row">
