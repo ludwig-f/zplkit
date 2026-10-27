@@ -6,12 +6,12 @@ description: Build labels as JSX, in React projects or on their own.
 JSX is the easiest way to build a label: the code is laid out like the label, and conditions and lists are plain JavaScript. `build()` returns a `Label` with `toZPL()`, `lint()` and `commands`.
 
 ```tsx
-import { Label, Text, Box, Code128, build, mm, dots } from "@zplkit/core/jsx";
+import { Label, Text, Box, Code128, build, inches, mm, dots } from "@zplkit/core/jsx";
 
 const order = { id: 10442, express: true };
 
 const label = build(
-  <Label width={mm(101.6)} height={mm(50.8)} dpmm={8}>
+  <Label width={inches(4)} height={inches(2)} dpmm={8}>
     <Text x={mm(5)} y={mm(5)} height={mm(7)}>
       Order #{order.id}
     </Text>

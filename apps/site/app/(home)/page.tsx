@@ -1,10 +1,12 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { Label, lint, mm, parse } from "@zplkit/core";
+import { Label, inches, lint, mm, parse } from "@zplkit/core";
 import { Code128, Label as LabelElement, Text, build } from "@zplkit/core/jsx";
 import { renderLabel } from "@/lib/render-label";
 import { highlight, highlightZpl } from "@/lib/highlight";
 import { CodePanel } from "@/components/home/code-panel";
+import { tools } from "@/components/tools";
+import type { Tool } from "@/components/tools";
 import { InstallBox } from "@/components/home/install-box";
 import {
   shippingLabel,
@@ -13,11 +15,11 @@ import {
 
 const order = { name: "Amara Okafor", tracking: "1ZK4F9W82034417" };
 
-const builderSource = `import { Label, mm } from "@zplkit/core";
+const builderSource = `import { Label, inches, mm } from "@zplkit/core";
 
 const zpl = new Label({
-  width: mm(100),
-  height: mm(150),
+  width: inches(4),
+  height: inches(6),
   dpmm: 8,
 })
   .text({
@@ -37,10 +39,10 @@ const zpl = new Label({
   })
   .toZPL();`;
 
-const jsxSource = `import { Label, Text, Code128, build, mm } from "@zplkit/core/jsx";
+const jsxSource = `import { Label, Text, Code128, build, inches, mm } from "@zplkit/core/jsx";
 
 const zpl = build(
-  <Label width={mm(100)} height={mm(150)} dpmm={8}>
+  <Label width={inches(4)} height={inches(6)} dpmm={8}>
     <Text x={mm(5)} y={mm(8)} height={mm(3)}>
       SHIP TO
     </Text>
@@ -54,7 +56,7 @@ const zpl = build(
 ).toZPL();`;
 
 /** The samples above, run for real, so the output shown can't drift from the code */
-const builderZpl = new Label({ width: mm(100), height: mm(150), dpmm: 8 })
+const builderZpl = new Label({ width: inches(4), height: inches(6), dpmm: 8 })
   .text({
     position: { x: mm(5), y: mm(8) },
     text: "SHIP TO",
@@ -73,7 +75,7 @@ const builderZpl = new Label({ width: mm(100), height: mm(150), dpmm: 8 })
   .toZPL();
 
 const jsxZpl = build(
-  <LabelElement width={mm(100)} height={mm(150)} dpmm={8}>
+  <LabelElement width={inches(4)} height={inches(6)} dpmm={8}>
     <Text x={mm(5)} y={mm(8)} height={mm(3)}>
       SHIP TO
     </Text>
@@ -440,20 +442,33 @@ export default async function HomePage() {
             Install, build your first label and render it to PNG.
           </span>
         </Link>
-        <Link
-          href="/viewer"
-          className="flex flex-col gap-1.5 p-7 transition-colors hover:bg-surface"
-        >
+        <div className="flex flex-col gap-3 p-7">
           <span className="font-mono text-xs font-semibold uppercase tracking-[0.06em] text-muted">
             No install
           </span>
-          <span className="text-2xl font-extrabold [font-stretch:112%]">
-            Paste ZPL in the viewer →
-          </span>
-          <span className="text-muted">
-            Edit on the left, and watch the label redraw on the right.
-          </span>
-        </Link>
+          {(Object.keys(tools) as Tool[]).map((id) => {
+            const { href, name, tagline, Icon, tile } = tools[id];
+            return (
+              <Link
+                key={id}
+                href={href}
+                className="grid grid-cols-[40px_minmax(0,1fr)] items-center gap-3.5 rounded-md border border-rule bg-raised p-3.5 transition-colors hover:border-rule-strong"
+              >
+                <span
+                  className={`flex size-10 items-center justify-center rounded-md ${tile}`}
+                >
+                  <Icon className="size-[22px]" />
+                </span>
+                <span className="flex flex-col">
+                  <span className="text-lg font-extrabold [font-stretch:108%]">
+                    {name}
+                  </span>
+                  <span className="text-muted">{tagline}</span>
+                </span>
+              </Link>
+            );
+          })}
+        </div>
       </section>
 
       <footer className="flex flex-wrap justify-between gap-x-8 gap-y-4 border-t border-rule px-[clamp(20px,5cqi,64px)] py-6 text-sm text-muted">

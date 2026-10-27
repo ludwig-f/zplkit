@@ -14,10 +14,10 @@ npm install @zplkit/core
 A label has a size and a resolution. Zebra printers come in 6, 8, 12 and 24 dots per millimeter (152, 203, 300 and 600 dpi); use the one your printer has.
 
 ```tsx title="label.tsx"
-import { Label, Text, Code128, build, mm } from "@zplkit/core/jsx";
+import { Label, Text, Code128, build, inches, mm } from "@zplkit/core/jsx";
 
 const label = build(
-  <Label width={mm(101.6)} height={mm(50.8)} dpmm={8}>
+  <Label width={inches(4)} height={inches(2)} dpmm={8}>
     <Text x={mm(5)} y={mm(5)} height={mm(7)}>
       Harbor Parts Co.
     </Text>
@@ -28,7 +28,7 @@ const label = build(
 );
 
 const zpl = label.toZPL();
-// ^XA^PW813^LL406^LRN^CI28^LH0,0^FO40,40^A0,56^FDHarbor Parts Co.^FS...^XZ
+// ^XA^PW812^LL406^LRN^CI28^LH0,0^FO40,40^A0,56^FDHarbor Parts Co.^FS...^XZ
 ```
 
 In a React project this works as it is. Otherwise, tell TypeScript to use zplkit's JSX runtime with `"jsxImportSource": "@zplkit/core"`; [JSX](/docs/jsx#setup) has the details. To build labels without JSX, use [method calls](/docs/building-labels).

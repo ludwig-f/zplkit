@@ -4,7 +4,7 @@ description: The Label builder from @zplkit/core, its methods and their options.
 ---
 
 ```ts
-import { Label, mm, dots, Orientation, ZebraFontFamily } from "@zplkit/core";
+import { Label, inches, mm, dots, Orientation, ZebraFontFamily } from "@zplkit/core";
 ```
 
 `Label` builds one label as a list of ZPL commands. Each drawing method adds a field and returns the label, so calls chain. [Method calls](/docs/building-labels) introduces it; this page lists every method and option.
@@ -16,7 +16,7 @@ new Label(options: LabelOptions): Label
 ```
 
 ```ts
-const label = new Label({ width: mm(101.6), height: mm(152.4), dpmm: 8 });
+const label = new Label({ width: inches(4), height: inches(6), dpmm: 8 });
 ```
 
 <auto-type-table cwd path="../../packages/zpl/src/options.ts" name="LabelOptions" />
