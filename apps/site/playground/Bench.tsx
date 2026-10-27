@@ -3,6 +3,9 @@
 import { useState } from "react";
 import type { CSSProperties, MouseEvent, ReactNode } from "react";
 import "./bench.css";
+import type { Unit } from "./settings";
+import { formatDots, formatSize, fromDots, ticksFor } from "./units";
+import type { Tick } from "./units";
 
 /** Screen pixels per millimeter at most, so small labels aren't blown up */
 const MAX_PX_PER_MM = 6;
@@ -16,6 +19,10 @@ type Cursor = { x: number; y: number; label: number };
 type BenchProps = {
   widthMm: number;
   heightMm: number;
+  /** Dots per millimeter, to measure in dots and inches */
+  dpmm: number;
+  /** The unit the rulers and the size are in */
+  unit: Unit;
   /** Called with the position under the pointer, or undefined when it leaves */
   onCursor?: (cursor: Cursor | undefined) => void;
   /** Called when a label is clicked, with the position clicked */
@@ -35,31 +42,34 @@ type Hover = Cursor & {
   box: { left: number; top: number; width: number; height: number };
 };
 
-const tickClass = (mm: number) =>
-  mm % 10 === 0 ? "tick major" : mm % 5 === 0 ? "tick mid" : "tick";
-
-/** Ticks every millimeter, or every 5 mm on long labels to stay readable */
-const ticksFor = (lengthMm: number, step: number) =>
-  Array.from(
-    { length: Math.floor(lengthMm / step) + 1 },
-    (_, index) => index * step
-  );
+const tickClass = (tick: Tick) =>
+  tick.kind === "minor" ? "tick" : `tick ${tick.kind}`;
 
 /**
- * The label on its backing paper, between millimeter rulers along its top
- * and left edges. With onCursor, the position under the pointer is marked on
+ * The label on its backing paper, between rulers along its top and left
+ * edges, in millimeters, inches or dots. With onCursor, the position under the pointer is marked on
  * both rulers and with guide lines across the label.
  */
 export default function Bench({
   widthMm,
   heightMm,
+  dpmm,
+  unit,
   onCursor,
   onPick,
   labels = 1,
   children,
 }: BenchProps) {
   const [hover, setHover] = useState<Hover>();
-  const step = Math.max(widthMm, heightMm) > 120 ? 5 : 1;
+  const widthDots = Math.round(widthMm * dpmm);
+  const heightDots = Math.round(heightMm * dpmm);
+  // The sides in the ruler's unit
+  const width = fromDots(widthDots, unit, dpmm);
+  const height = fromDots(heightDots, unit, dpmm);
+  // Both rulers step alike, by the longer side
+  const longest = Math.max(width, height);
+  const ticks = (length: number) =>
+    ticksFor(longest, unit).filter((tick) => tick.at <= length + 1e-9);
   const tracking = Boolean(onCursor || onPick);
 
   /** The label image under the pointer, inside <zpl-preview>'s shadow root */
@@ -132,16 +142,16 @@ export default function Bench({
           <div
             className="ruler horizontal"
             role="img"
-            aria-label={`${widthMm.toFixed(1)} mm wide`}
+            aria-label={`${formatDots(widthDots, unit, dpmm)} ${unit} wide`}
           >
-            {ticksFor(widthMm, step).map((mm) => (
+            {ticks(width).map((tick) => (
               <span
-                key={mm}
-                className={tickClass(mm)}
-                style={{ left: `${(mm / widthMm) * 100}%` }}
+                key={tick.at}
+                className={tickClass(tick)}
+                style={{ left: `${(tick.at / width) * 100}%` }}
               >
-                {mm % 10 === 0 && mm > 0 && (
-                  <span className="tick-label">{mm}</span>
+                {tick.label !== undefined && (
+                  <span className="tick-label">{tick.label}</span>
                 )}
               </span>
             ))}
@@ -160,16 +170,20 @@ export default function Bench({
                 key={index}
                 className="ruler vertical"
                 role="img"
-                aria-label={`${heightMm.toFixed(1)} mm tall`}
+                aria-label={`${formatDots(
+                  heightDots,
+                  unit,
+                  dpmm
+                )} ${unit} tall`}
               >
-                {ticksFor(heightMm, step).map((mm) => (
+                {ticks(height).map((tick) => (
                   <span
-                    key={mm}
-                    className={tickClass(mm)}
-                    style={{ top: `${(mm / heightMm) * 100}%` }}
+                    key={tick.at}
+                    className={tickClass(tick)}
+                    style={{ top: `${(tick.at / height) * 100}%` }}
                   >
-                    {mm % 10 === 0 && mm > 0 && (
-                      <span className="tick-label">{mm}</span>
+                    {tick.label !== undefined && (
+                      <span className="tick-label">{tick.label}</span>
                     )}
                   </span>
                 ))}
@@ -222,9 +236,7 @@ export default function Bench({
           </div>
         </div>
       </div>
-      <p className="size">
-        {widthMm.toFixed(1)} × {heightMm.toFixed(1)} mm
-      </p>
+      <p className="size">{formatSize(widthDots, heightDots, unit, dpmm)}</p>
     </div>
   );
 }
