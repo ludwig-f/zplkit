@@ -18,6 +18,7 @@ import {
   encodeShare,
 } from "./share";
 import { useSettings } from "./settings";
+import { dpiFor, formatDots, formatSize, toMm } from "./units";
 import { DiscardDialog, ExportMenu, TemplateMenu, ViewMenu } from "./chrome";
 import ToolTitle from "./ToolTitle";
 import type { Cursor } from "./Bench";
@@ -41,9 +42,6 @@ const loadSaved = (): Saved | undefined => {
     return undefined;
   }
 };
-
-const dpiOf = (dpmm: number) =>
-  ({ 6: 152, 8: 203, 12: 300, 24: 600 }[dpmm] ?? Math.round(dpmm * 25.4));
 
 const labelCount = (count: number) => `${count} label${count === 1 ? "" : "s"}`;
 
@@ -98,7 +96,7 @@ export default function Playground() {
   const editor = useRef<EditorHandle>(null);
   const runner = useRef<ReturnType<typeof createRunner>>(undefined);
   const { code } = state;
-  const { smoothing } = settings;
+  const { smoothing, unit } = settings;
   const update = (changes: Partial<Saved>) =>
     setState((current) => ({ ...current, ...changes }));
 
@@ -152,9 +150,14 @@ export default function Playground() {
 
   const zpl = output?.zpl ?? "";
   const dpmm = output?.dpmm ?? 8;
+  // The size the label sets with ^PW and ^LL, else 4 × 6 in
   const labelSize = {
-    width: (firstValue(zpl, "PW") ?? 0) / dpmm || 101.6,
-    height: (firstValue(zpl, "LL") ?? 0) / dpmm || 152.4,
+    width: (firstValue(zpl, "PW") ?? 0) / dpmm || toMm({ inches: 4 }, dpmm),
+    height: (firstValue(zpl, "LL") ?? 0) / dpmm || toMm({ inches: 6 }, dpmm),
+  };
+  const labelDots = {
+    width: Math.round(labelSize.width * dpmm),
+    height: Math.round(labelSize.height * dpmm),
   };
 
   const lintProblems = useMemo(
@@ -287,9 +290,9 @@ export default function Playground() {
             {
               icon: <Code />,
               title: "ZPL",
-              detail: `${Math.round(labelSize.width * dpmm)} × ${Math.round(
-                labelSize.height * dpmm
-              )} dots, ${labelCount(Math.max(images.length, 1))}`,
+              detail: `${labelDots.width} × ${
+                labelDots.height
+              } dots, ${labelCount(Math.max(images.length, 1))}`,
               actions: (
                 <>
                   <button type="button" onClick={copyZpl} disabled={!zpl}>
@@ -304,7 +307,7 @@ export default function Playground() {
             {
               icon: <ImageDown />,
               title: "PNG",
-              detail: `${dpiOf(dpmm)} dpi, ${labelCount(
+              detail: `${dpiFor(dpmm)} dpi, ${labelCount(
                 Math.max(images.length, 1)
               )}`,
               actions: (
@@ -370,13 +373,16 @@ export default function Playground() {
             </span>
             <span className="spacer" />
             {cursor ? (
-              <span title="Click to copy as ^FO">
-                x {cursor.x}, y {cursor.y}
-              </span>
+              <>
+                <span>
+                  x {formatDots(cursor.x, unit, dpmm)}, y{" "}
+                  {formatDots(cursor.y, unit, dpmm)} {unit}
+                </span>
+                <span className="hint">Click to copy the position</span>
+              </>
             ) : (
               <span>
-                {Math.round(labelSize.width * dpmm)} ×{" "}
-                {Math.round(labelSize.height * dpmm)} dots
+                {formatSize(labelDots.width, labelDots.height, unit, dpmm)}
               </span>
             )}
             <ViewMenu tool="playground" settings={settings} fonts={fonts} />
@@ -396,6 +402,8 @@ export default function Playground() {
               <Bench
                 widthMm={labelSize.width}
                 heightMm={labelSize.height}
+                dpmm={dpmm}
+                unit={unit}
                 onCursor={setCursor}
                 labels={images.length}
                 onPick={async ({ x, y }) => {

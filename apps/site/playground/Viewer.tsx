@@ -16,6 +16,14 @@ import examples from "./examples";
 import { analyze } from "./analyze";
 import { decodeShare, encodeCodeShare, encodeShare } from "./share";
 import { useSettings } from "./settings";
+import {
+  dpiFor,
+  formatDots,
+  formatSize,
+  lengthIn,
+  toLength,
+  toMm,
+} from "./units";
 import { DiscardDialog, ExportMenu, TemplateMenu, ViewMenu } from "./chrome";
 import ToolTitle from "./ToolTitle";
 import type { Cursor } from "./Bench";
@@ -106,23 +114,41 @@ const lastValue = (zpl: string, command: string): number | undefined => {
   return value === undefined ? undefined : Number(value);
 };
 
-/**
- * A label side in millimeters for the renderer. Inches use the dpi printers
- * are sold as, so 6 in at 300 dpi is exactly 1800 dots.
- */
-const toMm = (length: LabelLength, dpmm: number): number => {
-  if ("mm" in length) return length.mm;
-  const dpi = resolutions.find((r) => r.dpmm === dpmm)?.dpi ?? dpmm * 25.4;
-  return Math.round(length.inches * dpi) / dpmm;
-};
+const unitNames = { mm: "millimeters", in: "inches", dots: "dots" };
 
-const lengthMm = (value: number | undefined) =>
-  value === undefined ? undefined : mm(value);
-
-const parseMm = (text: string): number | undefined => {
+const parseNumber = (text: string): number | undefined => {
   const value = Number(text.replace(",", "."));
   return text.trim() && Number.isFinite(value) && value > 0 ? value : undefined;
 };
+
+/**
+ * A number field that keeps what's typed, like "10.", while it has focus,
+ * and shows the value it stands for after
+ */
+function NumberField({
+  value,
+  onValue,
+  ...props
+}: {
+  value: number | undefined;
+  onValue: (value: number | undefined) => void;
+  "aria-label": string;
+  placeholder: string;
+}) {
+  const [text, setText] = useState<string>();
+  return (
+    <input
+      {...props}
+      inputMode="decimal"
+      value={text ?? (value === undefined ? "" : String(value))}
+      onChange={(event) => {
+        setText(event.target.value);
+        onValue(parseNumber(event.target.value));
+      }}
+      onBlur={() => setText(undefined)}
+    />
+  );
+}
 
 /** The last label home (^LH) in the ZPL, which ^FO positions are relative to */
 const labelHome = (zpl: string) => {
@@ -163,7 +189,7 @@ export default function Viewer() {
   });
   const editor = useRef<EditorHandle>(null);
   const { zpl, width, height, dpmm } = state;
-  const { smoothing } = settings;
+  const { smoothing, unit } = settings;
   const widthMm = width && toMm(width, dpmm);
   const heightMm = height && toMm(height, dpmm);
   const update = (changes: Partial<Saved>) =>
@@ -215,6 +241,13 @@ export default function Viewer() {
     height:
       heightMm ?? ((lastValue(zpl, "LL") ?? 0) / dpmm || toMm(inches(6), dpmm)),
   };
+  const labelDots = {
+    width: Math.round(labelSize.width * dpmm),
+    height: Math.round(labelSize.height * dpmm),
+  };
+  /** A number in the unit, rounded as the unit shows it */
+  const shown = (value: number) =>
+    Number(value.toFixed(unit === "in" ? 2 : unit === "mm" ? 1 : 0));
   const size =
     width === undefined && height === undefined
       ? "auto"
@@ -302,10 +335,15 @@ export default function Viewer() {
     });
   };
 
-  /** Copy a clicked position as the ^FO that puts a field there */
-  const pick = async ({ x, y }: Cursor) => {
+  /** The ^FO that puts a field at a position, from the label home */
+  const originAt = ({ x, y }: Cursor) => {
     const home = labelHome(zpl);
-    const origin = `^FO${Math.max(x - home.x, 0)},${Math.max(y - home.y, 0)}`;
+    return `^FO${Math.max(x - home.x, 0)},${Math.max(y - home.y, 0)}`;
+  };
+
+  /** Copy a clicked position as the ^FO that puts a field there */
+  const pick = async (cursor: Cursor) => {
+    const origin = originAt(cursor);
     try {
       await navigator.clipboard.writeText(origin);
       setNotice(`Copied ${origin}`);
@@ -367,26 +405,34 @@ export default function Viewer() {
         </label>
         {sizeValue === "custom" && (
           <span className="custom-size">
-            <input
-              aria-label="Width in millimeters"
-              inputMode="decimal"
-              placeholder={labelSize.width.toFixed(1)}
-              value={widthMm === undefined ? "" : String(widthMm)}
-              onChange={(event) =>
-                update({ width: lengthMm(parseMm(event.target.value)) })
+            <NumberField
+              aria-label={`Width in ${unitNames[unit]}`}
+              placeholder={formatDots(labelDots.width, unit, dpmm)}
+              value={width && shown(lengthIn(width, unit, dpmm))}
+              onValue={(value) =>
+                update({
+                  width:
+                    value === undefined
+                      ? undefined
+                      : toLength(value, unit, dpmm),
+                })
               }
             />
             ×
-            <input
-              aria-label="Height in millimeters"
-              inputMode="decimal"
-              placeholder={labelSize.height.toFixed(1)}
-              value={heightMm === undefined ? "" : String(heightMm)}
-              onChange={(event) =>
-                update({ height: lengthMm(parseMm(event.target.value)) })
+            <NumberField
+              aria-label={`Height in ${unitNames[unit]}`}
+              placeholder={formatDots(labelDots.height, unit, dpmm)}
+              value={height && shown(lengthIn(height, unit, dpmm))}
+              onValue={(value) =>
+                update({
+                  height:
+                    value === undefined
+                      ? undefined
+                      : toLength(value, unit, dpmm),
+                })
               }
             />
-            mm
+            {unit}
           </span>
         )}
         <div role="radiogroup" aria-label="Resolution" className="segmented">
@@ -435,9 +481,9 @@ export default function Viewer() {
             {
               icon: <ImageDown />,
               title: "PNG",
-              detail: `${
-                resolutions.find((r) => r.dpmm === dpmm)?.dpi ?? dpmm
-              } dpi, ${labelCount(Math.max(images.length, 1))}`,
+              detail: `${dpiFor(dpmm)} dpi, ${labelCount(
+                Math.max(images.length, 1)
+              )}`,
               actions: (
                 <button
                   type="button"
@@ -500,13 +546,16 @@ export default function Viewer() {
             </span>
             <span className="spacer" />
             {cursor ? (
-              <span title="Click to copy as ^FO">
-                x {cursor.x}, y {cursor.y}
-              </span>
+              <>
+                <span>
+                  x {formatDots(cursor.x, unit, dpmm)}, y{" "}
+                  {formatDots(cursor.y, unit, dpmm)} {unit}
+                </span>
+                <span className="hint">Click to copy {originAt(cursor)}</span>
+              </>
             ) : (
               <span>
-                {Math.round(labelSize.width * dpmm)} ×{" "}
-                {Math.round(labelSize.height * dpmm)} dots
+                {formatSize(labelDots.width, labelDots.height, unit, dpmm)}
               </span>
             )}
             <ViewMenu tool="viewer" settings={settings} fonts={fonts} />
@@ -520,6 +569,8 @@ export default function Viewer() {
             <Bench
               widthMm={labelSize.width}
               heightMm={labelSize.height}
+              dpmm={dpmm}
+              unit={unit}
               onCursor={setCursor}
               labels={images.length}
               onPick={pick}
