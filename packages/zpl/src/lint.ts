@@ -12,6 +12,7 @@ type LintRule =
   | "box-smaller-than-line"
   | "value-out-of-range"
   | "ean13-data"
+  | "databar-parentheses"
   | "barcode-without-data"
   | "unknown-command"
   | "printer-command-in-label";
@@ -360,6 +361,22 @@ const lint = (
             "ean13-data",
             "warning",
             `EAN-13 data must be exactly 12 digits (the printer adds the check digit), got '${command.data}'. The printer pads or cuts it to 12.`
+          );
+        }
+
+        if (
+          barcode?.type === "Gs1DataBar" &&
+          barcode.symbology === 6 &&
+          command.data.includes("(")
+        ) {
+          report(
+            index,
+            "databar-parentheses",
+            "warning",
+            `The printer encodes these parentheses as data, so scanners can't read the AIs. Leave them out: ${command.data.replace(
+              /[()]/g,
+              ""
+            )}.`
           );
         }
         break;

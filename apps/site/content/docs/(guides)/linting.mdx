@@ -71,6 +71,10 @@ lint(commands, { width: 812, length: 406 });
 
 **Warning.** EAN-13 data must be exactly 12 digits; the printer adds the check digit. Other lengths are padded or cut, which prints a different barcode.
 
+### databar-parentheses
+
+**Warning.** GS1 DataBar Expanded data (`^BR` type 6) has parentheses around its AIs, like `(01)…`. The printer encodes them as data characters, so scanners can't read the AIs. Write the AIs and their data without them: `^FD0198898765432106`.
+
 ### barcode-without-data
 
 **Warning.** A barcode has no `^FD` data, so nothing prints.

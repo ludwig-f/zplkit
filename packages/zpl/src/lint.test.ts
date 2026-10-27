@@ -293,6 +293,25 @@ suite("lint", () => {
       ]);
     });
 
+    test("GS1 DataBar Expanded data with parentheses", () => {
+      const diagnostics = lintLabel(
+        { type: "FieldOrigin", x: 10, y: 10 },
+        { type: "Gs1DataBar", symbology: 6 },
+        { type: "FieldData", data: "(01)98898765432106(15)991231" },
+        { type: "FieldSeparator" }
+      );
+
+      expect(diagnostics).toStrictEqual([
+        {
+          rule: "databar-parentheses",
+          severity: "warning",
+          message:
+            "The printer encodes these parentheses as data, so scanners can't read the AIs. Leave them out: 019889876543210615991231.",
+          index: 5,
+        },
+      ]);
+    });
+
     test("a QR code magnification outside the printer's range", () => {
       expect(
         lintLabel(

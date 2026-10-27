@@ -583,6 +583,16 @@ describe("postal codes, GS1 DataBar and MicroPDF417", () => {
     });
   });
 
+  test("GS1 DataBar Expanded keeps its leading space when segments fit one row", () => {
+    // Up to 22 segments a row fits the whole symbol on one row, which starts
+    // a module in, as without segments
+    expect(
+      bounds("^FO50,100^BRN,6,2,1,60,22^FD010001234567890521ABC^FS")
+    ).toStrictEqual(
+      bounds("^FO50,100^BRN,6,2,1,60^FD010001234567890521ABC^FS")
+    );
+  });
+
   test("GS1 DataBar Expanded with parentheses draws a placeholder", () => {
     // Printers encode the parentheses as data, which we can't. The symbol
     // would be 34 modules (68 dots) tall; the placeholder is 40.
