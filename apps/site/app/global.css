@@ -23,6 +23,11 @@
   --zk-on-accent: #ffffff;
   --zk-accent-soft: #e3e7f8;
   --zk-accent-line: #b9c3ee;
+  /* The viewer's accent, so the two tools are told apart */
+  --zk-view: #0b6b74;
+  --zk-on-view: #ffffff;
+  --zk-view-soft: #dcedee;
+  --zk-view-line: #a9d3d6;
   --zk-warn: #8a5300;
   --zk-warn-soft: #f9edd2;
   --zk-warn-line: #e5c98a;
@@ -59,6 +64,10 @@
   --zk-on-accent: #0e1533;
   --zk-accent-soft: #1e2440;
   --zk-accent-line: #3a4580;
+  --zk-view: #6fcad2;
+  --zk-on-view: #08292c;
+  --zk-view-soft: #132a2c;
+  --zk-view-line: #2b5a5e;
   --zk-warn: #f2b451;
   --zk-warn-soft: #2d2413;
   --zk-warn-line: #5e4a22;
@@ -95,6 +104,10 @@
   --color-on-accent: var(--zk-on-accent);
   --color-accent-soft: var(--zk-accent-soft);
   --color-accent-line: var(--zk-accent-line);
+  --color-view: var(--zk-view);
+  --color-on-view: var(--zk-on-view);
+  --color-view-soft: var(--zk-view-soft);
+  --color-view-line: var(--zk-view-line);
   --color-warn: var(--zk-warn);
   --color-warn-soft: var(--zk-warn-soft);
   --color-warn-line: var(--zk-warn-line);

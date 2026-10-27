@@ -5,6 +5,7 @@ import {
   DocsPage,
   DocsTitle,
   MarkdownCopyButton,
+  PageFooter,
   ViewOptionsPopover,
 } from "fumadocs-ui/layouts/docs/page";
 import { notFound } from "next/navigation";
@@ -12,6 +13,7 @@ import { getMDXComponents } from "@/components/mdx";
 import type { Metadata } from "next";
 import { createRelativeLink } from "fumadocs-ui/mdx";
 import { getPageImageUrl, getPageMarkdownUrl, gitConfig } from "@/lib/shared";
+import { DocsFooter } from "@/components/docs/docs-footer";
 import {
   CommandPage,
   CommandsIndex,
@@ -27,8 +29,14 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
   if (page.type === "commands") {
     const { code } = page.data;
     return (
-      <DocsPage toc={code ? commandToc(code) : []} full={!code}>
+      <DocsPage
+        toc={code ? commandToc(code) : []}
+        full={!code}
+        footer={{ enabled: false }}
+      >
         {code ? <CommandPage code={code} /> : <CommandsIndex />}
+        <PageFooter />
+        <DocsFooter />
       </DocsPage>
     );
   }
@@ -37,7 +45,12 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
   const markdownUrl = getPageMarkdownUrl(page).url;
 
   return (
-    <DocsPage toc={page.data.toc} full={page.data.full}>
+    <DocsPage
+      toc={page.data.toc}
+      full={page.data.full}
+      // The prev/next links come before the site footer, below
+      footer={{ enabled: false }}
+    >
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription className="mb-0">
         {page.data.description}
@@ -57,6 +70,8 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
           })}
         />
       </DocsBody>
+      <PageFooter />
+      <DocsFooter />
     </DocsPage>
   );
 }

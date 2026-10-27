@@ -1,18 +1,14 @@
 import type { BaseLayoutProps } from "fumadocs-ui/layouts/shared";
 import { Wordmark } from "@/components/wordmark";
-import { gitConfig } from "./shared";
 
+/**
+ * Options for Fumadocs' layouts. The header is the site's own
+ * (components/site-header.tsx), with the links, search and theme switch.
+ */
 export function baseOptions(): BaseLayoutProps {
   return {
     nav: {
-      title: <Wordmark className="text-[21px]" />,
+      title: <Wordmark className="text-[19px]" />,
     },
-    links: [
-      { text: "Docs", url: "/docs", active: "nested-url" },
-      { text: "Playground", url: "/playground" },
-      { text: "Viewer", url: "/viewer" },
-      { text: "Releases", url: "/releases" },
-    ],
-    githubUrl: `https://github.com/${gitConfig.user}/${gitConfig.repo}`,
   };
 }
