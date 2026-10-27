@@ -315,6 +315,13 @@ const parsers: Record<string, CommandParser> = {
     thickness: p.number(1, "thickness"),
     color: p.oneOf(2, "color", colors),
   })),
+  "^GE": withParams("^GE", (p) => ({
+    type: "GraphicEllipse",
+    width: p.number(0, "width"),
+    height: p.number(1, "height"),
+    thickness: p.number(2, "thickness"),
+    color: p.oneOf(3, "color", colors),
+  })),
   "^GD": withParams("^GD", (p) => ({
     type: "GraphicDiagonal",
     width: p.number(0, "width"),

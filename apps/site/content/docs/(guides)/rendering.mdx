@@ -36,7 +36,7 @@ const png = await encodePng(raster);
 
 ## What it draws
 
-- Boxes, circles and diagonal lines (`^GB`, `^GC`, `^GD`), with rounded corners and white lines
+- Boxes, circles, ellipses and diagonal lines (`^GB`, `^GC`, `^GE`, `^GD`), with rounded corners and white lines
 - Images (`^GF`, `~DG` or `~DY` with `^XG`), in hex with Zebra's compression or base64 (`:B64:`, `:Z64:`)
 - Text in font 0 and the bitmap fonts A to H (`^A`, `^CF`), rotated (`^FW`) and wrapped in blocks (`^FB`)
 - Text in TrueType fonts downloaded with `~DU` or `~DY` (hex, `:B64:` or `:Z64:`), called with `^A@` or `^CW`

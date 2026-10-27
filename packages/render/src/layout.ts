@@ -34,6 +34,13 @@ type Element = Common &
       }
     | { kind: "circle"; diameter: number; thickness: number; color: "B" | "W" }
     | {
+        kind: "ellipse";
+        width: number;
+        height: number;
+        thickness: number;
+        color: "B" | "W";
+      }
+    | {
         kind: "diagonal";
         width: number;
         height: number;
@@ -638,6 +645,21 @@ const layout = (
             color: command.color ?? "B",
           },
           diameter
+        );
+        break;
+      }
+      case "GraphicEllipse": {
+        const height = command.height ?? 3;
+        add(
+          {
+            ...common(),
+            kind: "ellipse",
+            width: command.width ?? 3,
+            height,
+            thickness: command.thickness ?? 1,
+            color: command.color ?? "B",
+          },
+          height
         );
         break;
       }

@@ -221,11 +221,16 @@ suite("lint", () => {
         { type: "FieldOrigin", x: 10, y: 10 },
         { type: "GraphicCircle", diameter: 5000, thickness: 4 },
         { type: "FieldSeparator" },
+        { type: "FieldOrigin", x: 10, y: 10 },
+        { type: "GraphicEllipse", width: 5000, height: 2 },
+        { type: "FieldSeparator" },
         { type: "BarcodeDefaults", moduleWidth: 12, ratio: 3.5 }
       );
 
       expect(diagnostics.map((d) => d.message)).toStrictEqual([
         "^GC diameter is 5000, but the printer only accepts 3 to 4095.",
+        "^GE width is 5000, but the printer only accepts 3 to 4095.",
+        "^GE height is 2, but the printer only accepts 3 to 4095.",
         "^BY module width is 12, but the printer only accepts 1 to 10.",
         "^BY ratio is 3.5, but the printer only accepts 2 to 3.",
       ]);

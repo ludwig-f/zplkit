@@ -50,6 +50,10 @@ const commandCases: [Command, string][] = [
   [{ type: "GraphicBox", width: 100, height: 50 }, "^GB100,50"],
   [{ type: "GraphicCircle", diameter: 80, thickness: 4 }, "^GC80,4"],
   [
+    { type: "GraphicEllipse", width: 200, height: 100, thickness: 4 },
+    "^GE200,100,4",
+  ],
+  [
     { type: "GraphicDiagonal", width: 80, height: 40, direction: "L" },
     "^GD80,40,,,L",
   ],

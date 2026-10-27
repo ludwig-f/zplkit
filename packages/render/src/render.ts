@@ -1,6 +1,6 @@
 import { parse } from "@zplkit/core";
 import { Raster, fillPath } from "./raster.js";
-import { boxPath, circlePath, diagonalPath } from "./shapes.js";
+import { boxPath, circlePath, diagonalPath, ellipsePath } from "./shapes.js";
 import { layout } from "./layout.js";
 import { drawText } from "./text.js";
 import { drawBarcode, drawPlaceholder } from "./barcode.js";
@@ -61,6 +61,13 @@ const draw = (
       fillPath(
         raster,
         circlePath(x, y, element.diameter, element.thickness),
+        element.color === "W" ? "W" : color
+      );
+      break;
+    case "ellipse":
+      fillPath(
+        raster,
+        ellipsePath(x, y, element.width, element.height, element.thickness),
         element.color === "W" ? "W" : color
       );
       break;
