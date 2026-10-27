@@ -69,6 +69,16 @@ describe("font 0", () => {
     );
   });
 
+  test("marks print where a printer puts their ink, not across their advance", () => {
+    // Reference: - and – take 90.33 dots but print from 17 to 74 after the
+    // pen, and | is a thin stem from 23 to 28
+    const ink = (char: string) =>
+      inkBounds(`^FO100,100^A0N,100,100^FD${char}^FS`).x.map((x) => x - 100);
+    expect(ink("-")).toStrictEqual([17, 73]);
+    expect(ink("–")).toStrictEqual([17, 73]);
+    expect(ink("|")).toStrictEqual([23, 27]);
+  });
+
   test("characters font 0 doesn't have advance like a space", () => {
     // Reference: a missing glyph prints nothing and advances 29.5
     const single = inkBounds("^FO100,100^A0N,100,100^FDH^FS").width;

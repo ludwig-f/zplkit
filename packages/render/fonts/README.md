@@ -5,7 +5,8 @@
 ZPL's font 0 is Zebra's CG Triumvirate Bold Condensed, which is licensed and can't be redistributed. `font0.ttf` stands in for it, and the `font0` option replaces it with a font file of your own:
 
 - **Shapes:** [Archivo](https://github.com/Omnibus-Type/Archivo) Bold at width 66, licensed under the SIL Open Font License (`OFL.txt`). It was chosen by rendering text with 13 open-licensed condensed fonts and comparing dot by dot with reference renders of font 0; it had the highest overlap.
-- **Spacing:** `font0-advances.json` holds font 0's advance width for each character at `^A0N,100,100`, measured from reference renders. Glyphs are stretched to these widths, so text takes up the same space as on a printer. Characters font 0 doesn't have print nothing but advance like a space (29.5), as on a printer.
+- **Spacing:** `font0-advances.json` holds font 0's advance width for each character at `^A0N,100,100`, measured from reference renders, so text takes up the same space as on a printer. Characters font 0 doesn't have print nothing but advance like a space (29.5), as on a printer.
+- **Placement:** `font0-ink.json` holds where each character's ink starts and ends after the pen at `^A0N,100,100`, also measured from reference renders. Glyphs are scaled and moved to fill that span, so a hyphen is a short dash in the middle of its wide advance, as on a printer. Characters set to `null` are stretched to fill their advance instead: for them, such as `1` (Archivo's has a foot, font 0's doesn't), that matched reference renders better dot by dot.
 
 `font0.ttf` was made from Archivo's variable font with fontTools:
 

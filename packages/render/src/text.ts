@@ -10,7 +10,7 @@
  * in each cell where reference renders print them.
  */
 import { parseFont, flattenGlyph } from "./font.js";
-import { font0Advances, font0Data } from "./fonts/font0.js";
+import { font0Advances, font0Data, font0Ink } from "./fonts/font0.js";
 import { dejavuMonoBoldData, dejavuMonoData } from "./fonts/dejavu.js";
 import { fillPath } from "./raster.js";
 import type { Font } from "./font.js";
@@ -43,6 +43,29 @@ const font0AdvanceTable = () =>
       return [parseInt(code, 36), Number(width)] as const;
     })
   ));
+
+let font0InkExtents: Map<number, [number, number]> | undefined;
+const font0InkTable = () =>
+  (font0InkExtents ??= new Map(
+    font0Ink.split(",").map((triple) => {
+      const [code, left, right] = triple.split(":");
+      return [parseInt(code, 36), [Number(left), Number(right)]] as const;
+    })
+  ));
+
+/** Where a glyph's ink starts and ends, in font units */
+const inkCache = new WeakMap<Font, Map<number, [number, number] | null>>();
+const inkExtent = (font: Font, glyph: number) => {
+  let extents = inkCache.get(font);
+  if (!extents) inkCache.set(font, (extents = new Map()));
+  if (!extents.has(glyph)) {
+    const xs = flattenGlyph(font, glyph, 1).flatMap((contour) =>
+      contour.map(([x]) => x)
+    );
+    extents.set(glyph, xs.length ? [Math.min(...xs), Math.max(...xs)] : null);
+  }
+  return extents.get(glyph);
+};
 
 /**
  * A bitmap font's character cell at magnification 1, in dots: from Zebra's
@@ -218,6 +241,7 @@ type Face = {
 const font0Face = (options: Pick<TextOptions, "height" | "width">): Face => {
   const font = load("0", font0Data);
   const advances = font0AdvanceTable();
+  const inks = font0InkTable();
   // A missing dimension takes the other's value
   const height = options.height ?? options.width ?? 9;
   const width = options.width ?? height;
@@ -233,6 +257,16 @@ const font0Face = (options: Pick<TextOptions, "height" | "width">): Face => {
       const advance = advances.get(code);
       if (advance === undefined) return undefined;
       const glyph = font.glyphIndex(code);
+      // Ink goes where font 0 prints it, so marks like - and | keep their
+      // size. Characters whose stand-in shape differs, like 1 with its foot,
+      // are stretched to fill their advance instead.
+      const target = inks.get(code);
+      const own = inkExtent(font, glyph);
+      if (target && own && own[1] > own[0]) {
+        const [left, right] = target.map((x) => (x * width) / 100);
+        const scaleX = (right - left) / (own[1] - own[0]);
+        return { font, glyph, offset: left - own[0] * scaleX, scaleY, scaleX };
+      }
       const scaleX = (advance * width) / 100 / font.advance(glyph);
       return { font, glyph, offset: 0, scaleX, scaleY };
     },
