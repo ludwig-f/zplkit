@@ -209,3 +209,9 @@
 .dark .label-dim {
   filter: brightness(0.91) sepia(0.12);
 }
+
+/* "26 more labels" under the labels the preview shows */
+.bench zpl-preview::part(more) {
+  color: var(--bench-muted);
+  font: 12px/1.4 var(--font-mono);
+}
