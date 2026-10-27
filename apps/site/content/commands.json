@@ -980,16 +980,16 @@
       "code": "^LS",
       "name": "Label Shift",
       "category": "Labels and formats",
-      "support": "no",
-      "drawn": false,
+      "support": "yes",
+      "drawn": true,
       "note": ""
     },
     {
       "code": "^LT",
       "name": "Label Top",
       "category": "Labels and formats",
-      "support": "no",
-      "drawn": false,
+      "support": "yes",
+      "drawn": true,
       "note": ""
     },
     {

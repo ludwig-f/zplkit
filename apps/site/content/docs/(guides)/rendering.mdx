@@ -45,7 +45,7 @@ const png = await encodePng(raster);
 - USPS POSTNET, PLANET and Intelligent Mail (`^BZ`, `^B5`), and GS1 DataBar (`^BR`)
 - PDF417, MicroPDF417, QR codes, Data Matrix, Aztec and MaxiCode (`^B7`, `^BF`, `^BQ`, `^BX`, `^BO`, `^B0`, `^BD`)
 - Graphic symbols (`^GS`), stored formats (`^DF`, `^XF`, `^FN`), labels printed upside down (`^PO`) and stored images as backgrounds (`^IL`)
-- Reverse printing (`^FR`, `^LR`), label home (`^LH`), print width (`^PW`) and UTF-8 text (`^CI28`)
+- Reverse printing (`^FR`, `^LR`), label home (`^LH`), label shift and top (`^LS`, `^LT`), print width (`^PW`) and UTF-8 text (`^CI28`)
 
 Fonts already stored on the printer can be passed in by path. A path without a device matches any device, and a font that isn't there prints in font 0:
 

@@ -236,6 +236,18 @@ suite("lint", () => {
       ]);
     });
 
+    test("label shift and top outside the printer's range", () => {
+      const diagnostics = lintLabel(
+        { type: "LabelShift", shift: 10000 },
+        { type: "LabelTop", offset: 121 }
+      );
+
+      expect(diagnostics.map((d) => d.message)).toStrictEqual([
+        "^LS shift is 10000, but the printer only accepts -9999 to 9999.",
+        "^LT offset is 121, but the printer only accepts -120 to 120.",
+      ]);
+    });
+
     test("print settings outside the printer's range", () => {
       const diagnostics = lintLabel(
         { type: "MediaDarkness", darkness: 40 },

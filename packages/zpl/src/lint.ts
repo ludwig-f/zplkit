@@ -54,6 +54,8 @@ const ranges: {
     ["y", "y", 0, 32000],
   ],
   LabelLength: [["length", "length", 1, 32000]],
+  LabelShift: [["shift", "shift", -9999, 9999]],
+  LabelTop: [["offset", "offset", -120, 120]],
   GraphicBox: [
     ["width", "width", 1, 32000],
     ["height", "height", 1, 32000],
@@ -91,6 +93,8 @@ const ranges: {
 const codes: { [T in Command["type"]]?: string } = {
   FieldOrigin: "^FO",
   LabelLength: "^LL",
+  LabelShift: "^LS",
+  LabelTop: "^LT",
   GraphicBox: "^GB",
   GraphicCircle: "^GC",
   GraphicEllipse: "^GE",

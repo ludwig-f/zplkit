@@ -312,6 +312,9 @@ const layout = (
   const identifiers = new Map<string, FontPath>();
   let label: LabelLayout | undefined;
   let home = { x: 0, y: 0 };
+  /** ^LS and ^LT, kept between labels like the printer settings they are */
+  let shift = 0;
+  let top = 0;
   let labelReverse = false;
   let field = newField();
 
@@ -405,6 +408,13 @@ const layout = (
 
     switch (command.type) {
       case "EndFormat":
+        // ^LT moves every field down, or up as far as the label's top edge,
+        // wherever it is in the format
+        if (top) {
+          for (const element of label.elements) {
+            element.y = Math.max(0, element.y + top);
+          }
+        }
         label = undefined;
         break;
       case "PrintWidth":
@@ -431,13 +441,25 @@ const layout = (
       case "LabelHome":
         home = { x: command.x, y: command.y };
         break;
+      case "LabelShift":
+        if (command.shift !== undefined && Math.abs(command.shift) <= 9999) {
+          shift = command.shift;
+        }
+        break;
+      case "LabelTop":
+        // Printers ignore offsets beyond their range
+        if (command.offset !== undefined && Math.abs(command.offset) <= 120) {
+          top = command.offset;
+        }
+        break;
       case "LabelReverse":
         labelReverse = command.reverse;
         break;
       case "FieldOrigin":
         field = {
           ...newField(),
-          x: home.x + command.x,
+          // ^LS can't move a field past the label's left edge
+          x: Math.max(0, home.x + command.x - shift),
           y: home.y + command.y,
           commands: [index],
         };
@@ -445,7 +467,7 @@ const layout = (
       case "FieldTypeset":
         field = {
           ...newField(),
-          x: home.x + (command.x ?? 0),
+          x: Math.max(0, home.x + (command.x ?? 0) - shift),
           y: home.y + (command.y ?? 0),
           fromBottom: true,
           commands: [index],

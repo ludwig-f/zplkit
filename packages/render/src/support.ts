@@ -8,6 +8,8 @@ const renderedCommands: readonly string[] = [
   "^XA",
   "^XZ",
   "^LH",
+  "^LS",
+  "^LT",
   "^LL",
   "^LR",
   "^PW",
