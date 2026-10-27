@@ -38,6 +38,14 @@ type LabelShift = Node<"LabelShift", { shift?: number }>;
 type LabelTop = Node<"LabelTop", { offset?: number }>;
 /** `^PMa`: prints the label as its mirror image, kept between labels */
 type PrintMirror = Node<"PrintMirror", { mirror: boolean }>;
+/**
+ * `^MUa,b,c`: the unit for positions and sizes after it, kept between
+ * labels: D dots, I inches or M millimeters
+ */
+type MeasurementUnits = Node<
+  "MeasurementUnits",
+  { unit?: "D" | "I" | "M"; baseDpi?: number; targetDpi?: number }
+>;
 /** `^LRa` */
 type LabelReverse = Node<"LabelReverse", { reverse: boolean }>;
 /** `^CIa` */
@@ -616,6 +624,7 @@ type Command =
   | LabelTop
   | LabelReverse
   | PrintMirror
+  | MeasurementUnits
   | ChangeEncoding
   | DefaultFont
   | FieldOrientation
@@ -694,6 +703,7 @@ export type {
   LabelTop,
   LabelReverse,
   PrintMirror,
+  MeasurementUnits,
   ChangeEncoding,
   DefaultFont,
   FieldOrientation,

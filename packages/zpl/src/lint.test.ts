@@ -236,6 +236,17 @@ suite("lint", () => {
       ]);
     });
 
+    test("ranges in dots don't apply to millimeters or inches", () => {
+      expect(
+        lintLabel(
+          { type: "MeasurementUnits", unit: "M" },
+          { type: "FieldOrigin", x: 5, y: 5 },
+          { type: "GraphicBox", width: 10, height: 5, thickness: 0.5 },
+          { type: "FieldSeparator" }
+        )
+      ).toStrictEqual([]);
+    });
+
     test("label shift and top outside the printer's range", () => {
       const diagnostics = lintLabel(
         { type: "LabelShift", shift: 10000 },

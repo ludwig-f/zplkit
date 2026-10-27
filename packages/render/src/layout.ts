@@ -8,6 +8,7 @@ import { decodeObjectData } from "./data.js";
 import { FontFiles, parseFontFile } from "./font-files.js";
 import { expandFormats } from "./formats.js";
 import { decodeGraphicData } from "./graphics.js";
+import { measuredFields } from "@zplkit/core";
 import type { Command } from "@zplkit/core";
 import type { Font } from "./font.js";
 import type { FontPath } from "./font-files.js";
@@ -297,6 +298,25 @@ type LayoutOptions = {
    * open-licensed stand-in, like the printer's own if you have a license
    */
   font0?: Uint8Array;
+  /** Dots per millimeter, for ^MU's millimeters and inches. 8 if not given. */
+  dpmm?: number;
+};
+
+/**
+ * A command with its positions and sizes in whole dots: converted from
+ * ^MU's millimeters or inches, and rounded to the nearest dot as printers do
+ */
+const inDots = <T extends Command>(command: T, dotsPerUnit: number): T => {
+  const fields = measuredFields[command.type];
+  if (!fields) return command;
+  const converted: Record<string, unknown> = { ...command };
+  for (const field of fields) {
+    const value = converted[field];
+    if (typeof value === "number") {
+      converted[field] = Math.round(value * dotsPerUnit);
+    }
+  }
+  return converted as T;
 };
 
 const layout = (
@@ -318,6 +338,10 @@ const layout = (
   let shift = 0;
   let top = 0;
   let mirror = false;
+  let unit: "D" | "I" | "M" = "D";
+  const dpmm = options.dpmm ?? 8;
+  // ^MU's inches are 25 mm, so 200 dots at 8 dpmm
+  const dotsPerUnit = { D: 1, M: dpmm, I: 25 * dpmm };
   let labelReverse = false;
   let field = newField();
 
@@ -345,7 +369,13 @@ const layout = (
     return typeface ? { ...setting, typeface } : { ...setting, font: "0" };
   };
 
-  for (const { command, index } of expandFormats(commands)) {
+  for (const { command: written, index } of expandFormats(commands)) {
+    if (written.type === "MeasurementUnits") {
+      unit = written.unit ?? unit;
+      continue;
+    }
+    const command = inDots(written, dotsPerUnit[unit]);
+
     if (command.type === "DownloadFont") {
       // Bounded fonts are converted to Zebra's own format, which we can't read
       if (!command.bounded) fontFiles.download(command, command.data);

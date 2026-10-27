@@ -233,6 +233,97 @@ describe("renderLabels", () => {
     });
   });
 
+  describe("units", () => {
+    const at = (zpl: string, dpmm = 8) => {
+      const [raster] = renderLabels(zpl, {
+        widthMm: 406 / 8,
+        heightMm: 406 / 8,
+        dpmm,
+      });
+      const { x, y } = dots(raster);
+      return { x, y };
+    };
+    const box = "^FO5,5^GB10,5,5^FS";
+
+    test("^MUM measures positions and sizes in millimeters", () => {
+      expect(at(`^XA^MUM${box}^XZ`)).toStrictEqual({
+        x: [40, 119],
+        y: [40, 79],
+      });
+      expect(at(`^XA^MUM${box}^XZ`, 12)).toStrictEqual({
+        x: [60, 179],
+        y: [60, 119],
+      });
+    });
+
+    test("^MUI measures in inches of 25 millimeters", () => {
+      expect(at("^XA^MUI^FO0.5,0.5^GB0.5,0.25,0.25^FS^XZ")).toStrictEqual({
+        x: [100, 199],
+        y: [100, 149],
+      });
+      expect(at("^XA^MUI^FO1,0.2^GB0.2,0.2,0.2^FS^XZ", 12)).toStrictEqual({
+        x: [300, 359],
+        y: [60, 119],
+      });
+    });
+
+    test("rounds to the nearest dot, in dots too", () => {
+      expect(at("^XA^MUM^FO1.4,1.45^GB10,5,5^FS^XZ")).toStrictEqual({
+        x: [11, 90],
+        y: [12, 51],
+      });
+      expect(at("^XA^FO10.7,10.2^GB50.6,20.5,20^FS^XZ")).toStrictEqual({
+        x: [11, 61],
+        y: [10, 30],
+      });
+    });
+
+    test("converts ^LH, text, barcodes and print width", () => {
+      expect(at(`^XA^MUM^LH5,5^FO0,0^GB10,5,5^FS^XZ`)).toStrictEqual({
+        x: [40, 119],
+        y: [40, 79],
+      });
+      expect(at("^XA^MUM^FO5,5^A0N,5,5^FDH^FS^XZ").y).toStrictEqual([40, 69]);
+      expect(at("^XA^MUM^BY1^FO5,5^BCN,5,N^FD12^FS^XZ").y).toStrictEqual([
+        40, 79,
+      ]);
+      expect(at("^XA^MUM^PW20^FO0,0^GB30,5,5^FS^XZ").x).toStrictEqual([
+        123, 282,
+      ]);
+    });
+
+    test("^BY widths are converted, Data Matrix modules aren't", () => {
+      // Code 128's first bar is two modules wide
+      expect(at("^XA^MUM^BY1^FO5,5^BCN,5,N^FD12^FS^XZ").x[0]).toBe(40);
+      expect(at("^XA^MUM^FO5,5^BXN,1,200^FDhi^FS^XZ")).toStrictEqual({
+        x: [40, 49],
+        y: [40, 49],
+      });
+    });
+
+    test("^FB's width stays in dots", () => {
+      // 40 dots fits one word a line; 40 mm would fit both on one
+      const { y } = at("^XA^MUM^FO5,5^FB40,3^A0N,4,4^FDAB CD^FS^XZ");
+      expect(y[1] - y[0]).toBeGreaterThan(40);
+    });
+
+    test("stay for the next label, until ^MUD", () => {
+      const labels = renderLabels(
+        `^XA^MUM^XZ^XA${box}^XZ^XA^MU${box}^XZ^XA^MUD${box}^XZ`,
+        {
+          widthMm: 406 / 8,
+          heightMm: 406 / 8,
+          dpmm: 8,
+        }
+      ).map((raster) => dots(raster).x);
+      expect(labels.slice(1)).toStrictEqual([
+        [40, 119],
+        [40, 119],
+        [5, 14],
+      ]);
+    });
+  });
+
   describe("mirror image", () => {
     const boxes = (zpl: string) =>
       renderLabels(zpl, { widthMm: 406 / 8, heightMm: 406 / 8, dpmm: 8 }).map(

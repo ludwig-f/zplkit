@@ -1,3 +1,4 @@
+import { measuredFields } from "./measured.js";
 import { unknownCommands } from "./commands.js";
 import type { Command, Span } from "./ast.js";
 
@@ -170,6 +171,8 @@ const lint = (
   let reportedOutside = false;
   let size = { ...media };
   let home = { x: 0, y: 0 };
+  // ^MU: ranges are in dots, so they don't apply to millimeters or inches
+  let unit: "D" | "I" | "M" = "D";
   let field: { index: number; barcode?: number; hasData: boolean } | undefined;
 
   const report = (
@@ -274,6 +277,9 @@ const lint = (
 
     for (const [key, name, min, max] of range ?? []) {
       const value = (command as Record<string, unknown>)[key];
+      if (unit !== "D" && measuredFields[command.type]?.includes(key)) {
+        continue;
+      }
 
       if (typeof value === "number" && (value < min || value > max)) {
         report(
@@ -296,6 +302,9 @@ const lint = (
         break;
       case "LabelHome":
         home = { x: command.x, y: command.y };
+        break;
+      case "MeasurementUnits":
+        unit = command.unit ?? unit;
         break;
       case "FieldOrigin":
       case "FieldTypeset": {

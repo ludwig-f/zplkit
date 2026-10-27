@@ -13,4 +13,5 @@ export type * from "./ast.js";
 export { parse } from "./parse.js";
 export type { Diagnostic, ParseResult } from "./parse.js";
 export { lint } from "./lint.js";
+export { measuredFields } from "./measured.js";
 export type { LintDiagnostic, LintMedia, LintRule } from "./lint.js";

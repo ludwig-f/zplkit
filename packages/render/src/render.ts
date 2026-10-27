@@ -179,40 +179,42 @@ const renderLabels = (
     );
   }
 
-  return layout(commands, { fonts: options.fonts, font0: options.font0 }).map(
-    (label) => {
-      const printWidth = Math.min(width, label.printWidth ?? width);
-      const printed = new Raster(printWidth, height, sampling);
+  return layout(commands, {
+    fonts: options.fonts,
+    font0: options.font0,
+    dpmm: options.dpmm,
+  }).map((label) => {
+    const printWidth = Math.min(width, label.printWidth ?? width);
+    const printed = new Raster(printWidth, height, sampling);
 
-      for (const element of label.elements) {
-        if (element.reverse) drawReversed(printed, element, options.dpmm);
-        else draw(printed, element, options.dpmm);
-      }
-
-      // Mirrored: each row of the print area runs the other way
-      if (label.mirrored) {
-        for (let y = 0; y < height; y++) {
-          printed.ink.subarray(y * printWidth, (y + 1) * printWidth).reverse();
-        }
-      }
-
-      // Upside down: turning the print area half a turn reverses its dots
-      if (label.inverted) printed.ink.reverse();
-
-      if (printWidth === width) return printed;
-
-      // Center the printed area on the label
-      const raster = new Raster(width, height, sampling);
-      const offset = Math.floor((width - printWidth) / 2);
-      for (let y = 0; y < height; y++) {
-        raster.ink.set(
-          printed.ink.subarray(y * printWidth, (y + 1) * printWidth),
-          y * width + offset
-        );
-      }
-      return raster;
+    for (const element of label.elements) {
+      if (element.reverse) drawReversed(printed, element, options.dpmm);
+      else draw(printed, element, options.dpmm);
     }
-  );
+
+    // Mirrored: each row of the print area runs the other way
+    if (label.mirrored) {
+      for (let y = 0; y < height; y++) {
+        printed.ink.subarray(y * printWidth, (y + 1) * printWidth).reverse();
+      }
+    }
+
+    // Upside down: turning the print area half a turn reverses its dots
+    if (label.inverted) printed.ink.reverse();
+
+    if (printWidth === width) return printed;
+
+    // Center the printed area on the label
+    const raster = new Raster(width, height, sampling);
+    const offset = Math.floor((width - printWidth) / 2);
+    for (let y = 0; y < height; y++) {
+      raster.ink.set(
+        printed.ink.subarray(y * printWidth, (y + 1) * printWidth),
+        y * width + offset
+      );
+    }
+    return raster;
+  });
 };
 
 export type { RenderOptions };

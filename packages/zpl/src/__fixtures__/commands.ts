@@ -18,6 +18,12 @@ const commandCases: [Command, string][] = [
   [{ type: "FieldOrientation", orientation: "B", justification: 1 }, "^FWB,1"],
   [{ type: "FieldOrigin", x: 20, y: 30 }, "^FO20,30"],
   [{ type: "FieldOrigin", x: 20, y: 30, justification: 1 }, "^FO20,30,1"],
+  [{ type: "FieldOrigin", x: 2.5, y: 30 }, "^FO2.5,30"],
+  [{ type: "MeasurementUnits", unit: "M" }, "^MUM"],
+  [
+    { type: "MeasurementUnits", unit: "D", baseDpi: 200, targetDpi: 300 },
+    "^MUD,200,300",
+  ],
   [{ type: "FieldTypeset", x: 20, y: 30 }, "^FT20,30"],
   [{ type: "FieldTypeset" }, "^FT"],
   [
