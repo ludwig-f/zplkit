@@ -1,4 +1,5 @@
 import { Raster } from "./raster.js";
+import type { Dirty } from "./raster.js";
 import { layout } from "./layout.js";
 import { draw, justified } from "./render.js";
 import type { Command } from "@zplkit/core";
@@ -30,16 +31,21 @@ type DesignLabel = {
   fields: DesignField[];
 };
 
-/** The smallest rectangle around the dots with ink, if there are any */
-const inkBounds = (raster: Raster): Rect | undefined => {
-  const { width, height, ink } = raster;
-  let left = width;
-  let top = height;
+/**
+ * The smallest rectangle around the dots with ink in an area, if there are
+ * any, clearing the area for the next element
+ */
+const takeInk = (raster: Raster, area: Dirty): Rect | undefined => {
+  const { width, ink } = raster;
+  let left = area.right;
+  let top = area.bottom;
   let right = -1;
   let bottom = -1;
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      if (ink[y * width + x] <= 0) continue;
+  for (let y = area.top; y < area.bottom; y++) {
+    const row = y * width;
+    for (let x = area.left; x < area.right; x++) {
+      if (ink[row + x] <= 0) continue;
+      ink[row + x] = 0;
       if (x < left) left = x;
       if (x > right) right = x;
       if (y < top) top = y;
@@ -88,9 +94,11 @@ const designLabels = (
 
     for (const given of label.elements) {
       const element = justified(given, scratch, options.dpmm);
-      scratch.ink.fill(0);
+      // Track where the element draws, so only that area is scanned
+      const area = { left: printWidth, top: height, right: 0, bottom: 0 };
+      scratch.dirty = area;
       draw(scratch, element, options.dpmm);
-      const bounds = inkBounds(scratch) ?? {
+      const bounds = takeInk(scratch, area) ?? {
         x: element.x,
         y: element.y,
         width: 0,

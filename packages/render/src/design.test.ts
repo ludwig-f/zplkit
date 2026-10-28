@@ -142,4 +142,15 @@ describe("designLabels", () => {
       height: 0,
     });
   });
+
+  test("each field is measured on its own, bitmaps too", () => {
+    // A 16 × 2 bitmap, then a box that overlaps it
+    const [label] = design(
+      "^XA^FO10,10^GFA,4,4,2,FFFFFFFF^FS^FO20,12^GB30,20,2^FS^XZ"
+    );
+    expect(label.fields.map(({ bounds }) => bounds)).toEqual([
+      { x: 10, y: 10, width: 16, height: 2 },
+      { x: 20, y: 12, width: 30, height: 20 },
+    ]);
+  });
 });
