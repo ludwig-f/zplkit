@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/ludwig-f/zplkit/compare/mcp-v0.2.1...mcp-v0.2.2) (2026-10-28)
+
+
+### Bug Fixes
+
+* **mcp:** lint_zpl and render_zpl report parse warnings ([38c6535](https://github.com/ludwig-f/zplkit/commit/38c6535aca5c502ffdb111bcd7137b6e15ba8dcb))
+
 ## [0.2.1](https://github.com/ludwig-f/zplkit/compare/mcp-v0.2.0...mcp-v0.2.1) (2026-10-28)
 
 
