@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { designFor } from "./fields";
 import {
   captionOf,
+  cropsFor,
   describeSelection,
   extentOf,
   guideName,
@@ -52,6 +53,67 @@ describe("tagOf", () => {
     expect(tagOf(design, design.labels[1].fields[0])).toBe(
       "Shared by 3 copies"
     );
+  });
+});
+
+describe("tagOf past the labels shown", () => {
+  test("counts every copy, not only the ones designed", () => {
+    const zpl = "^XA^FO10,10^A0N,30^SN001,1^FS^PQ6^XZ";
+    const design = designFor(zpl, { ...options, limit: 5 });
+    expect(design.labels).toHaveLength(5);
+    expect(tagOf(design, design.labels[0].fields[0])).toBe(
+      "Shared by 6 copies"
+    );
+  });
+
+  test("counts every label recalling the format", () => {
+    const recalls = Array.from(
+      { length: 7 },
+      (_, i) => `^XA^XFR:A.ZPL^FN1^FD${i}^FS^XZ\n`
+    ).join("");
+    const zpl = "^XA^DFR:A.ZPL^FS^FO10,10^A0N,30^FN1^FS^XZ\n" + recalls;
+    const design = designFor(zpl, { ...options, limit: 5 });
+    expect(tagOf(design, design.labels[0].fields[0])).toBe(
+      "Shared by 7 labels"
+    );
+  });
+
+  test("counts copies of each recalling label", () => {
+    const zpl =
+      "^XA^DFR:A.ZPL^FS^FO10,10^A0N,30^SN1,1^FS^XZ\n" +
+      "^XA^XFR:A.ZPL^PQ2^XZ\n^XA^XFR:A.ZPL^PQ3^XZ\n";
+    const design = designFor(zpl, options);
+    expect(tagOf(design, design.labels[0].fields[0])).toBe(
+      "Shared by 5 labels"
+    );
+  });
+});
+
+describe("cropsFor", () => {
+  const zpl = "^XA^FO10,10^GB100,50,50^FS^FO200,100^GB50,50,50^FS^XZ";
+
+  test("a move shifts every selected field on the label", () => {
+    const { design, fields } = fieldsOf(zpl);
+    const keys = fields.map((f) => f.key);
+    expect(cropsFor(design, 0, keys, "move", { dx: 5, dy: -5 })).toEqual([
+      { from: fields[0].bounds, to: { ...fields[0].bounds, x: 15, y: 5 } },
+      { from: fields[1].bounds, to: { ...fields[1].bounds, x: 205, y: 95 } },
+    ]);
+  });
+
+  test("a resize stretches the field to the step's bounds", () => {
+    const { design, fields } = fieldsOf(zpl);
+    const bounds = { x: 10, y: 10, width: 120, height: 60 };
+    expect(
+      cropsFor(design, 0, [fields[0].key], "resize", { dx: 0, dy: 0, bounds })
+    ).toEqual([{ from: fields[0].bounds, to: bounds }]);
+  });
+
+  test("leaves out fields with no ink", () => {
+    const { design, fields } = fieldsOf("^XA^FO30,40^A0N,30^FD^FS^XZ");
+    expect(
+      cropsFor(design, 0, [fields[0].key], "move", { dx: 1, dy: 1 })
+    ).toEqual([]);
   });
 });
 

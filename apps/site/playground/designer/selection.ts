@@ -7,6 +7,7 @@ import {
   spansOf,
   type Design,
 } from "./fields";
+import type { DragKind, Handle } from "./drag";
 import type { Highlight } from "./highlight";
 
 /** The selected fields' keys in selection order, and the label they were picked on */
@@ -103,7 +104,7 @@ const carry = (
       start = changes.mapPos(span.start, 1);
       if (changes.mapPos(span.end, -1) <= start) continue;
     }
-    const index = next.commands.findIndex((c) => c.span?.start === start);
+    let index = next.commands.findIndex((c) => c.span?.start === start);
     const found = next.commands[index]?.span;
     if (
       !found ||
@@ -112,11 +113,80 @@ const carry = (
           previous.zpl.slice(span.start, span.end))
     )
       continue;
-    if (labelWith(next, index, selection.label) >= 0 && !keys.includes(index))
+    // A command inserted before it, like a ^FO a move adds, starts the field now
+    if (labelWith(next, index, selection.label) < 0) {
+      index = fieldAtOffset(next, start)?.key ?? -1;
+    }
+    if (
+      index >= 0 &&
+      labelWith(next, index, selection.label) >= 0 &&
+      !keys.includes(index)
+    )
       keys.push(index);
   }
   const label = keys.length ? labelWith(next, keys[0], selection.label) : -1;
   return { keys, label: label < 0 ? selection.label : label };
+};
+
+/**
+ * The selection once the design follows an edit: carried through it, or the
+ * field at `selectAt.offset` (like a duplicate) when the text is the one
+ * that edit made. A selectAt for another text, e.g. an edit that changed
+ * nothing, is dropped.
+ */
+const redesigned = (
+  previous: Design,
+  next: Design,
+  selection: Selection,
+  options: {
+    changes?: ChangeSet;
+    selectAt?: { offset: number; zpl: string };
+  } = {}
+): Selection => {
+  const carried = carry(previous, next, selection, options.changes);
+  const { selectAt } = options;
+  return selectAt && selectAt.zpl === next.zpl
+    ? selectAtOffset(next, selectAt.offset, { ...carried, keys: [] })
+    : carried;
+};
+
+/**
+ * A press on a label at a point in dots: what it starts and the selection
+ * it works on. A handle of the one selected field resizes; empty space draws
+ * a selection box; a selected field moves with the others selected, and a
+ * press without dragging picks on pointer up (`clickOnUp`); any other field
+ * is picked right away, with shift adding it, and moves.
+ */
+const pressAt = (
+  design: Design,
+  selection: Selection,
+  label: number,
+  at: { x: number; y: number },
+  { handle, shift }: { handle?: Handle; shift: boolean }
+): { kind: DragKind; selection: Selection; clickOnUp: boolean } => {
+  const fields = design.labels[label]?.fields ?? [];
+  const selected =
+    selection.label === label
+      ? fields.filter((f) => selection.keys.includes(f.key))
+      : [];
+  if (handle && selected.length === 1) {
+    return { kind: { kind: "resize", handle }, selection, clickOnUp: false };
+  }
+  const hit = design.labels[label]
+    ? fieldAt(design.labels[label], at.x, at.y)
+    : undefined;
+  if (!hit) return { kind: { kind: "box" }, selection, clickOnUp: true };
+  if (selected.some((f) => f.key === hit.key)) {
+    return { kind: { kind: "move" }, selection, clickOnUp: true };
+  }
+  return {
+    kind: { kind: "move" },
+    selection: clickAt(design, selection, label, at.x, at.y, {
+      shift,
+      alt: false,
+    }),
+    clickOnUp: false,
+  };
 };
 
 /** The field with a key on a label */
@@ -155,4 +225,13 @@ const twinsOf = (
   );
 
 export type { Hover, Selection };
-export { carry, clickAt, highlightOf, selectAtOffset, selectIn, twinsOf };
+export {
+  carry,
+  clickAt,
+  highlightOf,
+  pressAt,
+  redesigned,
+  selectAtOffset,
+  selectIn,
+  twinsOf,
+};

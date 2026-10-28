@@ -52,7 +52,7 @@ const movesToChanges = (
 /**
  * A key on the canvas: arrows nudge 1 dot (shift 10), Delete or Backspace
  * delete, mod+D duplicates, Escape clears; undefined when the key isn't the
- * designer's. For a duplicate, `selectAt` is where the copy starts once the
+ * designer's, or nothing is selected. For a duplicate, `selectAt` is where the copy starts once the
  * edit is applied.
  */
 const keyEdit = (
@@ -62,9 +62,9 @@ const keyEdit = (
 ):
   | { edit?: TransactionSpec; selection?: Selection; selectAt?: number }
   | undefined => {
+  if (selection.keys.length === 0) return undefined;
   if (key === "Escape")
     return { selection: { keys: [], label: selection.label } };
-  if (selection.keys.length === 0) return undefined;
 
   const arrow = ARROWS[key];
   if (arrow && !mod) {

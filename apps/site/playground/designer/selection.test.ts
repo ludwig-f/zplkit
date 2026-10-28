@@ -1,10 +1,13 @@
-import { ChangeSet } from "@codemirror/state";
+import { ChangeSet, Text } from "@codemirror/state";
 import { describe, expect, test } from "vitest";
 import { designFor } from "./fields";
+import { moveFields } from "./move";
 import {
   carry,
   clickAt,
   highlightOf,
+  pressAt,
+  redesigned,
   selectAtOffset,
   selectIn,
   twinsOf,
@@ -153,5 +156,98 @@ describe("selection", () => {
       r.map(({ from, to }) => design.zpl.slice(from, to)).join("");
     expect(text(h.selected)).toBe("^FO10,10^GB100,100,100^FS");
     expect(text(h.hovered)).toBe("^FO200,10^GB50,50,50^FS");
+  });
+
+  test("carry keeps a field a move just gave a ^FO", () => {
+    const before = "^XA^GB10,10,10^FS^XZ";
+    const previous = designFor(before, options);
+    const selection = { keys: [previous.labels[0].fields[0].key], label: 0 };
+    const edit = moveFields(previous, selection.keys, 5, 0);
+    expect(edit[0].insert).toContain("^FO");
+    const changes = ChangeSet.of(edit, before.length);
+    const next = designFor(
+      changes.apply(Text.of([before])).toString(),
+      options
+    );
+    const kept = carry(previous, next, selection, changes);
+    expect(kept.keys).toEqual([next.labels[0].fields[0].key]);
+  });
+
+  test("redesigned selects a duplicate once its text is in", () => {
+    const before = "^XA^FO10,10^GB50,50,50^FS^XZ";
+    const previous = designFor(before, options);
+    const selection = { keys: [previous.labels[0].fields[0].key], label: 0 };
+    const copy = "^FO60,60^GB50,50,50^FS";
+    const after = before.replace("^XZ", copy + "^XZ");
+    const next = designFor(after, options);
+    const offset = after.indexOf(copy);
+    const picked = redesigned(previous, next, selection, {
+      selectAt: { offset, zpl: after },
+    });
+    expect(picked.keys).toEqual([next.labels[0].fields[1].key]);
+    // A duplicate whose edit never made it doesn't select later
+    const stale = redesigned(previous, next, selection, {
+      selectAt: { offset, zpl: before },
+    });
+    expect(stale.keys).toEqual([next.labels[0].fields[0].key]);
+  });
+
+  describe("pressAt", () => {
+    const design = designFor(two, options);
+    const [a, b] = design.labels[0].fields;
+    const none = { keys: [], label: 0 };
+    const press = { shift: false };
+
+    test("on a handle of one selected field: resize", () => {
+      const one = { keys: [a.key], label: 0 };
+      expect(
+        pressAt(design, one, 0, { x: 0, y: 0 }, { ...press, handle: "se" })
+      ).toEqual({
+        kind: { kind: "resize", handle: "se" },
+        selection: one,
+        clickOnUp: false,
+      });
+    });
+
+    test("on empty space: a selection box, clicking clears on up", () => {
+      expect(pressAt(design, none, 0, { x: 300, y: 180 }, press)).toEqual({
+        kind: { kind: "box" },
+        selection: none,
+        clickOnUp: true,
+      });
+    });
+
+    test("on a selected field: move it, a click picks on up", () => {
+      const both = { keys: [a.key, b.key], label: 0 };
+      expect(pressAt(design, both, 0, { x: 20, y: 20 }, press)).toEqual({
+        kind: { kind: "move" },
+        selection: both,
+        clickOnUp: true,
+      });
+    });
+
+    test("on another field: select it now and move it", () => {
+      expect(pressAt(design, none, 0, { x: 20, y: 20 }, press)).toEqual({
+        kind: { kind: "move" },
+        selection: { keys: [a.key], label: 0 },
+        clickOnUp: false,
+      });
+      const added = pressAt(
+        design,
+        { keys: [a.key], label: 0 },
+        0,
+        { x: 210, y: 20 },
+        { shift: true }
+      );
+      expect(added.selection.keys).toEqual([a.key, b.key]);
+    });
+
+    test("a handle with several selected is a press on the field", () => {
+      const both = { keys: [a.key, b.key], label: 0 };
+      expect(
+        pressAt(design, both, 0, { x: 20, y: 20 }, { ...press, handle: "se" })
+          .kind
+      ).toEqual({ kind: "move" });
+    });
   });
 });

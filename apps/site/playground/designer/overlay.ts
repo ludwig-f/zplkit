@@ -4,6 +4,7 @@ import type { Unit } from "../settings";
 import { formatDots } from "../units";
 import type { Handle } from "./drag";
 import { fieldAtOffset, type Design } from "./fields";
+import { moved, union } from "./geometry";
 import { dotsPerUnit } from "./move";
 import { resizeHandles } from "./resize";
 import type { Selection } from "./selection";
@@ -83,14 +84,73 @@ const barcodeCommand = (
   return undefined;
 };
 
-/** How many labels print a field, and whether they're copies of one label */
+/** A stored format's name, as ^DF and ^XF write it */
+const formatName = (command: Command): string | undefined =>
+  command.type === "DownloadFormat" || command.type === "RecallFormat"
+    ? `${command.device}:${command.name}.${command.extension}`.toUpperCase()
+    : undefined;
+
+/**
+ * How many different labels print a field, counting all of them and not
+ * only those designed: each ^XA that has it or recalls the format it's in,
+ * once for each serialized copy. `copies` when they all come from one ^XA.
+ */
 const sharing = (design: Design, key: number) => {
-  const labels = design.labels.filter((label) =>
+  const { commands } = design;
+  // The commands of each ^XA to ^XZ, by index
+  const parts: number[][] = [];
+  let part: number[] | undefined;
+  commands.forEach((command, index) => {
+    if (command.type === "StartFormat") parts.push((part = []));
+    part?.push(index);
+    if (command.type === "EndFormat") part = undefined;
+  });
+  const formats = new Map<string, number[]>();
+  for (const indices of parts) {
+    const download = indices.find((i) => commands[i].type === "DownloadFormat");
+    const name =
+      download === undefined ? undefined : formatName(commands[download]);
+    if (name) formats.set(name, indices);
+  }
+
+  let total = 0;
+  let sources = 0;
+  for (const own of parts) {
+    if (own.some((i) => commands[i].type === "DownloadFormat")) continue;
+    const recall = own.find((i) => commands[i].type === "RecallFormat");
+    const recalled =
+      recall === undefined
+        ? []
+        : formats.get(formatName(commands[recall]) ?? "") ?? [];
+    const all = [...own, ...recalled];
+    if (!all.includes(key)) continue;
+    sources++;
+    const serialized = all.some((i) =>
+      ["SerialNumber", "SerializationField"].includes(commands[i].type)
+    );
+    const pq = [...recalled, ...own]
+      .map((i) => commands[i])
+      .filter((c) => c.type === "PrintQuantity")
+      .pop();
+    const quantity =
+      pq?.type === "PrintQuantity"
+        ? Math.max(1, Math.floor(pq.quantity ?? 1))
+        : 1;
+    const replicates =
+      pq?.type === "PrintQuantity"
+        ? Math.max(1, Math.floor(pq.replicates || 1))
+        : 1;
+    total += serialized ? Math.ceil(quantity / replicates) : 1;
+  }
+
+  const designed = design.labels.filter((label) =>
     label.fields.some((f) => f.key === key)
   );
   return {
-    count: labels.length,
-    copies: labels.every((label) => label.start === labels[0]?.start),
+    count: Math.max(total, designed.length),
+    copies:
+      sources <= 1 &&
+      designed.every((label) => label.start === designed[0]?.start),
   };
 };
 
@@ -186,6 +246,35 @@ const positionIn = (
   )} ${unit}`;
 };
 
+/**
+ * The fields a drag moves, drawn from the label image: where each one's ink
+ * is (`from`) and where it goes (`to`), in dots. A move shifts every
+ * selected field on the label; a resize stretches the first to the step's
+ * bounds. Fields with no ink have nothing to draw.
+ */
+const cropsFor = (
+  design: Design,
+  label: number,
+  keys: readonly number[],
+  kind: "move" | "resize" | "box",
+  step: { dx: number; dy: number; bounds?: Rect }
+): { from: Rect; to: Rect }[] => {
+  if (kind === "box") return [];
+  const fields = (design.labels[label]?.fields ?? []).filter(
+    (f) => keys.includes(f.key) && f.bounds.width > 0 && f.bounds.height > 0
+  );
+  if (kind === "resize") {
+    const [field] = fields;
+    return field && step.bounds
+      ? [{ from: field.bounds, to: step.bounds }]
+      : [];
+  }
+  return fields.map((f) => ({
+    from: f.bounds,
+    to: moved(f.bounds, step.dx, step.dy),
+  }));
+};
+
 /** The overlay's accessible name, saying what's selected */
 const describeSelection = (design: Design, selection: Selection): string => {
   const fields = design.labels[selection.label]?.fields ?? [];
@@ -210,19 +299,12 @@ const extentOf = (
     .filter((f) => selection.keys.includes(f.key))
     .map((f) => f.bounds);
   if (rects.length === 0) return undefined;
-  const x = Math.min(...rects.map((r) => r.x));
-  const y = Math.min(...rects.map((r) => r.y));
-  return {
-    label: selection.label,
-    x,
-    y,
-    width: Math.max(...rects.map((r) => r.x + r.width)) - x,
-    height: Math.max(...rects.map((r) => r.y + r.height)) - y,
-  };
+  return { label: selection.label, ...union(rects) };
 };
 
 export {
   captionOf,
+  cropsFor,
   describeSelection,
   extentOf,
   guideName,

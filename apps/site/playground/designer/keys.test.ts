@@ -72,6 +72,13 @@ describe("keyEdit", () => {
     });
   });
 
+  test("Escape with nothing selected is left to the page", () => {
+    const { design } = setup(zpl);
+    expect(
+      keyEdit(design, { keys: [], label: 0 }, { key: "Escape", ...plain })
+    ).toBeUndefined();
+  });
+
   test("other keys are not the designer's", () => {
     const { design, selection } = setup(zpl);
     expect(keyEdit(design, selection, { key: "a", ...plain })).toBeUndefined();

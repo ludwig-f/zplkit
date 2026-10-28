@@ -1,5 +1,14 @@
 import { describe, expect, test } from "vitest";
-import { labelAt, pxToDots, toDots, toScreen } from "./geometry";
+import {
+  grow,
+  labelAt,
+  moved,
+  pxToDots,
+  spanning,
+  toDots,
+  toScreen,
+  union,
+} from "./geometry";
 import type { LabelBox } from "./geometry";
 
 /** A 400 x 200 dot label shown at 200 x 100 px from (10, 20) */
@@ -47,5 +56,35 @@ describe("labelAt", () => {
 
   test("is undefined in the gap between boxes", () => {
     expect(labelAt(stacked, 50, 60)).toBeUndefined();
+  });
+});
+
+describe("rects", () => {
+  const rect = { x: 10, y: 20, width: 30, height: 40 };
+
+  test("grow adds a margin on every side", () => {
+    expect(grow(rect, 3)).toEqual({ x: 7, y: 17, width: 36, height: 46 });
+  });
+
+  test("moved shifts without resizing", () => {
+    expect(moved(rect, 5, -5)).toEqual({ x: 15, y: 15, width: 30, height: 40 });
+  });
+
+  test("spanning takes two corners in any order", () => {
+    expect(spanning({ x: 50, y: 10 }, { x: 20, y: 30 })).toEqual({
+      x: 20,
+      y: 10,
+      width: 30,
+      height: 20,
+    });
+  });
+
+  test("union is the rect around all of them", () => {
+    expect(union([rect, { x: 0, y: 50, width: 5, height: 20 }])).toEqual({
+      x: 0,
+      y: 20,
+      width: 40,
+      height: 50,
+    });
   });
 });
