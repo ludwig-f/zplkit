@@ -630,7 +630,7 @@ export default function DesignOverlay({
       return (
         <span
           key={`${guide.axis}${guide.at}`}
-          className={`guide ${guide.axis}`}
+          className={`snap-guide ${guide.axis}`}
           style={style}
         >
           <span className="guide-name" style={name}>
@@ -688,10 +688,13 @@ export default function DesignOverlay({
         type="button"
         className={on ? "on" : undefined}
         aria-label={label}
-        aria-pressed={on}
         title={label}
         disabled={disabled}
-        onClick={() => apply(alignEdit(design, selection, how))}
+        onClick={() => {
+          apply(alignEdit(design, selection, how));
+          // Back to the labels, so arrows keep nudging
+          root.current?.focus({ preventScroll: true });
+        }}
       >
         {icon}
       </button>

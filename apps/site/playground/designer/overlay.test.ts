@@ -267,6 +267,15 @@ describe("captionSide", () => {
     );
   });
 
+  test("below when the caption chip and its margin don't fit above", () => {
+    expect(captionSide({ top: 22, labelTop: 0, selected: false })).toBe(
+      "below"
+    );
+    expect(captionSide({ top: 24, labelTop: 0, selected: false })).toBe(
+      "above"
+    );
+  });
+
   test("below when the tag of a selected field is above", () => {
     expect(captionSide({ top: 100, labelTop: 0, selected: true })).toBe(
       "below"

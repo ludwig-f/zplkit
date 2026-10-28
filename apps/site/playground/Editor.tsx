@@ -141,7 +141,13 @@ const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
   onChangeRef.current = onChange;
   const onCursorRef = useRef(onCursor);
   onCursorRef.current = onCursor;
-  /** The latest texts this editor reported, which the sync effect must not undo */
+  /**
+   * The latest texts this editor reported, which the sync effect must not
+   * undo. This relies on the parent feeding `value` back from onChange: once
+   * the value catches up with the document the list is cleared. It's capped
+   * so texts the parent never echoes (it may skip some mid-drag) can't pile
+   * up, and a long-gone text coming back from outside is applied again.
+   */
   const emitted = useRef<string[]>([]);
 
   useEffect(() => {

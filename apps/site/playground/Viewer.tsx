@@ -292,12 +292,15 @@ export default function Viewer() {
     ? "label"
     : fileName(examples[template].name);
 
-  // The size the preview uses: settings, then ^PW/^LL, then 4 × 6 in
+  // The size the preview uses: settings, then ^PW/^LL, then 4 × 6 in. From
+  // the previewed ZPL like the design, so a drag past ^PW doesn't resize it
   const labelSize = {
     width:
-      widthMm ?? ((lastValue(zpl, "PW") ?? 0) / dpmm || toMm(inches(4), dpmm)),
+      widthMm ??
+      ((lastValue(previewZpl, "PW") ?? 0) / dpmm || toMm(inches(4), dpmm)),
     height:
-      heightMm ?? ((lastValue(zpl, "LL") ?? 0) / dpmm || toMm(inches(6), dpmm)),
+      heightMm ??
+      ((lastValue(previewZpl, "LL") ?? 0) / dpmm || toMm(inches(6), dpmm)),
   };
   const labelDots = {
     width: Math.round(labelSize.width * dpmm),
@@ -784,7 +787,12 @@ export default function Viewer() {
                   x {formatDots(cursor.x, unit, dpmm)}, y{" "}
                   {formatDots(cursor.y, unit, dpmm)} {unit}
                 </span>
-                <span className="hint">Right-click for {originAt(cursor)}</span>
+                {/* Right-click on a field is the browser's menu */}
+                {!hover && (
+                  <span className="hint">
+                    Right-click for {originAt(cursor)}
+                  </span>
+                )}
               </>
             ) : (
               <span>

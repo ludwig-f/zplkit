@@ -140,18 +140,18 @@
   inset: -5px;
 }
 
-.designer .guide {
+.designer .snap-guide {
   position: absolute;
   background: var(--on-paper-accent);
   pointer-events: none;
 }
 
-.designer .guide.x {
+.designer .snap-guide.x {
   width: 1px;
   transform: translateX(-0.5px);
 }
 
-.designer .guide.y {
+.designer .snap-guide.y {
   height: 1px;
   transform: translateY(-0.5px);
 }
@@ -166,11 +166,11 @@
   white-space: nowrap;
 }
 
-.designer .guide.x .guide-name {
+.designer .snap-guide.x .guide-name {
   left: 6px;
 }
 
-.designer .guide.y .guide-name {
+.designer .snap-guide.y .guide-name {
   top: 6px;
 }
 

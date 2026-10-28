@@ -173,7 +173,7 @@ const captionOf = (design: Design, field: DesignField): string =>
     : `${barcodeCommand(design, field) ?? kindOf(design, field)} · not drawn`;
 
 /** How much room a caption or tag takes above a field's outline, in px */
-const CAPTION_ROOM = 20;
+const CAPTION_ROOM = 24;
 
 /**
  * Where a not-drawn field's caption goes, never over the field: above its
