@@ -8,6 +8,7 @@
     "linting",
     "preview",
     "rendering",
-    "printing"
+    "printing",
+    "cli"
   ]
 }

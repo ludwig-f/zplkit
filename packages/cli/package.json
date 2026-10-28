@@ -1,0 +1,57 @@
+{
+  "name": "@zplkit/cli",
+  "version": "0.0.0",
+  "description": "Render, lint, convert, view and print ZPL labels from the command line",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ludwig-f/zplkit.git",
+    "directory": "packages/cli"
+  },
+  "keywords": [
+    "zpl",
+    "zebra",
+    "label",
+    "cli",
+    "render",
+    "lint"
+  ],
+  "bin": {
+    "zplkit": "./bin/zplkit.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./build/cli.d.ts",
+      "default": "./build/cli.js"
+    }
+  },
+  "files": [
+    "bin",
+    "build",
+    "CHANGELOG.md",
+    "LICENSE",
+    "README.md"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest --run"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@zplkit/core": "workspace:^",
+    "@zplkit/print": "workspace:^",
+    "@zplkit/render": "workspace:^"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "typescript": "~5.9.3",
+    "vitest": "^1.6.1"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
