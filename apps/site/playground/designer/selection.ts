@@ -1,4 +1,4 @@
-import { MapMode, type ChangeSet } from "@codemirror/state";
+import type { ChangeSet } from "@codemirror/state";
 import type { DesignField, Rect } from "@zplkit/render/internal";
 import {
   fieldAt,
@@ -16,7 +16,7 @@ type Selection = { keys: number[]; label: number };
 type Hover = { key: number; label: number } | undefined;
 
 /** The first label that prints a field, preferring `label` */
-const labelWith = (design: Design, key: number, label: number): number | -1 =>
+const labelWith = (design: Design, key: number, label: number): number =>
   design.labels[label]?.fields.some((f) => f.key === key)
     ? label
     : design.labels.findIndex((l) => l.fields.some((f) => f.key === key));
@@ -30,13 +30,21 @@ const clickAt = (
   y: number,
   mods: { shift: boolean; alt: boolean }
 ): Selection => {
-  const fields = design.labels[label]?.fields ?? [];
-  const current = mods.alt
-    ? fields.find((f) => selection.keys.includes(f.key))
-    : undefined;
-  const field = design.labels[label]
-    ? fieldAt(design.labels[label], x, y, current)
-    : undefined;
+  const at = design.labels[label];
+  let reference: DesignField | undefined;
+  if (at && mods.alt) {
+    // The topmost selected field among those under the pointer
+    const top = fieldAt(at, x, y);
+    let hit = top;
+    while (hit && !reference) {
+      if (selection.keys.includes(hit.key)) reference = hit;
+      else {
+        hit = fieldAt(at, x, y, hit);
+        if (hit === top) break;
+      }
+    }
+  }
+  const field = at ? fieldAt(at, x, y, reference) : undefined;
   if (!field) return mods.shift ? selection : { keys: [], label };
   if (!mods.shift) return { keys: [field.key], label };
   return selection.keys.includes(field.key)
@@ -89,10 +97,12 @@ const carry = (
   for (const key of selection.keys) {
     const span = previous.commands[key]?.span;
     if (!span) continue;
-    const start = changes
-      ? changes.mapPos(span.start, 1, MapMode.TrackDel)
-      : span.start;
-    if (start === null) continue;
+    let start = span.start;
+    if (changes) {
+      // The edit removed the first command when nothing of it is left
+      start = changes.mapPos(span.start, 1);
+      if (changes.mapPos(span.end, -1) <= start) continue;
+    }
     const index = next.commands.findIndex((c) => c.span?.start === start);
     const found = next.commands[index]?.span;
     if (

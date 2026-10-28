@@ -40,6 +40,19 @@ describe("selection", () => {
     expect(under.keys).toEqual([lower.key]);
   });
 
+  test("alt-click cycles through stacked fields that are all selected", () => {
+    const design = designFor(
+      "^XA^FO10,10^GB100,100,100^FS^FO50,50^GB100,100,100^FS^XZ",
+      options
+    );
+    const [lower, top] = design.labels[0].fields;
+    const all = { keys: [lower.key, top.key], label: 0 };
+    const alt = { ...plain, alt: true };
+    const down = clickAt(design, all, 0, 60, 60, alt);
+    expect(down.keys).toEqual([lower.key]);
+    expect(clickAt(design, down, 0, 60, 60, alt).keys).toEqual([top.key]);
+  });
+
   test("selecting on a later copy keeps its label and shows twins", () => {
     const design = designFor("^XA^FO0,0^A0N,30^SN001,1,Y^FS^PQ3^XZ", options);
     const field = design.labels[2].fields[0];
@@ -113,6 +126,16 @@ describe("selection", () => {
     );
     expect(carry(previous, afterDelete, selection, deleted).keys).toEqual([]);
     expect(carry(previous, afterDelete, selection).keys).toEqual([]);
+  });
+
+  test("carry drops a deleted field even when another follows it", () => {
+    const before = "^XA^FO10,10^FDone^FS^FO10,60^FDtwo^FS^XZ";
+    const previous = designFor(before, options);
+    const selection = { keys: [previous.labels[0].fields[0].key], label: 0 };
+    const to = before.indexOf("^FO10,60");
+    const deleted = ChangeSet.of({ from: 3, to }, before.length);
+    const next = designFor(before.slice(0, 3) + before.slice(to), options);
+    expect(carry(previous, next, selection, deleted).keys).toEqual([]);
   });
 
   test("highlightOf gives selected and hovered spans", () => {
