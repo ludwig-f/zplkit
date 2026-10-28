@@ -9,5 +9,12 @@
   "homepage": "https://zplkit.fingal.dev/docs/mcp",
   "repository": "https://github.com/ludwig-f/zplkit",
   "license": "MIT",
-  "keywords": ["zpl", "zebra", "label", "barcode", "printer", "mcp"]
+  "keywords": [
+    "zpl",
+    "zebra",
+    "label",
+    "barcode",
+    "printer",
+    "mcp"
+  ]
 }
