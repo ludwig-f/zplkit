@@ -27,6 +27,8 @@ const label = new Label({ width: inches(4), height: inches(6), dpmm: 8 });
 | --- | --- | --- |
 | [`text`](#text) | `^A`, `^FD` | Text |
 | [`box`](#box) | `^GB` | A box or line |
+| [`ellipse`](#ellipse) | `^GE` | An ellipse |
+| [`circle`](#circle) | `^GC` | A circle |
 | [`graphic`](#graphic) | `^GF` | An image |
 | [`storedGraphic`](#storedgraphic) | `^XG` | An image stored on the printer |
 | [`field`](#field) | any | A field with any command |
@@ -60,6 +62,32 @@ label.text({
 
 <auto-type-table cwd path="../../packages/zpl/src/options.ts" name="FontOptions" />
 
+Text can run down or right to left, be spaced out, wrap in a block, show the printer's date and time, or count up on each copy:
+
+```ts
+// 001, 002, 003… on the 500 copies
+const label = new Label({ width: inches(4), height: inches(2), dpmm: 8, copies: 500 });
+label.text({ position: { x: mm(5), y: mm(5) }, text: "001", serial: {} });
+
+// Printed 28.10.2026, from the printer's clock
+label.text({ position: { x: mm(5), y: mm(15) }, text: "Printed %d.%m.%Y", clock: true });
+
+// Wrapped in a block 60 mm wide, centered, on up to 3 lines
+label.text({
+  position: { x: mm(5), y: mm(25) },
+  text: "Keep dry and away from direct sunlight",
+  block: { width: mm(60), lines: 3, align: "center" },
+});
+```
+
+`block` takes:
+
+<auto-type-table cwd path="../../packages/zpl/src/options.ts" name="TextBlockOptions" />
+
+`serial` takes the following. Barcodes, except QR codes, take it too, to count their data up.
+
+<auto-type-table cwd path="../../packages/zpl/src/options.ts" name="SerialOptions" />
+
 ### box
 
 ```ts
@@ -79,6 +107,35 @@ label.box({
 ```
 
 <auto-type-table cwd path="../../packages/zpl/src/options.ts" name="BoxOptions" />
+
+### ellipse
+
+```ts
+label.ellipse(options: EllipseOptions): this
+```
+
+Adds an ellipse, or a solid one when the line is half its width or height.
+
+```ts
+label.ellipse({
+  position: { x: mm(5), y: mm(5) },
+  width: mm(30),
+  height: mm(15),
+  thickness: mm(0.5),
+});
+```
+
+<auto-type-table cwd path="../../packages/zpl/src/options.ts" name="EllipseOptions" />
+
+### circle
+
+```ts
+label.circle(options: CircleOptions): this
+```
+
+Adds a circle.
+
+<auto-type-table cwd path="../../packages/zpl/src/options.ts" name="CircleOptions" />
 
 ### graphic
 

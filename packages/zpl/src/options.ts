@@ -57,6 +57,46 @@ type LabelOptions = {
   darkness?: number;
 };
 
+/** A field's data that counts up on each copy (^SN) */
+type SerialOptions = {
+  /**
+   * How much the last run of digits counts up by; negative counts down
+   * @defaultValue 1
+   */
+  increment?: number;
+  /**
+   * Keep leading zeros, like 001; without, they print as spaces
+   * @defaultValue true
+   */
+  leadingZeros?: boolean;
+};
+
+/** Text wrapped in a block (^FB) */
+type TextBlockOptions = {
+  /** Width of the block; lines wrap at spaces to fit it */
+  width: Length;
+  /**
+   * Most lines; more print over the last one
+   * @defaultValue 1
+   */
+  lines?: number;
+  /**
+   * Extra space between lines
+   * @defaultValue None
+   */
+  lineSpacing?: Length;
+  /**
+   * How lines line up in the block
+   * @defaultValue "left"
+   */
+  align?: "left" | "center" | "right" | "justify";
+  /**
+   * How far lines after the first are indented
+   * @defaultValue None
+   */
+  indent?: Length;
+};
+
 /** Options for `setDefaultFont()` and `<DefaultFont>` (^CF) */
 type DefaultFontOptions = {
   /** One of the printer's fonts, like ZebraFontFamily.ZERO, or a font name */
@@ -95,6 +135,33 @@ type TextOptions = {
    * @defaultValue The label's default font
    */
   font?: FontOptions;
+  /**
+   * Which way the characters run: across, down (one under the other) or
+   * right to left (^FP)
+   * @defaultValue "horizontal"
+   */
+  direction?: "horizontal" | "vertical" | "reverse";
+  /**
+   * Extra space between characters (^FP)
+   * @defaultValue None
+   */
+  letterSpacing?: Length;
+  /**
+   * Fill in date and time codes like %Y-%m-%d %H:%M from the printer's
+   * clock (^FC)
+   * @defaultValue false
+   */
+  clock?: boolean;
+  /**
+   * Wrap the text in a block (^FB)
+   * @defaultValue One line
+   */
+  block?: TextBlockOptions;
+  /**
+   * Count the text up on each copy, from the number at its end (^SN)
+   * @defaultValue The same text on every copy
+   */
+  serial?: SerialOptions;
 };
 
 /** Options for `box()` and `<Box>` (^GB) */
@@ -153,6 +220,11 @@ type BarcodeOptions = {
   data: string;
   /** Which way the barcode runs */
   orientation?: Orientation;
+  /**
+   * Count the data up on each copy, from the number at its end (^SN)
+   * @defaultValue The same data on every copy
+   */
+  serial?: SerialOptions;
 };
 
 /** What the linear barcodes take: height and the human readable line */
@@ -458,7 +530,7 @@ type DataMatrixOptions = BarcodeOptions & {
 };
 
 /** Options for `qrCode()` (^BQ) */
-type QrCodeOptions = Omit<BarcodeOptions, "orientation"> & {
+type QrCodeOptions = Omit<BarcodeOptions, "orientation" | "serial"> & {
   /**
    * Size of each square module
    * @defaultValue The printer's default for its resolution
@@ -469,6 +541,38 @@ type QrCodeOptions = Omit<BarcodeOptions, "orientation"> & {
    * @defaultValue "M"
    */
   errorCorrection?: "H" | "Q" | "M" | "L";
+};
+
+/** Options for `ellipse()` and `<Ellipse>` (^GE) */
+type EllipseOptions = {
+  /** Where the ellipse's box starts */
+  position: Position;
+  /** Ellipse width */
+  width: Length;
+  /** Ellipse height */
+  height: Length;
+  /** Line thickness; half the width or height draws a solid ellipse */
+  thickness: Length;
+  /**
+   * B for black, W for white
+   * @defaultValue "B"
+   */
+  color?: Color;
+};
+
+/** Options for `circle()` and `<Circle>` (^GC) */
+type CircleOptions = {
+  /** Where the circle's box starts */
+  position: Position;
+  /** Circle diameter */
+  diameter: Length;
+  /** Line thickness; half the diameter draws a solid circle */
+  thickness: Length;
+  /**
+   * B for black, W for white
+   * @defaultValue "B"
+   */
+  color?: Color;
 };
 
 /** Options for `field()` and `<Field>` */
@@ -515,6 +619,10 @@ export type {
   FontOptions,
   TextOptions,
   BoxOptions,
+  EllipseOptions,
+  CircleOptions,
+  SerialOptions,
+  TextBlockOptions,
   GraphicOptions,
   StoredGraphicOptions,
   BarcodeOptions,

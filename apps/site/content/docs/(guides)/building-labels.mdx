@@ -28,7 +28,7 @@ Every length takes an explicit unit: `mm(10)` for millimeters, `inches(0.5)` for
 
 ## Elements
 
-There's a method for each kind of element: `text`, `box`, `graphic` and `storedGraphic`, one per barcode, like `code128`, `ean13`, `upcA` and `qrCode`, and `field` for any other command. The [API reference](/docs/api/label) lists them all with every option.
+There's a method for each kind of element: `text`, `box`, `ellipse`, `circle`, `graphic` and `storedGraphic`, one per barcode, like `code128`, `ean13`, `upcA` and `qrCode`, and `field` for any other command. The [API reference](/docs/api/label) lists them all with every option.
 
 ## QR codes
 
@@ -85,9 +85,22 @@ label.field({
 Labels are built from typed command nodes, which you can read with `label.commands`. Commands with a typed node but no method can be added with `add()`, and anything else as plain ZPL with `raw()`, the escape hatch. Neither escapes anything, so keep user input out of `raw()`:
 
 ```ts
-label.add({ type: "GraphicCircle", diameter: 80, thickness: 4 });
+label.add({ type: "GraphicDiagonal", width: 80, height: 40, thickness: 4 });
 label.raw("^MMC"); // cut after each label
 ```
+
+## Serial numbers
+
+With `copies`, text and barcodes can count up on each copy with `serial`, from the number at the end of their data. The printer counts, so the ZPL stays as short as for one label:
+
+```ts
+const label = new Label({ width: inches(4), height: inches(2), dpmm: 8, copies: 100 });
+label.text({ position: { x: mm(5), y: mm(5) }, text: "BOX-001", serial: {} });
+label.code128({ position: { x: mm(5), y: mm(15) }, data: "BOX-001", serial: {} });
+// BOX-001, BOX-002… BOX-100, in the text and the barcode
+```
+
+`serial: { increment: 10 }` counts by ten, and a negative increment counts down. Leading zeros are kept, as in 001.
 
 ## Print settings
 
@@ -98,4 +111,4 @@ new Label({ width: mm(57), height: mm(19), dpmm: 12, copies: 3, speed: 4, darkne
 // ^XA…^PR4^MD5^PQ3…^XZ
 ```
 
-Settings that change the printer itself, like its default darkness or stored graphics, are sent before the label with [`PrinterSetup`](/docs/printing), and a [`PrintJob`](/docs/printing#print-jobs) sends both together. [Lint](/docs/linting#printer-command-in-label) warns when one ends up inside a label.
+Settings that change the printer itself, like its default darkness, stored graphics, or moving and mirroring every label (`setLabelShift`, `setLabelTop`, `setMirror`), are sent before the label with [`PrinterSetup`](/docs/printing), and a [`PrintJob`](/docs/printing#print-jobs) sends both together. [Lint](/docs/linting#printer-command-in-label) warns when one ends up inside a label.

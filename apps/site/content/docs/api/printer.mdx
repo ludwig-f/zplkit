@@ -36,6 +36,11 @@ Stores a TrueType font (`~DU`), to use with `text({ font: { file: "R:NAME.TTF" }
 | Method | Does |
 | --- | --- |
 | `setDarkness(darkness)` | Sets print darkness (`~SD`), 0 to 30 |
+| `setLabelShift(dots)` | Moves every field left, or right when negative (`^LS`), -9999 to 9999 dots |
+| `setLabelTop(dots)` | Moves every field down, or up when negative (`^LT`), -120 to 120 dots |
+| `setMirror(mirror)` | Prints labels as their mirror image (`^PM`), for clear media printed from the back |
+
+The printer keeps these three until they're set again, also for labels sent later from other software, so they belong in printer setup rather than in a label. Each is sent in its own format, without fields.
 | `deleteGraphic(name, device?)` | Deletes a stored graphic (`^ID`), from R: unless another device is given |
 
 ## PrintJob

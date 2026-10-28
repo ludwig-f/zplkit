@@ -3,6 +3,8 @@ import {
   Label,
   Text,
   Box,
+  Ellipse,
+  Circle,
   Code11,
   Code128,
   Code39,
@@ -290,6 +292,92 @@ suite("jsx", () => {
       );
 
       expect(label.toZPL()).toContain("^FO0,0^A0R,40,30^FDHi^FS");
+    });
+  });
+
+  describe("shapes, copies and text options", () => {
+    test("make the same ZPL as the builder", () => {
+      const label = build(
+        <Label width={mm(57)} height={mm(19)} dpmm={12} copies={10}>
+          <Ellipse
+            x={dots(20)}
+            y={dots(20)}
+            width={dots(100)}
+            height={dots(50)}
+            thickness={dots(3)}
+          />
+          <Circle
+            x={dots(20)}
+            y={dots(80)}
+            diameter={dots(60)}
+            thickness={dots(2)}
+            color="W"
+          />
+          <Text
+            x={dots(150)}
+            y={dots(20)}
+            direction="vertical"
+            letterSpacing={dots(2)}
+          >
+            Up
+          </Text>
+          <Text
+            x={dots(150)}
+            y={dots(60)}
+            clock
+            block={{ width: dots(200), align: "right" }}
+          >
+            %d.%m.%Y
+          </Text>
+          <Text x={dots(150)} y={dots(100)} serial={{}}>
+            001
+          </Text>
+          <Code128 x={dots(150)} y={dots(140)} serial={{ increment: 5 }}>
+            0005
+          </Code128>
+        </Label>
+      );
+
+      const expected = new LabelBuilder({
+        width: mm(57),
+        height: mm(19),
+        dpmm: 12,
+        copies: 10,
+      })
+        .ellipse({
+          position: at(20, 20),
+          width: dots(100),
+          height: dots(50),
+          thickness: dots(3),
+        })
+        .circle({
+          position: at(20, 80),
+          diameter: dots(60),
+          thickness: dots(2),
+          color: "W",
+        })
+        .text({
+          position: at(150, 20),
+          text: "Up",
+          direction: "vertical",
+          letterSpacing: dots(2),
+        })
+        .text({
+          position: at(150, 60),
+          text: "%d.%m.%Y",
+          clock: true,
+          block: { width: dots(200), align: "right" },
+        })
+        .text({ position: at(150, 100), text: "001", serial: {} })
+        .code128({
+          position: at(150, 140),
+          data: "0005",
+          serial: { increment: 5 },
+        });
+
+      expect(label.toZPL()).toStrictEqual(expected.toZPL());
+      expect(label.toZPL()).toContain("^GE100,50,3,B");
+      expect(label.toZPL()).toContain("^SN001,1,Y");
     });
   });
 

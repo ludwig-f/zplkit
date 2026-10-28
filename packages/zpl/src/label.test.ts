@@ -202,6 +202,97 @@ suite("Label", () => {
     });
   });
 
+  describe("ellipse and circle", () => {
+    test("should draw an ellipse", () => {
+      const label = wideLabel().ellipse({
+        position: at20,
+        width: dots(100),
+        height: dots(50),
+        thickness: dots(3),
+      });
+      expect(label.toZPL()).toStrictEqual(
+        wideHeader + "^FO20,20^GE100,50,3,B^FS^XZ"
+      );
+    });
+
+    test("should draw a white circle", () => {
+      const label = wideLabel().circle({
+        position: at20,
+        diameter: dots(80),
+        thickness: dots(3),
+        color: "W",
+      });
+      expect(label.toZPL()).toStrictEqual(
+        wideHeader + "^FO20,20^GC80,3,W^FS^XZ"
+      );
+    });
+  });
+
+  describe("text options", () => {
+    test("should print text down or right to left, spaced out", () => {
+      expect(
+        wideLabel()
+          .text({
+            position: at20,
+            text: "Hi",
+            direction: "vertical",
+            letterSpacing: dots(4),
+          })
+          .toZPL()
+      ).toStrictEqual(wideHeader + "^FO20,20^FPV,4^FDHi^FS^XZ");
+      expect(
+        wideLabel()
+          .text({ position: at20, text: "Hi", direction: "reverse" })
+          .toZPL()
+      ).toStrictEqual(wideHeader + "^FO20,20^FPR^FDHi^FS^XZ");
+      expect(
+        wideLabel()
+          .text({ position: at20, text: "Hi", letterSpacing: dots(4) })
+          .toZPL()
+      ).toStrictEqual(wideHeader + "^FO20,20^FPH,4^FDHi^FS^XZ");
+    });
+
+    test("should fill in dates and times with clock", () => {
+      expect(
+        wideLabel()
+          .text({ position: at20, text: "%Y-%m-%d", clock: true })
+          .toZPL()
+      ).toStrictEqual(wideHeader + "^FO20,20^FC%^FD%Y-%m-%d^FS^XZ");
+    });
+
+    test("should wrap text in a block", () => {
+      expect(
+        wideLabel()
+          .text({
+            position: at20,
+            text: "Wrapped text",
+            block: {
+              width: dots(300),
+              lines: 2,
+              lineSpacing: dots(4),
+              align: "center",
+            },
+          })
+          .toZPL()
+      ).toStrictEqual(wideHeader + "^FO20,20^FB300,2,4,C^FDWrapped text^FS^XZ");
+    });
+
+    test("should count up a serial number on each copy", () => {
+      expect(
+        wideLabel().text({ position: at20, text: "001", serial: {} }).toZPL()
+      ).toStrictEqual(wideHeader + "^FO20,20^SN001,1,Y^FS^XZ");
+      expect(
+        wideLabel()
+          .code128({
+            position: at20,
+            data: "0010",
+            serial: { increment: -2, leadingZeros: false },
+          })
+          .toZPL()
+      ).toStrictEqual(wideHeader + "^FO20,20^BC^SN0010,-2,N^FS^XZ");
+    });
+  });
+
   describe("text", () => {
     test("should draw text with the given font", () => {
       const label = wideLabel().text({
