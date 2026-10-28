@@ -20,6 +20,10 @@
     ".": {
       "types": "./build/index.d.ts",
       "default": "./build/index.js"
+    },
+    "./internal": {
+      "types": "./build/internal.d.ts",
+      "default": "./build/internal.js"
     }
   },
   "files": [

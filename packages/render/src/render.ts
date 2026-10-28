@@ -272,4 +272,4 @@ const renderLabels = (
 };
 
 export type { RenderOptions };
-export { renderLabels };
+export { draw, justified, renderLabels };
