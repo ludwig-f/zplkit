@@ -170,6 +170,44 @@ describe("startDrag move", () => {
   });
 });
 
+describe("startDrag move past the edge", () => {
+  test("a group stops where its first field reaches 0, keeping its spacing", () => {
+    const text = "^XA^FO10,20^GB10,10,10^FS^FO50,40^GB10,10,10^FS^XZ";
+    const design = designFor(text, options);
+    const keys = design.labels[0].fields.map((f) => f.key);
+    const state = EditorState.create({ doc: text });
+    const step = startDrag(
+      design,
+      { keys, label: 0 },
+      0,
+      { x: 100, y: 100 },
+      { kind: "move" }
+    ).moveTo({ x: 70, y: 70 }, move);
+    expect(step.dx).toBe(-10);
+    expect(step.dy).toBe(-20);
+    expect(step.bounds).toMatchObject({ x: 0, y: 0 });
+    expect(applied(state, step.edit).doc.toString()).toBe(
+      "^XA^FO0,0^GB10,10,10^FS^FO40,20^GB10,10,10^FS^XZ"
+    );
+  });
+
+  test("on an upside-down label it stops dragging right", () => {
+    const text = "^XA^POI^FO10,30^GB10,10,10^FS^XZ";
+    const { design, selection, state } = setup(text);
+    const step = startDrag(
+      design,
+      selection,
+      0,
+      { x: 0, y: 0 },
+      { kind: "move" }
+    ).moveTo({ x: 30, y: -5 }, move);
+    expect(step.dx).toBe(10);
+    expect(applied(state, step.edit).doc.toString()).toBe(
+      "^XA^POI^FO0,35^GB10,10,10^FS^XZ"
+    );
+  });
+});
+
 describe("startDrag resize", () => {
   const zpl = "^XA^FO10,10^GB100,50,3^FS^XZ";
 

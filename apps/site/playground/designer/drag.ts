@@ -4,7 +4,7 @@ import type { TextChange } from "@zplkit/core/internal";
 import type { DesignField, Rect } from "@zplkit/render/internal";
 import type { Design } from "./fields";
 import { designerEdit } from "./history";
-import { moveFields } from "./move";
+import { clampMove, moveFields } from "./move";
 import { resizeField, resizeHandles } from "./resize";
 import type { Selection } from "./selection";
 import { snapMove, type Guide } from "./snap";
@@ -203,6 +203,11 @@ const startDrag = (
         );
         ({ dx, dy, guides } = snapped);
       }
+      // The group stops as one at the label's edge
+      const clamped = clampMove(design, selection.keys, dx, dy);
+      if (clamped.dx !== dx) guides = guides.filter((g) => g.axis !== "x");
+      if (clamped.dy !== dy) guides = guides.filter((g) => g.axis !== "y");
+      ({ dx, dy } = clamped);
       changes = moveFields(design, selection.keys, dx, dy);
       readout = moveReadout(design, selected[0], changes);
       const { x, y, width, height } = selected[0].bounds;

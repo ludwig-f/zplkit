@@ -87,4 +87,40 @@ const moveFields = (
   return changes.sort((a, b) => a.from - b.from);
 };
 
-export { dotsPerUnit, inUnits, moveFields };
+/**
+ * A distance on screen, in dots, cut short so no field's ^FO or ^FT goes
+ * past the label's left or top edge, in the field's own coordinates (so a
+ * turned or mirrored label stops on the edge it prints from). Fields then
+ * move together instead of each stopping at 0 on its own.
+ */
+const clampMove = (
+  design: Design,
+  keys: number[],
+  dx: number,
+  dy: number
+): { dx: number; dy: number } => {
+  const { commands, labels } = design;
+  const dots = dotsPerUnit(design);
+  for (const key of new Set(keys)) {
+    const label = labels.find(({ fields }) =>
+      fields.some((f) => f.key === key)
+    );
+    const field = label?.fields.find((f) => f.key === key);
+    if (!label || !field) continue;
+    const index = field.commands[0];
+    const command = commands[index];
+    const placed =
+      command?.type === "FieldOrigin" || command?.type === "FieldTypeset";
+    // A field without one is at 0, where an added ^FO starts
+    const x0 = placed ? (command.x ?? 0) * dots[index] : 0;
+    const y0 = placed ? (command.y ?? 0) * dots[index] : 0;
+    // Which way the screen's distance prints, as moveFields turns it
+    const sx = Boolean(label.mirrored) !== Boolean(label.inverted) ? -1 : 1;
+    const sy = label.inverted ? -1 : 1;
+    if (sx * dx < -x0) dx = -sx * x0;
+    if (sy * dy < -y0) dy = -sy * y0;
+  }
+  return { dx, dy };
+};
+
+export { clampMove, dotsPerUnit, inUnits, moveFields };
