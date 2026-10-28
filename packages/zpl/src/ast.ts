@@ -57,8 +57,10 @@ type SerialNumber = Node<
 >;
 /**
  * `^SFa,b`: counts up the ^FD data on each copy. The mask a lines up with
- * the data: d decimal, h hex, o octal, a letters, n letters and digits, %
- * left as it is. The increment b lines up with the mask's end.
+ * the data: d decimal, h hex, o octal, a letters, n digits then letters, %
+ * left as it is. Uppercase H, A and N count uppercase letters, lowercase
+ * ones lowercase. The increment b lines up with the mask's end, written in
+ * the same digits, so B adds 1 under an A.
  */
 type SerializationField = Node<
   "SerializationField",

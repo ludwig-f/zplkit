@@ -1244,9 +1244,9 @@
       "code": "^SF",
       "name": "Serialization Field (with a standard ^FD String)",
       "category": "Fields",
-      "support": "partial",
+      "support": "yes",
       "drawn": true,
-      "note": "Decimal, octal and hex masks count; letter masks don't yet"
+      "note": ""
     },
     {
       "code": "^SL",

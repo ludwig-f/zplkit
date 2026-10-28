@@ -1,6 +1,7 @@
 // Copies with ^PQ, and serialized data with ^SN and ^SF
 import { describe, test, expect } from "vitest";
-import { countLabels, renderLabels } from "./index.js";
+import { parse } from "@zplkit/core";
+import { countLabels, layout, renderLabels } from "./index.js";
 
 const size = { widthMm: 50, heightMm: 25, dpmm: 8 };
 const render = (zpl: string, limit?: number) =>
@@ -28,6 +29,13 @@ describe("copies", () => {
   test("^SF counts up the field data", () => {
     const labels = render(`^XA${text}^FDAB0099^SF%%dddd,1^FS^PQ2^XZ`);
     expect(labels[1].ink).toEqual(render(`^XA${text}^FDAB0100^FS^XZ`)[0].ink);
+  });
+
+  test("^SF counts letters, and draws them all", () => {
+    const zpl = `^XA${text}^FDBOX-AZ^SF%%%%AA,B^FS^PQ2^XZ`;
+    expect(layout(parse(zpl).commands)[0].unsupported).toEqual([]);
+    const labels = render(zpl);
+    expect(labels[1].ink).toEqual(render(`^XA${text}^FDBOX-BA^FS^XZ`)[0].ink);
   });
 
   test("serial numbers go into barcodes", () => {
