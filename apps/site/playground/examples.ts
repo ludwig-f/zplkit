@@ -95,12 +95,12 @@ const examples: {
     dpmm: 8,
     zpl: `^XA
 ^PW406^LL203
-^FX Six copies with PQ, each counting up from the one before.
-^FX SN counts the number at the end: BOX-001, BOX-002 and on.
 ^FO20,16^A0,24^FDBox^FS
+^FX SN counts the number at the end: BOX-001, BOX-002 and on.
 ^FO20,42^A0,56^SNBOX-001,1,Y^FS
 ^BY3
 ^FO20,110^BCN,70,N,N^SNBOX-001,1,Y^FS
+^FX Six copies with PQ, each counting up from the one before.
 ^PQ6
 ^XZ`,
   },
