@@ -10,13 +10,13 @@ import {
 } from "@codemirror/view";
 import {
   defaultKeymap,
-  history,
   historyKeymap,
   indentWithTab,
 } from "@codemirror/commands";
 import { lintGutter, setDiagnostics } from "@codemirror/lint";
 import { zplHighlighting, zplLanguage } from "./zpl-language";
 import { tsxLanguage } from "./tsx-language";
+import { designerHistory } from "./designer/history";
 
 /** A problem to underline, as offsets in the text */
 type EditorProblem = {
@@ -111,7 +111,7 @@ const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
         extensions: [
           lineNumbers(),
           highlightActiveLine(),
-          history(),
+          designerHistory(),
           keymap.of([...defaultKeymap, ...historyKeymap]),
           // Code keeps its indentation readable without wrapping
           ...(language === "zpl"
