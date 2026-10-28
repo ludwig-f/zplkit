@@ -192,7 +192,7 @@ const createServer = (options: ServerOptions = {}): McpServer => {
     },
     safely(async ({ zpl, dpi = 203, width, height, labels }) => {
       const dpmm = dpmmByDpi[dpi];
-      const { commands } = parse(zpl);
+      const { commands, diagnostics: unread } = parse(zpl);
       const widthDots = width
         ? lengthInDots(width, "width", dpmm, dpi)
         : lastOf(commands, "PrintWidth")?.width ?? 4 * dpi;
@@ -241,7 +241,7 @@ const createServer = (options: ServerOptions = {}): McpServer => {
           } drawn yet, so a printer may print more than this shows.`
         );
       }
-      const diagnostics = lint(commands);
+      const diagnostics = [...unread, ...lint(commands)];
       if (diagnostics.length) {
         const errors = diagnostics.filter((d) => d.severity === "error").length;
         const warnings = diagnostics.length - errors;
@@ -275,7 +275,11 @@ const createServer = (options: ServerOptions = {}): McpServer => {
       annotations: { readOnlyHint: true },
     },
     safely(({ zpl }) => {
-      const diagnostics = lint(parse(zpl).commands);
+      const { commands, diagnostics: unread } = parse(zpl);
+      // What the parser couldn't read, and what lint() found, in order
+      const diagnostics = [...unread, ...lint(commands)].sort(
+        (a, b) => (a.span?.start ?? 0) - (b.span?.start ?? 0)
+      );
       if (!diagnostics.length) return text("No problems found.");
       return text(
         diagnostics
