@@ -5,6 +5,7 @@
  * makes the same label.
  */
 import Label from "./Label.js";
+import { measuredFields } from "./measured.js";
 import { parse } from "./parse.js";
 import { serialize, serializeCommand } from "./serialize.js";
 import type { Command } from "./ast.js";
@@ -580,12 +581,43 @@ const plan = (zpl: string, options: Required<ConvertOptions>): Part[] => {
   const parts: Part[] = [];
   let setup: Step[] = [];
   let label: Command[] | undefined;
+  // ^MU, kept between labels
+  let units: "D" | "I" | "M" = "D";
   for (const command of commands) {
     if (command.type === "StartFormat") {
       if (setup.length) parts.push({ kind: "setup", steps: setup });
       setup = [];
       label = [];
     } else if (command.type === "EndFormat" && label) {
+      // Lengths in millimeters or inches (^MU), or with decimals, aren't
+      // dots, so the label is kept as it is
+      let measuredIn: "D" | "I" | "M" = units;
+      let notDots = units !== "D";
+      for (const c of label) {
+        if (c.type !== "MeasurementUnits") continue;
+        measuredIn = c.unit ?? measuredIn;
+        if (measuredIn !== "D") notDots = true;
+      }
+      notDots ||= label.some((c) =>
+        (measuredFields[c.type] ?? []).some((key) => {
+          const value = (c as Record<string, unknown>)[key];
+          return typeof value === "number" && !Number.isInteger(value);
+        })
+      );
+      units = measuredIn;
+      if (notDots) {
+        parts.push({
+          kind: "setup",
+          steps: [
+            {
+              kind: "raw",
+              zpl: serialize([{ type: "StartFormat" }, ...label, command]),
+            },
+          ],
+        });
+        label = undefined;
+        continue;
+      }
       const { options: labelOptionsValue, rest } = labelOptions(label);
       const steps: Step[] = [];
       for (let i = 0; i < rest.length; i++) {
