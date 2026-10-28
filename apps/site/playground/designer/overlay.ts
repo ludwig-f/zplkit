@@ -212,6 +212,8 @@ const CORNERS: Handle[] = ["nw", "ne", "sw", "se"];
  * what keeps its shape, and the two ends a barcode's height grows from
  */
 const handlesFor = (design: Design, field: DesignField): Handle[] => {
+  // Nothing to grab on a field with no size, like empty text
+  if (!field.bounds.width || !field.bounds.height) return [];
   const handles = resizeHandles(design, field);
   if (handles === "none") return [];
   if (handles === "proportional") return CORNERS;

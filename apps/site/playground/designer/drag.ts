@@ -114,7 +114,7 @@ const union = (rects: Rect[]): Rect => {
   };
 };
 
-/** A field's bounds dragged by a handle, keeping the opposite side (and the shape, when `keep`) */
+/** A field's bounds dragged by a handle, keeping the opposite side (and the shape, when `keep`); a field with no size, like empty text, keeps its bounds */
 const resized = (
   old: Rect,
   handle: Handle,
@@ -122,6 +122,7 @@ const resized = (
   dy: number,
   keep: boolean
 ): Rect => {
+  if (!old.width || !old.height) return old;
   const west = handle.includes("w");
   const east = handle.includes("e");
   const north = handle.includes("n");

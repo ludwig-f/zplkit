@@ -145,6 +145,12 @@ describe("problemKeys", () => {
 });
 
 describe("handlesFor", () => {
+  test("a field with no size has none", () => {
+    const { design, fields } = fieldsOf("^XA^FO10,10^A0N,30^FD^FS^XZ");
+    expect(fields[0].bounds).toMatchObject({ width: 0, height: 0 });
+    expect(handlesFor(design, fields[0])).toEqual([]);
+  });
+
   test("boxes get eight handles", () => {
     const { design, fields } = fieldsOf("^XA^FO10,10^GB100,50,3^FS^XZ");
     expect(handlesFor(design, fields[0])).toHaveLength(8);

@@ -203,6 +203,25 @@ describe("startDrag resize", () => {
   });
 });
 
+describe("startDrag resize of a field with no size", () => {
+  test("keeps its bounds and its text", () => {
+    const { design, selection, state } = setup("^XA^FO10,10^A0N,30^FD^FS^XZ");
+    const old = design.labels[0].fields[0].bounds;
+    expect(old).toMatchObject({ width: 0, height: 0 });
+    for (const handle of ["se", "nw", "e", "s"] as const) {
+      const step = startDrag(
+        design,
+        selection,
+        0,
+        { x: old.x, y: old.y },
+        { kind: "resize", handle }
+      ).moveTo({ x: old.x + 20, y: old.y + 20 }, move);
+      expect(step.bounds).toEqual(old);
+      expect(applied(state, step.edit).doc.toString()).toBe(design.zpl);
+    }
+  });
+});
+
 describe("startDrag bounds", () => {
   test("a move gives the first field's bounds after the step", () => {
     const { design, selection } = setup("^XA^FO20,30^GB10,10,10^FS^XZ");
