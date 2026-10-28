@@ -454,7 +454,7 @@
       "category": "Fields",
       "support": "yes",
       "drawn": true,
-      "note": ""
+      "note": "Days and months in English; the renderer's clock option sets the time"
     },
     {
       "code": "^FD",
@@ -1062,7 +1062,7 @@
       "category": "Labels and formats",
       "support": "yes",
       "drawn": true,
-      "note": ""
+      "note": "Converting between resolutions (b and c) isn't applied"
     },
     {
       "code": "^MW",
@@ -1174,7 +1174,7 @@
       "category": "Printer and media",
       "support": "yes",
       "drawn": true,
-      "note": ""
+      "note": "Copies that are all the same are drawn once, with their count"
     },
     {
       "code": "^PR",
@@ -1244,9 +1244,9 @@
       "code": "^SF",
       "name": "Serialization Field (with a standard ^FD String)",
       "category": "Fields",
-      "support": "yes",
+      "support": "partial",
       "drawn": true,
-      "note": ""
+      "note": "Decimal, octal and hex masks count; letter masks don't yet"
     },
     {
       "code": "^SL",
@@ -1335,6 +1335,14 @@
       "support": "no",
       "drawn": false,
       "note": ""
+    },
+    {
+      "code": "^TB",
+      "name": "Text Blocks",
+      "category": "Text and fonts",
+      "support": "yes",
+      "drawn": true,
+      "note": "Drawn as Zebra's guide describes, without reference renders to compare with"
     },
     {
       "code": "^TO",

@@ -165,6 +165,7 @@ const commands = {
   "^SX": "Set ZebraNet Alert",
   "^SZ": "Set ZPL Mode",
   "~TA": "Tear-off Adjust Position",
+  "^TB": "Text Blocks",
   "^TO": "Transfer Object",
   "~WC": "Print Configuration Label",
   "^WD": "Print Directory Label",

@@ -16,7 +16,7 @@ const docsUrl = "https://zplkit.fingal.dev/docs/commands";
 
 const groups = {
   "Labels and formats": ["^XA", "^XZ", "^LH", "^LL", "^LR", "^LS", "^LT", "^PW", "^PO", "^PM", "^DF", "^XF", "^MU", "^CC", "~CC", "^CD", "~CD", "^CT", "~CT"],
-  "Text and fonts": ["^A", "^A@", "^CF", "^CI", "^CW", "^FB", "^FH", "^SE", "~DB", "~DE", "~DS", "~DT", "~DU"],
+  "Text and fonts": ["^A", "^A@", "^CF", "^CI", "^CW", "^FB", "^TB", "^FH", "^SE", "~DB", "~DE", "~DS", "~DT", "~DU"],
   "Graphics and images": ["~DG", "~DY", "~EG", "~DN", "^XG", "^IL", "^IM", "^IS", "^ID", "^HG", "^HY"],
 };
 
@@ -52,10 +52,15 @@ const notes = {
   "^GS": "The UL and CSA marks are drawn as stand-ins",
   "~DT": "Bounded fonts use Zebra's own format, which isn't drawn",
   "~DY": "TrueType fonts and graphics",
+  "^FC": "Days and months in English; the renderer's clock option sets the time",
+  "^MU": "Converting between resolutions (b and c) isn't applied",
+  "^PQ": "Copies that are all the same are drawn once, with their count",
+  "^SF": "Decimal, octal and hex masks count; letter masks don't yet",
+  "^TB": "Drawn as Zebra's guide describes, without reference renders to compare with",
 };
 
 /** Supported, with differences the notes explain */
-const partial = new Set(["^CI", "^GS", "^BR"]);
+const partial = new Set(["^CI", "^GS", "^BR", "^SF"]);
 
 /** Commands with nothing to draw, besides printer setup */
 const nothingToDraw = new Set(["^FX", "^ID", "~DN", "~EG", "^HG", "^HY"]);
