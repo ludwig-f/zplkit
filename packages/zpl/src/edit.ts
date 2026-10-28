@@ -11,6 +11,12 @@ type TextChange = { from: number; to: number; insert: string };
 const changesDelimiter = (text: string): boolean => {
   let caret = "^";
   let tilde = "~";
+  // Like the parser, ignore line breaks between a prefix and the code, and
+  // before a new prefix character
+  const next = (index: number): number => {
+    while (text.charAt(index) === "\r" || text.charAt(index) === "\n") index++;
+    return index;
+  };
   let i = 0;
   while (i < text.length) {
     const char = text.charAt(i);
@@ -18,12 +24,19 @@ const changesDelimiter = (text: string): boolean => {
       i++;
       continue;
     }
-    const code = text.slice(i + 1, i + 3);
+    const first = next(i + 1);
+    const second = next(first + 1);
+    const code = text.charAt(first) + text.charAt(second);
     if (code === "CD") return true;
-    if (code === "CC") caret = text.charAt(i + 3);
-    if (code === "CT") tilde = text.charAt(i + 3);
-    // Skip the new prefix character itself
-    i += code === "CC" || code === "CT" ? 4 : 1;
+    if (code === "CC" || code === "CT") {
+      const prefix = next(second + 1);
+      if (code === "CC") caret = text.charAt(prefix);
+      else tilde = text.charAt(prefix);
+      // Skip the new prefix character itself
+      i = prefix + 1;
+    } else {
+      i++;
+    }
   }
   return false;
 };

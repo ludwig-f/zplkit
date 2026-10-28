@@ -73,4 +73,13 @@ suite("editParameters", () => {
       edit("^XA^CC#\n#CD;#FO20;30#FS#XZ", "FieldOrigin", { 0: 25 })
     ).toThrow(ZplError);
   });
+
+  test("sees a changed delimiter through line breaks", () => {
+    expect(() =>
+      edit("^XA^CC\n##CD;#FO20;30#FS#XZ", "FieldOrigin", { 0: 25 })
+    ).toThrow(ZplError);
+    expect(() =>
+      edit("^XA^\nCD;^FO20;30^FS^XZ", "FieldOrigin", { 0: 25 })
+    ).toThrow(ZplError);
+  });
 });
