@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.2.0](https://github.com/ludwig-f/zplkit/compare/v2.1.0...v2.2.0) (2026-10-28)
+
+
+### Features
+
+* **core:** format() lays out ZPL to read ([cb01d7d](https://github.com/ludwig-f/zplkit/commit/cb01d7d3b5cad0bf0e5de02c467da08321798574))
+
 ## [2.1.0](https://github.com/ludwig-f/zplkit/compare/v2.0.0...v2.1.0) (2026-10-28)
 
 

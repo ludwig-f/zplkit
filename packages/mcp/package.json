@@ -1,6 +1,6 @@
 {
   "name": "@zplkit/mcp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "An MCP server that lets AI assistants render, lint, convert and look up ZPL labels",
   "type": "module",
   "license": "MIT",

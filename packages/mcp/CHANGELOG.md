@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/ludwig-f/zplkit/compare/mcp-v0.1.0...mcp-v0.2.0) (2026-10-28)
+
+
+### Features
+
+* **mcp:** viewer_link opens the ZPL formatted ([d409fa9](https://github.com/ludwig-f/zplkit/commit/d409fa9bb29284ea147a5d4d43f243b033ccf38e))
+
 ## 0.1.0 (2026-10-28)
 
 
