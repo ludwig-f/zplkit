@@ -126,6 +126,14 @@ describe("serializedField", () => {
     expect(copies(3, (step) => serializedField("0Z", "NN", "1", step))).toEqual(
       ["0Z", "10", "11"]
     );
+    expect(copies(6, (step) => serializedField("X", "A", "B", step))).toEqual([
+      "X",
+      "Y",
+      "Z",
+      "A",
+      "B",
+      "C",
+    ]);
     expect(copies(3, (step) => serializedField("B", "A", "-B", step))).toEqual([
       "B",
       "A",
