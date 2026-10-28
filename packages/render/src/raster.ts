@@ -23,6 +23,9 @@ type Color = "B" | "W";
 
 type Sampling = "center" | "coverage";
 
+/** A rectangle of dots, from left and top up to but not including right and bottom */
+type Dirty = { left: number; top: number; right: number; bottom: number };
+
 /**
  * A rendered label: how much ink each dot gets, from 0 (blank) to 1
  * (printed), row by row
@@ -32,6 +35,11 @@ class Raster {
   readonly ink: Float32Array;
   /** How many times the label prints in a row, from ^PQ */
   copies = 1;
+  /**
+   * Where drawing may have changed ink since this was last set, when set:
+   * each draw grows it to hold the dots it can reach
+   */
+  dirty?: Dirty;
 
   constructor(
     readonly width: number,
@@ -39,6 +47,19 @@ class Raster {
     readonly sampling: Sampling = "coverage"
   ) {
     this.ink = new Float32Array(width * height);
+  }
+
+  /** Grow the dirty rectangle, if it's tracked, to hold an area of dots */
+  touch(left: number, top: number, right: number, bottom: number): void {
+    const { dirty } = this;
+    if (!dirty) return;
+    dirty.left = Math.max(0, Math.min(dirty.left, Math.floor(left)));
+    dirty.top = Math.max(0, Math.min(dirty.top, Math.floor(top)));
+    dirty.right = Math.min(this.width, Math.max(dirty.right, Math.ceil(right)));
+    dirty.bottom = Math.min(
+      this.height,
+      Math.max(dirty.bottom, Math.ceil(bottom))
+    );
   }
 }
 
@@ -289,6 +310,23 @@ const fillPath = (
   color: Color,
   options: { dropouts?: boolean } = {}
 ): void => {
+  if (raster.dirty) {
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    for (const contour of path) {
+      for (const [x, y] of contour) {
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x);
+        maxY = Math.max(maxY, y);
+      }
+    }
+    // A dot past the edges, for dropouts and the dots edges partly cover
+    if (minX <= maxX) raster.touch(minX - 1, minY - 1, maxX + 2, maxY + 2);
+  }
+
   if (raster.sampling === "center") {
     fillCenters(raster, path, color, options.dropouts ?? false);
     return;
@@ -342,5 +380,5 @@ const fillPath = (
   }
 };
 
-export type { Point, Path, Color, Sampling };
+export type { Point, Path, Color, Sampling, Dirty };
 export { Raster, fillPath };

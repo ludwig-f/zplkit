@@ -215,3 +215,21 @@
   color: var(--bench-muted);
   font: 12px/1.4 var(--font-mono);
 }
+
+/* The selected fields' extent, on each ruler */
+.bench .extent {
+  position: absolute;
+  background: color-mix(in srgb, var(--zk-view) 35%, transparent);
+}
+
+.bench .horizontal .extent {
+  bottom: 0;
+  height: 5px;
+  border-inline: 1.5px solid var(--zk-view);
+}
+
+.bench .vertical .extent {
+  right: 0;
+  width: 5px;
+  border-block: 1.5px solid var(--zk-view);
+}

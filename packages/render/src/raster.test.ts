@@ -239,3 +239,28 @@ describe("fillPath with dropout control", () => {
     expect(dotsOf(raster)).toStrictEqual([]);
   });
 });
+
+describe("dirty rectangle", () => {
+  test("holds every dot a fill inks, within the raster", () => {
+    for (const sampling of ["center", "coverage"] as const) {
+      const raster = new Raster(10, 10, sampling);
+      raster.dirty = { left: 10, top: 10, right: 0, bottom: 0 };
+      fillPath(raster, rect(2.3, 3.5, 5.7, 12), "B", { dropouts: true });
+      const { left, top, right, bottom } = raster.dirty;
+      expect(left).toBeGreaterThanOrEqual(0);
+      expect(bottom).toBeLessThanOrEqual(10);
+      for (let i = 0; i < raster.ink.length; i++) {
+        if (raster.ink[i] === 0) continue;
+        const x = i % 10;
+        const y = Math.floor(i / 10);
+        expect(x >= left && x < right && y >= top && y < bottom).toBe(true);
+      }
+    }
+  });
+
+  test("isn't tracked unless set", () => {
+    const raster = new Raster(4, 4);
+    fillPath(raster, rect(0, 0, 2, 2), "B");
+    expect(raster.dirty).toBeUndefined();
+  });
+});

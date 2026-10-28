@@ -156,6 +156,7 @@ const draw = (
         magnificationX: mx,
         magnificationY: my,
       } = element;
+      raster.touch(x, y, x + bytesPerRow * 8 * mx, y + rows * my);
       for (let row = 0; row < rows; row++) {
         for (let bit = 0; bit < bytesPerRow * 8; bit++) {
           const byte = bytes[row * bytesPerRow + (bit >> 3)];
@@ -272,4 +273,4 @@ const renderLabels = (
 };
 
 export type { RenderOptions };
-export { renderLabels };
+export { draw, justified, renderLabels };
