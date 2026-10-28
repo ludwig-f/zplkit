@@ -43,8 +43,8 @@ import DesignOverlay from "./designer/DesignOverlay";
 import { designFor, type Design } from "./designer/fields";
 import { extentOf } from "./designer/overlay";
 import {
-  carry,
   highlightOf,
+  redesigned,
   selectAtOffset,
   type Hover,
   type Selection,
@@ -236,8 +236,13 @@ export default function Viewer() {
   const edits = useRef<{ from: string; to: string; changes: ChangeSet }>(
     undefined
   );
-  /** Where a duplicate starts, to select once the design has it */
-  const selectAt = useRef<number | undefined>(undefined);
+  /** Where a duplicate starts, and the text it's in, to select once the design has it */
+  const selectAt = useRef<{ offset: number; zpl: string } | undefined>(
+    undefined
+  );
+  /** The ZPL the preview is rendering, and the one its images show */
+  const rendering = useRef<string | undefined>(undefined);
+  const [imagesZpl, setImagesZpl] = useState<string>();
   const { smoothing, unit } = settings;
   const widthMm = width && toMm(width, dpmm);
   const heightMm = height && toMm(height, dpmm);
@@ -336,14 +341,11 @@ export default function Viewer() {
         ? edit.changes
         : undefined;
     if (before.zpl !== design.zpl) edits.current = undefined;
-    const offset = selectAt.current;
+    const pick = selectAt.current;
     selectAt.current = undefined;
-    setSelection((current) => {
-      const next = carry(before, design, current, changes);
-      return offset === undefined
-        ? next
-        : selectAtOffset(design, offset, { ...next, keys: [] });
-    });
+    setSelection((current) =>
+      redesigned(before, design, current, { changes, selectAt: pick })
+    );
     setHover(undefined);
   }, [design]);
 
@@ -806,6 +808,7 @@ export default function Viewer() {
                   design={design}
                   boxes={boxes}
                   images={images}
+                  imagesZpl={imagesZpl}
                   selection={selection}
                   hover={hover}
                   problems={problems}
@@ -817,7 +820,10 @@ export default function Viewer() {
                     setFrozen(dragging ? latest.current : undefined)
                   }
                   onSelectAt={(offset) => {
-                    selectAt.current = offset;
+                    // Only for the text the edit made; an edit that changed
+                    // nothing leaves latest as it was, and the next
+                    // redesign drops it
+                    selectAt.current = { offset, zpl: latest.current };
                   }}
                   onPick={pick}
                   onUndo={() => editor.current?.undo()}
@@ -835,16 +841,19 @@ export default function Viewer() {
                 font0={fonts.font0?.bytes}
                 maxLabels={PREVIEW_LABELS}
                 fade
-                onzpl-render-start={() =>
-                  setRender((current) => ({ ...current, busy: true }))
-                }
+                onzpl-render-start={(event) => {
+                  rendering.current = event.detail.zpl;
+                  setRender((current) => ({ ...current, busy: true }));
+                }}
                 onzpl-render={(event) => {
                   setImages(event.detail.images);
+                  setImagesZpl(rendering.current);
                   setLabelTotal(event.detail.labels);
                   setRender({ busy: false, ms: event.detail.duration });
                 }}
                 onzpl-error={() => {
                   setImages([]);
+                  setImagesZpl(undefined);
                   setLabelTotal(undefined);
                   setRender({ busy: false });
                 }}

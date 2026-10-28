@@ -17,10 +17,21 @@ import { formatSize } from "../units";
 import type { Edge } from "./align";
 import { startDrag, type Drag, type DragKind, type Handle } from "./drag";
 import { fieldAt, type Design } from "./fields";
-import { labelAt, pxToDots, toDots, toScreen, type LabelBox } from "./geometry";
+import {
+  grow,
+  labelAt,
+  moved,
+  pxToDots,
+  spanning,
+  toDots,
+  toScreen,
+  union,
+  type LabelBox,
+} from "./geometry";
 import { alignEdit, alignedEdges, keyEdit } from "./keys";
 import {
   captionOf,
+  cropsFor,
   describeSelection,
   guideName,
   handlesFor,
@@ -30,6 +41,7 @@ import {
 } from "./overlay";
 import {
   clickAt,
+  pressAt,
   selectIn,
   twinsOf,
   type Hover,
@@ -43,6 +55,8 @@ type DesignOverlayProps = {
   boxes: LabelBox[];
   /** The label images, to draw moving fields from while the preview waits */
   images: string[];
+  /** The ZPL the images were rendered from; moving fields are only cut from images of the design's ZPL */
+  imagesZpl: string | undefined;
   selection: Selection;
   hover: Hover;
   problems: readonly { from: number }[];
@@ -155,48 +169,12 @@ const ALIGN: { how: Edge; label: string; path: string }[] = [
   },
 ];
 
-/** A rect grown by a margin on every side */
-const grow = (rect: Rect, by: number): Rect => ({
-  x: rect.x - by,
-  y: rect.y - by,
-  width: rect.width + by * 2,
-  height: rect.height + by * 2,
-});
-
-const moved = (rect: Rect, dx: number, dy: number): Rect => ({
-  ...rect,
-  x: rect.x + dx,
-  y: rect.y + dy,
-});
-
-/** A rect from two corners, in any order */
-const spanning = (
-  a: { x: number; y: number },
-  b: { x: number; y: number }
-) => ({
-  x: Math.min(a.x, b.x),
-  y: Math.min(a.y, b.y),
-  width: Math.abs(a.x - b.x),
-  height: Math.abs(a.y - b.y),
-});
-
 const place = (rect: Rect): CSSProperties => ({
   left: rect.x,
   top: rect.y,
   width: rect.width,
   height: rect.height,
 });
-
-const unionOf = (rects: Rect[]): Rect => {
-  const x = Math.min(...rects.map((r) => r.x));
-  const y = Math.min(...rects.map((r) => r.y));
-  return {
-    x,
-    y,
-    width: Math.max(...rects.map((r) => r.x + r.width)) - x,
-    height: Math.max(...rects.map((r) => r.y + r.height)) - y,
-  };
-};
 
 const Icon = ({ path, children }: { path?: string; children?: ReactNode }) => (
   <svg
@@ -223,6 +201,7 @@ export default function DesignOverlay({
   design,
   boxes: measured,
   images,
+  imagesZpl,
   selection,
   hover,
   problems,
@@ -264,6 +243,20 @@ export default function DesignOverlay({
     return () => clearTimeout(timeout);
   }, [ghost]);
 
+  // Leaving mid-drag must not keep the preview frozen
+  const onDragRef = useRef(onDrag);
+  onDragRef.current = onDrag;
+  useEffect(
+    () => () => {
+      const drag = active.current;
+      if (drag?.started && drag.kind !== "box") onDragRef.current(false);
+    },
+    []
+  );
+
+  /** Whether the label images show the design's ZPL, so fields can be cut from them */
+  const fresh = imagesZpl === design.zpl;
+
   /** The pointer, in px from the overlay's corner */
   const pointOf = (event: { clientX: number; clientY: number }) => {
     const rect = root.current!.getBoundingClientRect();
@@ -287,7 +280,18 @@ export default function DesignOverlay({
   const pointerDown = (event: PointerEvent<HTMLDivElement>) => {
     if (event.button !== 0 || active.current) return;
     root.current?.focus({ preventScroll: true });
-    const found = locate(event);
+    // A handle can stick out past the label's edge, so it goes by the selection's label
+    const handle = (event.target as HTMLElement).closest<HTMLElement>(
+      "[data-handle]"
+    )?.dataset.handle as Handle | undefined;
+    const box = boxes[selection.label];
+    const found =
+      handle && box?.width
+        ? {
+            label: selection.label,
+            at: toDots(box, pointOf(event).x, pointOf(event).y),
+          }
+        : locate(event);
     if (!found) {
       if (!event.shiftKey) onSelect({ keys: [], label: selection.label });
       return;
@@ -295,30 +299,11 @@ export default function DesignOverlay({
     const { label, at } = found;
     setGhost(undefined);
 
-    const handle = (event.target as HTMLElement).closest<HTMLElement>(
-      "[data-handle]"
-    )?.dataset.handle as Handle | undefined;
-    let current = selection;
-    let kind: DragKind;
-    let click = true;
-    const hit = fieldAt(design.labels[label], at.x, at.y);
-    if (handle && selectedOn(label).length === 1) {
-      kind = { kind: "resize", handle };
-      click = false;
-    } else if (!hit) {
-      kind = { kind: "box" };
-    } else if (current.label === label && current.keys.includes(hit.key)) {
-      // Drag the selection; a click without moving picks on pointer up
-      kind = { kind: "move" };
-    } else {
-      current = clickAt(design, current, label, at.x, at.y, {
-        shift: event.shiftKey,
-        alt: false,
-      });
-      onSelect(current);
-      kind = { kind: "move" };
-      click = false;
-    }
+    const press = pressAt(design, selection, label, at, {
+      handle,
+      shift: event.shiftKey,
+    });
+    if (press.selection !== selection) onSelect(press.selection);
 
     // Touch selects but doesn't drag, so the page still scrolls
     const touch = event.pointerType === "touch";
@@ -326,13 +311,66 @@ export default function DesignOverlay({
       pointer: event.pointerId,
       label,
       at,
-      kind: kind.kind,
-      drag: touch ? undefined : startDrag(design, current, label, at, kind),
-      selection: current,
-      click,
+      kind: press.kind.kind,
+      drag: touch
+        ? undefined
+        : startDrag(design, press.selection, label, at, press.kind),
+      selection: press.selection,
+      click: press.clickOnUp,
       started: false,
     };
     if (!touch) event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  /**
+   * End the drag: a press that never moved is a click (unless the pointer
+   * was taken away), a box selects what's in it, and moved fields stay
+   * drawn from the old image until the preview redraws
+   */
+  const finish = (
+    drag: Active,
+    mods: { shiftKey: boolean; altKey: boolean },
+    cancelled: boolean
+  ) => {
+    active.current = undefined;
+    const { last } = drag;
+    setShown(undefined);
+
+    if (!drag.started) {
+      if (drag.click && !cancelled) {
+        onSelect(
+          clickAt(design, drag.selection, drag.label, drag.at.x, drag.at.y, {
+            shift: mods.shiftKey,
+            alt: mods.altKey,
+          })
+        );
+      }
+      return;
+    }
+    if (drag.kind === "box") {
+      if (last?.box && !cancelled) {
+        onSelect(
+          selectIn(design, drag.label, last.box, mods.shiftKey, drag.selection)
+        );
+      }
+      return;
+    }
+
+    const src = images[drag.label];
+    if (src && last && fresh) {
+      setGhost({
+        label: drag.label,
+        src,
+        crops: cropsFor(
+          design,
+          drag.label,
+          drag.selection.keys,
+          drag.kind,
+          last
+        ),
+      });
+    }
+    onDrag(false);
   };
 
   const pointerMove = (event: PointerEvent<HTMLDivElement>) => {
@@ -345,6 +383,11 @@ export default function DesignOverlay({
       return;
     }
     if (drag.pointer !== event.pointerId || !drag.drag) return;
+    // The button came up where we didn't hear it
+    if (event.buttons === 0) {
+      finish(drag, event, false);
+      return;
+    }
     const box = boxes[drag.label];
     if (!box) return;
     const { x, y } = pointOf(event);
@@ -375,63 +418,17 @@ export default function DesignOverlay({
   const pointerUp = (event: PointerEvent<HTMLDivElement>) => {
     const drag = active.current;
     if (!drag || drag.pointer !== event.pointerId) return;
-    active.current = undefined;
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
-    const { last } = drag;
-    setShown(undefined);
-
-    if (!drag.started) {
-      if (drag.click) {
-        onSelect(
-          clickAt(design, drag.selection, drag.label, drag.at.x, drag.at.y, {
-            shift: event.shiftKey,
-            alt: event.altKey,
-          })
-        );
-      }
-      return;
-    }
-    if (drag.kind === "box") {
-      if (last?.box) {
-        onSelect(
-          selectIn(design, drag.label, last.box, event.shiftKey, drag.selection)
-        );
-      }
-      return;
-    }
-
-    // Keep the moved fields in view until the preview redraws
-    const src = images[drag.label];
-    if (src && last) {
-      const fields = fieldsOn(drag.label).filter((f) =>
-        drag.selection.keys.includes(f.key)
-      );
-      setGhost({
-        label: drag.label,
-        src,
-        crops:
-          drag.kind === "resize" && last.bounds
-            ? fields
-                .slice(0, 1)
-                .map((f) => ({ from: f.bounds, to: last.bounds! }))
-            : fields.map((f) => ({
-                from: f.bounds,
-                to: moved(f.bounds, last.dx, last.dy),
-              })),
-      });
-    }
-    onDrag(false);
+    finish(drag, event, false);
   };
 
   /** The browser took the pointer, e.g. to scroll: keep what's applied, but no click */
   const pointerCancel = (event: PointerEvent<HTMLDivElement>) => {
     const drag = active.current;
     if (!drag || drag.pointer !== event.pointerId) return;
-    active.current = undefined;
-    setShown(undefined);
-    if (drag.started && drag.kind !== "box") onDrag(false);
+    finish(drag, event, true);
   };
 
   const keyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -458,6 +455,11 @@ export default function DesignOverlay({
   };
 
   const contextMenu = (event: MouseEvent<HTMLDivElement>) => {
+    // No menu in the middle of a drag
+    if (active.current) {
+      event.preventDefault();
+      return;
+    }
     const found = locate(event);
     if (!found) return;
     const { label, at } = found;
@@ -621,9 +623,7 @@ export default function DesignOverlay({
   let bar: ReactNode;
   const group = selectedOn(selection.label);
   if (group.length > 1 && !shown && boxes[selection.label]?.width) {
-    const around = unionOf(
-      group.map((f) => outline(selection.label, f.bounds))
-    );
+    const around = union(group.map((f) => outline(selection.label, f.bounds)));
     const lined = alignedEdges(design, selection);
     const button = (
       how: Parameters<typeof alignEdit>[2],
@@ -690,19 +690,11 @@ export default function DesignOverlay({
   let crops: { from: Rect; to: Rect }[] = [];
   let cropLabel = -1;
   let cropSrc: string | undefined;
-  if (shown && dragging && drag) {
+  if (shown && dragging && drag && fresh) {
+    // Only from images of the design's ZPL; outlines alone otherwise
     cropLabel = drag.label;
     cropSrc = images[drag.label];
-    const fields = fieldsOn(drag.label).filter((f) =>
-      drag.selection.keys.includes(f.key)
-    );
-    crops =
-      drag.kind === "resize" && shown.bounds
-        ? fields.slice(0, 1).map((f) => ({ from: f.bounds, to: shown.bounds! }))
-        : fields.map((f) => ({
-            from: f.bounds,
-            to: moved(f.bounds, shown.dx, shown.dy),
-          }));
+    crops = cropsFor(design, drag.label, drag.selection.keys, drag.kind, shown);
   } else if (ghost) {
     cropLabel = ghost.label;
     cropSrc = ghost.src;
@@ -711,38 +703,36 @@ export default function DesignOverlay({
   const box = boxes[cropLabel];
   const cut =
     box?.width && cropSrc
-      ? crops
-          .filter(({ from }) => from.width > 0 && from.height > 0)
-          .map(({ from, to }, i) => {
-            const source = toScreen(box, grow(from, 1));
-            const target = toScreen(box, {
-              x: to.x - (to.width / from.width) * 1,
-              y: to.y - (to.height / from.height) * 1,
-              width: to.width + (to.width / from.width) * 2,
-              height: to.height + (to.height / from.height) * 2,
-            });
-            const sx = target.width / source.width;
-            const sy = target.height / source.height;
-            return [
-              <div
-                key={`mask-${i}`}
-                className="mask label-dim"
-                style={place(source)}
-              />,
-              <div
-                key={`crop-${i}`}
-                className="crop label-dim"
-                style={{
-                  ...place(target),
-                  backgroundImage: `url(${cropSrc})`,
-                  backgroundSize: `${box.width * sx}px ${box.height * sy}px`,
-                  backgroundPosition: `${-(source.x - box.left) * sx}px ${
-                    -(source.y - box.top) * sy
-                  }px`,
-                }}
-              />,
-            ];
-          })
+      ? crops.map(({ from, to }, i) => {
+          const source = toScreen(box, grow(from, 1));
+          const target = toScreen(box, {
+            x: to.x - (to.width / from.width) * 1,
+            y: to.y - (to.height / from.height) * 1,
+            width: to.width + (to.width / from.width) * 2,
+            height: to.height + (to.height / from.height) * 2,
+          });
+          const sx = target.width / source.width;
+          const sy = target.height / source.height;
+          return [
+            <div
+              key={`mask-${i}`}
+              className="mask label-dim"
+              style={place(source)}
+            />,
+            <div
+              key={`crop-${i}`}
+              className="crop label-dim"
+              style={{
+                ...place(target),
+                backgroundImage: `url(${cropSrc})`,
+                backgroundSize: `${box.width * sx}px ${box.height * sy}px`,
+                backgroundPosition: `${-(source.x - box.left) * sx}px ${
+                  -(source.y - box.top) * sy
+                }px`,
+              }}
+            />,
+          ];
+        })
       : [];
 
   return (
@@ -757,6 +747,10 @@ export default function DesignOverlay({
       onPointerMove={pointerMove}
       onPointerUp={pointerUp}
       onPointerCancel={pointerCancel}
+      onLostPointerCapture={(event) => {
+        const drag = active.current;
+        if (drag?.pointer === event.pointerId) finish(drag, event, true);
+      }}
       onPointerLeave={() => {
         if (!active.current) onHover(undefined);
       }}

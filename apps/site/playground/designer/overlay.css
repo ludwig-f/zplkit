@@ -4,6 +4,22 @@
  * guides cobalt, problems amber.
  */
 .designer {
+  /*
+   * Labels stay white paper in both themes, so what's drawn on them uses
+   * the light theme's colors in both too. The align bar is page chrome.
+   */
+  --on-paper-view: #0b6b74;
+  --on-paper-on-view: #ffffff;
+  --on-paper-accent: #2742c4;
+  --on-paper-on-accent: #ffffff;
+  --on-paper-warn: #8a5300;
+  --on-paper-ink: #4f4c43;
+  --on-paper-rule: #8a877c;
+  --on-paper-hatch: rgb(25 24 19 / 0.14);
+  --on-paper-edge: #e8e5dc;
+  --readout-bg: #191813;
+  --readout-fg: #f4f2ec;
+
   position: absolute;
   inset: 0;
   outline: none;
@@ -31,29 +47,29 @@
 }
 
 .designer .field.hovered {
-  border: 1px dashed var(--zk-view);
+  border: 1px dashed var(--on-paper-view);
 }
 
 .designer .field.twin {
-  border: 1.5px dashed var(--zk-view);
+  border: 1.5px dashed var(--on-paper-view);
 }
 
 .designer .field.warn {
-  border: 1.5px dashed var(--zk-warn);
+  border: 1.5px dashed var(--on-paper-warn);
 }
 
 /* Fields zplkit can't draw: hatched, with their command */
 .designer .field.not-drawn {
-  border: 1px dashed var(--zk-muted);
+  border: 1px dashed var(--on-paper-rule);
   background: repeating-linear-gradient(
     135deg,
-    color-mix(in srgb, var(--zk-ink) 14%, transparent) 0 1px,
+    var(--on-paper-hatch) 0 1px,
     transparent 1px 7px
   );
 }
 
 .designer .field.selected {
-  border: 1.5px solid var(--zk-view);
+  border: 1.5px solid var(--on-paper-view);
 }
 
 .designer .caption {
@@ -62,7 +78,7 @@
   display: grid;
   place-items: center;
   overflow: hidden;
-  color: var(--zk-ink-2);
+  color: var(--on-paper-ink);
   font: 600 10.5px/1.2 var(--font-mono);
   white-space: nowrap;
 }
@@ -74,8 +90,8 @@
   margin-bottom: 4px;
   padding: 1px 6px;
   border-radius: 3px;
-  background: var(--zk-view);
-  color: var(--zk-on-view);
+  background: var(--on-paper-view);
+  color: var(--on-paper-on-view);
   font: 600 10.5px/1.5 var(--font-mono);
   white-space: nowrap;
 }
@@ -87,8 +103,8 @@
   width: 10px;
   height: 10px;
   box-sizing: border-box;
-  border: 1.5px solid var(--zk-platen);
-  background: var(--zk-warn);
+  border: 1.5px solid var(--on-paper-edge);
+  background: var(--on-paper-warn);
   transform: rotate(45deg);
 }
 
@@ -97,7 +113,7 @@
   width: 9px;
   height: 9px;
   box-sizing: border-box;
-  border: 1.5px solid var(--zk-view);
+  border: 1.5px solid var(--on-paper-view);
   border-radius: 1px;
   background: #fff;
   transform: translate(-50%, -50%);
@@ -114,7 +130,7 @@
 
 .designer .guide {
   position: absolute;
-  background: var(--zk-accent);
+  background: var(--on-paper-accent);
   pointer-events: none;
 }
 
@@ -132,8 +148,8 @@
   position: absolute;
   padding: 0 5px;
   border-radius: 3px;
-  background: var(--zk-accent);
-  color: var(--zk-on-accent);
+  background: var(--on-paper-accent);
+  color: var(--on-paper-on-accent);
   font: 600 10.5px/1.5 var(--font-mono);
   white-space: nowrap;
 }
@@ -153,8 +169,8 @@
   gap: 8px;
   padding: 3px 8px;
   border-radius: 4px;
-  background: var(--zk-ink);
-  color: var(--zk-bg);
+  background: var(--readout-bg);
+  color: var(--readout-fg);
   font: 600 11px/1.5 var(--font-mono);
   white-space: nowrap;
   transform: translateX(-50%);
@@ -168,8 +184,8 @@
 .designer .marquee {
   position: absolute;
   box-sizing: border-box;
-  border: 1px dashed var(--zk-view);
-  background: color-mix(in srgb, var(--zk-view-soft) 45%, transparent);
+  border: 1px dashed var(--on-paper-view);
+  background: rgb(11 107 116 / 0.08);
   pointer-events: none;
 }
 
