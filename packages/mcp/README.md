@@ -1,0 +1,55 @@
+# @zplkit/mcp
+
+An [MCP](https://modelcontextprotocol.io) server that gives AI assistants zplkit's tools, so they can check the ZPL they write: render it and look at the label, lint it, convert it to zplkit code, and look commands up instead of guessing their parameters.
+
+It needs Node 22 or newer, and runs with `npx`, so there's nothing else to install.
+
+## Setup
+
+**Claude Code**
+
+```bash
+claude mcp add zplkit -- npx -y @zplkit/mcp
+```
+
+**Claude Desktop, Cursor and others** take it in their MCP settings (`claude_desktop_config.json`, `.cursor/mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "zplkit": { "command": "npx", "args": ["-y", "@zplkit/mcp"] }
+  }
+}
+```
+
+**VS Code** (`.vscode/mcp.json`):
+
+```json
+{
+  "servers": {
+    "zplkit": { "command": "npx", "args": ["-y", "@zplkit/mcp"] }
+  }
+}
+```
+
+## Tools
+
+| Tool | Does |
+| --- | --- |
+| `render_zpl` | Renders labels to PNG images the assistant can see, the way a printer prints them, and says the size, how many labels there are, what isn't drawn yet and what lint found. Returns the first 3 labels unless asked for up to 10. |
+| `lint_zpl` | Lists problems a printer won't report, with their line and column |
+| `convert_zpl` | Turns ZPL into `@zplkit/core` code, as JSX or builder calls |
+| `lookup_command` | What a command does: its format, parameters and defaults, an example, and how well zplkit supports it |
+| `viewer_link` | A link that opens the ZPL in the [zplkit viewer](https://zplkit.fingal.dev/viewer), with the ZPL in the link so it isn't uploaded |
+| `print_zpl` | Sends labels to a network printer after checking it's ready. Only there when the server starts with `--allow-print`. |
+
+## Printing
+
+Printing makes real labels, so the server only offers `print_zpl` when you start it with `--allow-print`:
+
+```bash
+claude mcp add zplkit -- npx -y @zplkit/mcp --allow-print
+```
+
+> [!WARNING]
+> Printing uses [`@zplkit/print`](https://www.npmjs.com/package/@zplkit/print), which is experimental: it's built from Zebra's documentation and not yet tested against real printers.
