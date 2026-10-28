@@ -17,6 +17,56 @@ class PrinterSetup extends ZplContent {
   }
 
   /**
+   * Move every field of the labels that follow left, or right when
+   * negative (^LS), for a printer whose labels sit a little off. The
+   * printer keeps it until it's set again.
+   * @param dots Dots to move, -9999 to 9999
+   */
+  public setLabelShift(dots: number): this {
+    if (!Number.isInteger(dots) || Math.abs(dots) > 9999) {
+      throw new ZplError(
+        `Label shift must be a whole number of dots from -9999 to 9999, got ${dots}`
+      );
+    }
+    return this.add(
+      { type: "StartFormat" },
+      { type: "LabelShift", shift: dots },
+      { type: "EndFormat" }
+    );
+  }
+
+  /**
+   * Move every field of the labels that follow down, or up when negative
+   * (^LT). The printer keeps it until it's set again.
+   * @param dots Dots to move, -120 to 120
+   */
+  public setLabelTop(dots: number): this {
+    if (!Number.isInteger(dots) || Math.abs(dots) > 120) {
+      throw new ZplError(
+        `Label top must be a whole number of dots from -120 to 120, got ${dots}`
+      );
+    }
+    return this.add(
+      { type: "StartFormat" },
+      { type: "LabelTop", offset: dots },
+      { type: "EndFormat" }
+    );
+  }
+
+  /**
+   * Print the labels that follow as their mirror image (^PM), for clear
+   * media printed from the back. The printer keeps it until it's set again.
+   * @param mirror Whether to mirror labels
+   */
+  public setMirror(mirror: boolean): this {
+    return this.add(
+      { type: "StartFormat" },
+      { type: "PrintMirror", mirror },
+      { type: "EndFormat" }
+    );
+  }
+
+  /**
    * Store a graphic on the printer, to be drawn with Label.storedGraphic
    */
   public storeGraphic(options: StoreGraphicOptions): this {

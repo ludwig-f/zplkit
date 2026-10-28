@@ -38,6 +38,7 @@ suite("entry points", () => {
     expect(Object.keys(jsx).sort()).toStrictEqual([
       "Aztec",
       "Box",
+      "Circle",
       "Codabar",
       "Code11",
       "Code128",
@@ -47,6 +48,7 @@ suite("entry points", () => {
       "DefaultFont",
       "EAN13",
       "EAN8",
+      "Ellipse",
       "Field",
       "FieldOrientation",
       "Fragment",
