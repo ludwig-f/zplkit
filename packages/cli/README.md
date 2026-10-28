@@ -1,6 +1,6 @@
 # @zplkit/cli
 
-Render, preview, lint, convert, view and print ZPL labels from the command line.
+Render, preview, lint, convert, format, view and print ZPL labels from the command line.
 
 ```bash
 npx @zplkit/cli render label.zpl
@@ -57,9 +57,18 @@ Turns ZPL into zplkit code: JSX, or builder calls with `--style builder`.
 zplkit convert label.zpl --style builder > label.ts
 ```
 
+### format
+
+Puts each field and setting on its own line, with a blank line between labels, so long one-line ZPL is easy to read. Printers ignore line breaks, so the labels print the same. It prints the result; `--write` rewrites the files instead and names the ones it changed.
+
+```bash
+zplkit format label.zpl
+zplkit format labels/*.zpl --write
+```
+
 ### view
 
-Opens the label in the [zplkit viewer](https://zplkit.fingal.dev/viewer). The ZPL goes in the link, after the `#`, so it isn't sent to a server. `--no-open` only prints the link.
+Opens the label in the [zplkit viewer](https://zplkit.fingal.dev/viewer), formatted. The ZPL goes in the link, after the `#`, so it isn't sent to a server. `--no-open` only prints the link.
 
 ### print and status
 

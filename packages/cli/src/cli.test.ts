@@ -200,8 +200,37 @@ describe("convert", () => {
   });
 });
 
+describe("format", () => {
+  test("prints the ZPL with one field or setting per line", async () => {
+    const fake = fakeIo({ "label.zpl": label });
+    expect(await run(["format", "label.zpl"], fake.io)).toBe(0);
+    expect(fake.out).toEqual([
+      "^XA\n^PW406\n^LL203\n^FO20,20^A0N,40^FDHi^FS\n^XZ",
+    ]);
+  });
+
+  test("rewrites files with --write, and names the ones it changed", async () => {
+    const fake = fakeIo({
+      "a.zpl": label,
+      "b.zpl": "^XA\n^FO0,0^FDb^FS\n^XZ\n",
+    });
+    expect(await run(["format", "a.zpl", "b.zpl", "--write"], fake.io)).toBe(0);
+    expect([...fake.written.keys()]).toEqual(["a.zpl"]);
+    expect(new TextDecoder().decode(fake.written.get("a.zpl"))).toBe(
+      "^XA\n^PW406\n^LL203\n^FO20,20^A0N,40^FDHi^FS\n^XZ\n"
+    );
+    expect(fake.out).toEqual(["a.zpl"]);
+  });
+
+  test("prints one file, and writes only files", async () => {
+    const fake = fakeIo({ "a.zpl": label, "b.zpl": label }, label);
+    expect(await run(["format", "a.zpl", "b.zpl"], fake.io)).toBe(2);
+    expect(await run(["format", "-", "--write"], fake.io)).toBe(2);
+  });
+});
+
 describe("view", () => {
-  test("opens the label in the viewer, with the ZPL in the link", async () => {
+  test("opens the label in the viewer, with the formatted ZPL in the link", async () => {
     const fake = fakeIo({ "label.zpl": label });
     expect(await run(["view", "label.zpl", "--dpi", "300"], fake.io)).toBe(0);
     const [link] = fake.out;
@@ -211,7 +240,14 @@ describe("view", () => {
     const state = JSON.parse(
       inflateRawSync(Buffer.from(hash, "base64")).toString()
     );
-    expect(state).toEqual([label, null, null, 12, 0.4]);
+    // Formatted, so it's easy to read and edit in the viewer
+    expect(state).toEqual([
+      "^XA\n^PW406\n^LL203\n^FO20,20^A0N,40^FDHi^FS\n^XZ\n",
+      null,
+      null,
+      12,
+      0.4,
+    ]);
   });
 
   test("only prints the link with --no-open", async () => {
