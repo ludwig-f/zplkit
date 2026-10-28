@@ -3621,8 +3621,8 @@ export const reference: CommandReference[] = [
     "code": "^SF",
     "name": "Serialization Field (with a standard ^FD String)",
     "category": "Fields",
-    "support": "partial",
-    "note": "Decimal, octal and hex masks count; letter masks don't yet",
+    "support": "yes",
+    "note": "",
     "summary": "Makes part of a field's data count up or down on each label printed. A mask sets which characters change and how, e.g. D for decimal digits and % to skip a character.",
     "syntax": "^SFa,b",
     "params": [

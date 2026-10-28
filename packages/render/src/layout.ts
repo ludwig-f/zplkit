@@ -9,7 +9,6 @@ import { FontFiles, parseFontFile } from "./font-files.js";
 import { formatClock } from "./clock.js";
 import { expandCopies } from "./copies.js";
 import { expandFormats } from "./formats.js";
-import { hasUncountedMask } from "./serial.js";
 import { decodeGraphicData } from "./graphics.js";
 import { measuredFields } from "@zplkit/core/internal";
 import type { Command } from "@zplkit/core";
@@ -529,12 +528,6 @@ const layout = (
         break;
       case "PrintMirror":
         mirror = command.mirror;
-        break;
-      case "SerializationField":
-        // Letters aren't counted yet
-        if (command.mask && hasUncountedMask(command.mask)) {
-          label.unsupported.push(index);
-        }
         break;
       case "FieldOrigin":
         field = {

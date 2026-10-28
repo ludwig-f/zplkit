@@ -37,17 +37,32 @@ const serialNumber = (
   return before + counted + after;
 };
 
-/** The base each ^SF mask character counts in */
-const bases: Record<string, number> = { d: 10, o: 8, h: 16 };
+const DIGITS = "0123456789";
+const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-/** Whether a mask has characters the renderer doesn't count yet */
-const hasUncountedMask = (mask: string): boolean => /[an]/i.test(mask);
+/**
+ * The digits each ^SF mask character counts through, in order. The mask's
+ * case sets the case of its letters.
+ */
+const alphabets: Record<string, string> = {
+  d: DIGITS,
+  D: DIGITS,
+  o: "01234567",
+  O: "01234567",
+  H: DIGITS + "ABCDEF",
+  h: DIGITS + "abcdef",
+  A: LETTERS,
+  a: LETTERS.toLowerCase(),
+  N: DIGITS + LETTERS,
+  n: DIGITS + LETTERS.toLowerCase(),
+};
 
 /**
  * ^SF: the mask lines up with the start of the data and the increment with
- * the end of the mask. Each run of characters the mask counts is its own
- * counter: a carry stops at %, at a mask character we don't count, or at a
- * character that isn't a digit in the mask's base.
+ * the end of the mask. Each run of positions holding a digit of their mask
+ * is a counter, carrying from one mask character to the next; a carry stops
+ * at %, or at a character that isn't one of its mask's digits. The
+ * increment's characters are digits of the positions they line up with.
  */
 const serializedField = (
   data: string,
@@ -57,19 +72,22 @@ const serializedField = (
 ): string => {
   const negative = increment.startsWith("-");
   const incrementDigits = increment.replace(/^[-+]/, "");
-  // The increment's digit at each position of the mask, right-aligned
+  // The increment's character at each position of the mask, right-aligned
   const offset = mask.length - incrementDigits.length;
   const incrementAt = (position: number) => {
-    const char = incrementDigits[position - offset];
-    return char === undefined ? 0 : parseInt(char, 36) || 0;
+    const digit = alphabets[mask[position]].indexOf(
+      incrementDigits[position - offset] ?? ""
+    );
+    return Math.max(digit, 0);
   };
 
-  const base = (position: number) => {
+  /** The digits at a position, if its character is one of them */
+  const alphabet = (position: number) => {
+    const digits = alphabets[mask[position]];
     const char = data[position];
-    const radix = bases[mask[position]?.toLowerCase()];
-    if (!radix || char === undefined) return undefined;
-    const digit = parseInt(char, 36);
-    return Number.isNaN(digit) || digit >= radix ? undefined : radix;
+    return digits && char !== undefined && digits.includes(char)
+      ? digits
+      : undefined;
   };
 
   const chars = data.split("");
@@ -77,7 +95,7 @@ const serializedField = (
   while (end > 0) {
     // A run of counted positions, ending at `end`
     let start = end;
-    while (start > 0 && base(start - 1) !== undefined) start--;
+    while (start > 0 && alphabet(start - 1) !== undefined) start--;
     if (start === end) {
       end--;
       continue;
@@ -87,23 +105,21 @@ const serializedField = (
     let added = 0;
     let range = 1;
     for (let position = end - 1; position >= start; position--) {
-      const radix = base(position)!;
-      value += parseInt(chars[position], 36) * range;
+      const digits = alphabet(position)!;
+      value += digits.indexOf(chars[position]) * range;
       added += incrementAt(position) * range;
-      range *= radix;
+      range *= digits.length;
     }
     const total = value + (negative ? -1 : 1) * added * step;
     let wrapped = ((total % range) + range) % range;
-    const lowercase = /[a-z]/.test(data.slice(start, end));
     for (let position = end - 1; position >= start; position--) {
-      const radix = base(position)!;
-      const digit = (wrapped % radix).toString(radix);
-      chars[position] = lowercase ? digit : digit.toUpperCase();
-      wrapped = Math.floor(wrapped / radix);
+      const digits = alphabet(position)!;
+      chars[position] = digits[wrapped % digits.length];
+      wrapped = Math.floor(wrapped / digits.length);
     }
     end = start;
   }
   return chars.join("");
 };
 
-export { serialNumber, serializedField, hasUncountedMask };
+export { serialNumber, serializedField };

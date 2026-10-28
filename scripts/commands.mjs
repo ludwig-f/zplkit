@@ -17,9 +17,56 @@ const readme = new URL("packages/zpl/README.md", root);
 const docsUrl = "https://zplkit.fingal.dev/docs/commands";
 
 const groups = {
-  "Labels and formats": ["^XA", "^XZ", "^LH", "^LL", "^LR", "^LS", "^LT", "^PW", "^PO", "^PM", "^DF", "^XF", "^MU", "^CC", "~CC", "^CD", "~CD", "^CT", "~CT"],
-  "Text and fonts": ["^A", "^A@", "^CF", "^CI", "^CW", "^FB", "^TB", "^FH", "^SE", "~DB", "~DE", "~DS", "~DT", "~DU"],
-  "Graphics and images": ["~DG", "~DY", "~EG", "~DN", "^XG", "^IL", "^IM", "^IS", "^ID", "^HG", "^HY"],
+  "Labels and formats": [
+    "^XA",
+    "^XZ",
+    "^LH",
+    "^LL",
+    "^LR",
+    "^LS",
+    "^LT",
+    "^PW",
+    "^PO",
+    "^PM",
+    "^DF",
+    "^XF",
+    "^MU",
+    "^CC",
+    "~CC",
+    "^CD",
+    "~CD",
+    "^CT",
+    "~CT",
+  ],
+  "Text and fonts": [
+    "^A",
+    "^A@",
+    "^CF",
+    "^CI",
+    "^CW",
+    "^FB",
+    "^TB",
+    "^FH",
+    "^SE",
+    "~DB",
+    "~DE",
+    "~DS",
+    "~DT",
+    "~DU",
+  ],
+  "Graphics and images": [
+    "~DG",
+    "~DY",
+    "~EG",
+    "~DN",
+    "^XG",
+    "^IL",
+    "^IM",
+    "^IS",
+    "^ID",
+    "^HG",
+    "^HY",
+  ],
 };
 
 /** Barcodes, fields and graphics go by prefix; everything else is printer setup */
@@ -29,7 +76,8 @@ const categoryOf = (code) => {
   }
   if (code.startsWith("^B")) return "Barcodes";
   if (code.startsWith("^G")) return "Graphics and images";
-  if (code.startsWith("^F") || code === "^SF" || code === "^SN") return "Fields";
+  if (code.startsWith("^F") || code === "^SF" || code === "^SN")
+    return "Fields";
   return "Printer and media";
 };
 
@@ -44,8 +92,10 @@ const categories = [
 
 /** Limits worth knowing about, shown next to the command */
 const notes = {
-  "^A@": "Needs the font file, downloaded in the label or passed to the renderer",
-  "^B7": "Same size as a printer's symbol; error correction codewords can differ",
+  "^A@":
+    "Needs the font file, downloaded in the label or passed to the renderer",
+  "^B7":
+    "Same size as a printer's symbol; error correction codewords can differ",
   "^BD": "Modes 2 to 6",
   "^BX": "Same size as a printer's symbol; data can be encoded differently",
   "^BF": "Same size as a printer's symbol; data can be encoded differently",
@@ -54,15 +104,16 @@ const notes = {
   "^GS": "The UL and CSA marks are drawn as stand-ins",
   "~DT": "Bounded fonts use Zebra's own format, which isn't drawn",
   "~DY": "TrueType fonts and graphics",
-  "^FC": "Days and months in English; the renderer's clock option sets the time",
+  "^FC":
+    "Days and months in English; the renderer's clock option sets the time",
   "^MU": "Converting between resolutions (b and c) isn't applied",
   "^PQ": "Copies that are all the same are drawn once, with their count",
-  "^SF": "Decimal, octal and hex masks count; letter masks don't yet",
-  "^TB": "Drawn as Zebra's guide describes, without reference renders to compare with",
+  "^TB":
+    "Drawn as Zebra's guide describes, without reference renders to compare with",
 };
 
 /** Supported, with differences the notes explain */
-const partial = new Set(["^CI", "^GS", "^BR", "^SF"]);
+const partial = new Set(["^CI", "^GS", "^BR"]);
 
 /** Commands with nothing to draw, besides printer setup */
 const nothingToDraw = new Set(["^FX", "^ID", "~DN", "~EG", "^HG", "^HY"]);
@@ -107,8 +158,12 @@ const summary = [
   "| --- | --- |",
   ...categories.map((category) => {
     const rows = all.filter((command) => command.category === category);
-    const codes = rows.filter((command) => command.support !== "no").map(({ code }) => `\`${code}\``);
-    return `| ${category} (${codes.length} of ${rows.length}) | ${codes.join(" ") || "None yet"} |`;
+    const codes = rows
+      .filter((command) => command.support !== "no")
+      .map(({ code }) => `\`${code}\``);
+    return `| ${category} (${codes.length} of ${rows.length}) | ${
+      codes.join(" ") || "None yet"
+    } |`;
   }),
   "",
   "<!-- commands:end -->",
@@ -141,7 +196,11 @@ export type CommandReference = {
   example?: string;
 };
 
-export const reference: CommandReference[] = ${JSON.stringify(reference, null, 2)};
+export const reference: CommandReference[] = ${JSON.stringify(
+  reference,
+  null,
+  2
+)};
 `;
 
 const current = readFileSync(readme, "utf8");
@@ -149,7 +208,9 @@ const start = current.indexOf("<!-- commands:start");
 const end = current.indexOf("<!-- commands:end -->");
 if (start < 0 || end < 0) throw new Error("README.md has no commands markers");
 const newReadme =
-  current.slice(0, start) + summary + current.slice(end + "<!-- commands:end -->".length);
+  current.slice(0, start) +
+  summary +
+  current.slice(end + "<!-- commands:end -->".length);
 
 const outdated = [];
 for (const [file, content] of [

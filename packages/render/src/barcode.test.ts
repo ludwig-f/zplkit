@@ -508,6 +508,33 @@ describe("QR code", () => {
   });
 });
 
+/** The mask in a QR code drawn with 1-dot modules at ^FO100,100 */
+const qrMask = (body: string) => {
+  const raster = render(body);
+  // Format bits 14 to 10 run along row 8, left of the timing column
+  const dot = (x: number, y: number) =>
+    raster.ink[(110 + y) * raster.width + 100 + x] >= 0.5 ? 1 : 0;
+  const bits = [0, 1, 2, 3, 4, 5, 7].map((x) => dot(x, 8));
+  const format = parseInt(bits.join(""), 2) ^ 0b1010100;
+  return (format >> 2) & 0b111;
+};
+
+describe("QR code masks", () => {
+  // Masks measured from reference renders
+  test.each([
+    ["2601815908301661318609139", "L", 7],
+    ["P3E2Z8IQ", "M", 3],
+    ["Y7 JZ/B6$ +CN6", "Q", 6],
+    ["MVT45HU43JSIOM1TMA7V3DI8FP", "L", 7],
+    ["P6UP3C4DSA7L3609Y6N14DO9GMNU77", "H", 5],
+    ["1313735379907511637265167612", "M", 1],
+    ["LQCMK5N1LZTS1OLX*IW47E65GH2BH8", "Q", 1],
+    ["829657249208682889093100251678008374071881", "Q", 2],
+  ])("%s at %s uses mask %i", (data, level, mask) => {
+    expect(qrMask(`^FO100,100^BQN,2,1^FD${level}A,${data}^FS`)).toBe(mask);
+  });
+});
+
 describe("Data Matrix", () => {
   test.each([
     ["^FO100,100^BXN,6,200^FDhello^FS", 100, 171, 100, 171],
