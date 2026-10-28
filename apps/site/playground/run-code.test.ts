@@ -1,5 +1,6 @@
 import { describe, test, expect } from "vitest";
 import { run } from "./run-code-core";
+import { countLabels } from "@zplkit/render";
 import { analyze } from "./analyze";
 import codeExamples from "./code-examples";
 
@@ -12,6 +13,13 @@ describe("examples", () => {
       expect(analyze(outcome.zpl, { dpmm: outcome.dpmm })).toStrictEqual([]);
     }
   );
+
+  test("numbered boxes count up on 6 copies", () => {
+    const example = codeExamples.find((e) => e.name === "Numbered boxes")!;
+    const outcome = run(example.code);
+    if (!outcome.ok) throw new Error(outcome.message);
+    expect(countLabels(outcome.zpl)).toEqual({ labels: 6, printed: 6 });
+  });
 
   test("a print job shows every label", () => {
     const outcome = run(codeExamples[1].code);

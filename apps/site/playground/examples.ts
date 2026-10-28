@@ -89,21 +89,19 @@ const examples: {
 ^XZ`,
   },
   {
-    name: "Common mistakes",
+    name: "Numbered boxes",
     width: undefined,
     height: undefined,
     dpmm: 8,
     zpl: `^XA
 ^PW406^LL203
-^FX A rule thinner than its line thickness
-^FO20,20^GB360,1,3^FS
-^FX EAN-13 data must be 12 digits, without the check digit
-^FO20,40^BEN,50^FD7350001234569^FS
-^FX This field is never closed
-^FO20,130^A0,30^FDUnclosed field
-^FO20,170^A0,24^FDNext field^FS
-^FX This field starts past the right edge
-^FO420,20^A0,30^FDOff the label^FS
+^FO20,16^A0,24^FDBox^FS
+^FX SN counts the number at the end: BOX-001, BOX-002 and on.
+^FO20,42^A0,56^SNBOX-001,1,Y^FS
+^BY3
+^FO20,110^BCN,70,N,N^SNBOX-001,1,Y^FS
+^FX Six copies with PQ, each counting up from the one before.
+^PQ6
 ^XZ`,
   },
 ];

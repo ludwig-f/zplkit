@@ -114,6 +114,15 @@ describe("lint_zpl", () => {
     );
   });
 
+  test("reports parameters the printer can't read", async () => {
+    const { text } = await call(await connect(), "lint_zpl", {
+      zpl: "^XA\n^FX Six copies (^PQ6)\n^FO20,20^FDHi^FS\n^XZ",
+    });
+    expect(text).toBe(
+      "2:17 warning invalid-parameter: ^PQ: quantity must be a number, got '6)'"
+    );
+  });
+
   test("says when there's nothing to fix", async () => {
     expect((await call(await connect(), "lint_zpl", { zpl: label })).text).toBe(
       "No problems found."

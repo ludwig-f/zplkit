@@ -76,6 +76,8 @@ const loadSaved = (): Saved | undefined => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (!saved) return undefined;
     const state = JSON.parse(saved);
+    // Templates are saved by position, which changes when one is removed
+    if (!examples[state.template]) delete state.template;
     // Saved before sizes kept their unit, in millimeters
     if ("widthMm" in state || "heightMm" in state) {
       const { widthMm, heightMm, ...rest } = state;
