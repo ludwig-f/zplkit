@@ -1,0 +1,279 @@
+/*
+ * The designer over the bench's labels: outlines, handles, tags, guides,
+ * the readout and the align bar. Selection and hover are teal, snapping
+ * guides cobalt, problems amber.
+ */
+.designer {
+  /*
+   * Labels stay white paper in both themes, so what's drawn on them uses
+   * the light theme's colors in both too. The align bar is page chrome.
+   */
+  --on-paper-view: #0b6b74;
+  --on-paper-on-view: #ffffff;
+  --on-paper-accent: #2742c4;
+  --on-paper-on-accent: #ffffff;
+  --on-paper-warn: #8a5300;
+  --on-paper-ink: #4f4c43;
+  --on-paper-rule: #8a877c;
+  --on-paper-hatch: rgb(25 24 19 / 0.14);
+  --on-paper-edge: #e8e5dc;
+  --readout-bg: #191813;
+  --readout-fg: #f4f2ec;
+
+  position: absolute;
+  inset: 0;
+  outline: none;
+  /* Phones scroll the page; only mice and pens drag */
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.designer[data-hovering] {
+  cursor: move;
+}
+
+.designer:focus-visible {
+  outline: 2px solid var(--zk-view);
+  outline-offset: 4px;
+  border-radius: 6px;
+}
+
+.designer .field {
+  position: absolute;
+  box-sizing: border-box;
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.designer .field.hovered {
+  border: 1px dashed var(--on-paper-view);
+}
+
+/* The same field on the other labels: tinted, so it's clear what else changes */
+.designer .field.twin {
+  border: 1.5px dashed var(--on-paper-view);
+  background: rgb(11 107 116 / 0.12);
+}
+
+.designer .field.warn {
+  border: 1.5px dashed var(--on-paper-warn);
+}
+
+/* Fields zplkit can't draw: hatched, with their command */
+.designer .field.not-drawn {
+  border: 1px dashed var(--on-paper-rule);
+  background: repeating-linear-gradient(
+    135deg,
+    var(--on-paper-hatch) 0 1px,
+    transparent 1px 7px
+  );
+}
+
+.designer .field.selected {
+  border: 1.5px solid var(--on-paper-view);
+}
+
+/* Beside the field, never over the renderer's own placeholder text */
+.designer .caption {
+  position: absolute;
+  left: -1.5px;
+  padding: 1px 6px;
+  border: 1px dashed var(--on-paper-rule);
+  border-radius: 3px;
+  background: #fff;
+  color: var(--on-paper-ink);
+  font: 600 10.5px/1.5 var(--font-mono);
+  white-space: nowrap;
+}
+
+.designer .caption.above {
+  bottom: 100%;
+  margin-bottom: 4px;
+}
+
+.designer .caption.below {
+  top: 100%;
+  margin-top: 4px;
+}
+
+.designer .tag {
+  position: absolute;
+  bottom: 100%;
+  left: -1.5px;
+  margin-bottom: 4px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: var(--on-paper-view);
+  color: var(--on-paper-on-view);
+  font: 600 10.5px/1.5 var(--font-mono);
+  white-space: nowrap;
+}
+
+.designer .diamond {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 10px;
+  height: 10px;
+  box-sizing: border-box;
+  border: 1.5px solid var(--on-paper-edge);
+  background: var(--on-paper-warn);
+  transform: rotate(45deg);
+}
+
+.designer .handle {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  box-sizing: border-box;
+  border: 1.5px solid var(--on-paper-view);
+  border-radius: 1px;
+  background: #fff;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+  touch-action: none;
+}
+
+/* A bigger target than it looks */
+.designer .handle::before {
+  content: "";
+  position: absolute;
+  inset: -5px;
+}
+
+.designer .snap-guide {
+  position: absolute;
+  background: var(--on-paper-accent);
+  pointer-events: none;
+}
+
+.designer .snap-guide.x {
+  width: 1px;
+  transform: translateX(-0.5px);
+}
+
+.designer .snap-guide.y {
+  height: 1px;
+  transform: translateY(-0.5px);
+}
+
+.designer .guide-name {
+  position: absolute;
+  padding: 0 5px;
+  border-radius: 3px;
+  background: var(--on-paper-accent);
+  color: var(--on-paper-on-accent);
+  font: 600 10.5px/1.5 var(--font-mono);
+  white-space: nowrap;
+}
+
+.designer .snap-guide.x .guide-name {
+  left: 6px;
+}
+
+.designer .snap-guide.y .guide-name {
+  top: 6px;
+}
+
+/* What the drag writes, under the field */
+.designer .readout {
+  position: absolute;
+  display: flex;
+  gap: 8px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: var(--readout-bg);
+  color: var(--readout-fg);
+  font: 600 11px/1.5 var(--font-mono);
+  white-space: nowrap;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.designer .readout-unit {
+  opacity: 0.72;
+}
+
+.designer .marquee {
+  position: absolute;
+  box-sizing: border-box;
+  border: 1px dashed var(--on-paper-view);
+  background: rgb(11 107 116 / 0.08);
+  pointer-events: none;
+}
+
+/* Moving fields, cut from the label image, over a patch of blank paper */
+.designer .mask,
+.designer .crop {
+  position: absolute;
+  pointer-events: none;
+}
+
+.designer .mask {
+  background: #fff;
+}
+
+.designer .crop {
+  background-repeat: no-repeat;
+}
+
+.designer .align-bar {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--zk-rule-strong);
+  border-radius: 6px;
+  background: var(--zk-raised);
+  color: var(--zk-ink-2);
+  box-shadow: 0 10px 24px -12px rgb(0 0 0 / 0.45);
+  white-space: nowrap;
+  transform: translateY(calc(-100% - 10px));
+  cursor: default;
+}
+
+.designer .align-bar .count {
+  padding: 0 8px 0 6px;
+  color: var(--zk-ink);
+  font: 600 11.5px var(--font-mono);
+}
+
+.designer .align-bar .sep {
+  width: 1px;
+  height: 18px;
+  background: var(--zk-rule);
+}
+
+.designer .align-bar button {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.designer .align-bar button:hover:not(:disabled) {
+  background: var(--zk-surface);
+}
+
+.designer .align-bar button.on {
+  background: var(--zk-view-soft);
+  color: var(--zk-view);
+}
+
+.designer .align-bar button:disabled {
+  color: var(--zk-rule-strong);
+  cursor: default;
+}
+
+.designer .align-bar button:focus-visible {
+  outline: 2px solid var(--zk-view);
+  outline-offset: -2px;
+}

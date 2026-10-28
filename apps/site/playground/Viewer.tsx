@@ -1,6 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import type { ChangeSet } from "@codemirror/state";
 import "@zplkit/preview/react";
 import "./styles.css";
 import { PopoverClose } from "fumadocs-ui/components/ui/popover";
@@ -31,6 +39,17 @@ import type { Cursor } from "./Bench";
 import type { EditorHandle } from "./Editor";
 import type { Problem } from "./analyze";
 import type { LabelLength, ShareState } from "./share";
+import DesignOverlay from "./designer/DesignOverlay";
+import { designFor, type Design } from "./designer/fields";
+import { replacesAll } from "./designer/highlight";
+import { extentOf } from "./designer/overlay";
+import {
+  highlightOf,
+  redesigned,
+  selectAtOffset,
+  type Hover,
+  type Selection,
+} from "./designer/selection";
 
 // Kept from before the rename, so saved labels stay
 const STORAGE_KEY = "node-zpl-playground";
@@ -199,7 +218,32 @@ export default function Viewer() {
     busy: true,
   });
   const editor = useRef<EditorHandle>(null);
+  const [selection, setSelection] = useState<Selection>({
+    keys: [],
+    label: 0,
+  });
+  const [hover, setHover] = useState<Hover>();
+  /** The ZPL from before a drag, which the preview shows until it ends */
+  const [frozen, setFrozen] = useState<string>();
   const { zpl, width, height, dpmm } = state;
+  const previewZpl = frozen ?? zpl;
+  /** The latest text, ahead of state while a drag edits */
+  const latest = useRef(zpl);
+  latest.current = zpl;
+  /**
+   * The editor's changes since the design was last made, from the text
+   * `from` to `to`, so the selection follows them
+   */
+  const edits = useRef<{ from: string; to: string; changes: ChangeSet }>(
+    undefined
+  );
+  /** Where a duplicate starts, and the text it's in, to select once the design has it */
+  const selectAt = useRef<{ offset: number; zpl: string } | undefined>(
+    undefined
+  );
+  /** The ZPL the preview is rendering, and the one its images show */
+  const rendering = useRef<string | undefined>(undefined);
+  const [imagesZpl, setImagesZpl] = useState<string>();
   const { smoothing, unit } = settings;
   const widthMm = width && toMm(width, dpmm);
   const heightMm = height && toMm(height, dpmm);
@@ -217,12 +261,14 @@ export default function Viewer() {
   }, []);
 
   useEffect(() => {
+    // Saved once a drag ends, not on every step
+    if (frozen !== undefined) return;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } catch {
       // Storage can be unavailable, e.g. in private windows
     }
-  }, [state]);
+  }, [state, frozen]);
 
   useEffect(() => {
     if (!notice) return;
@@ -230,9 +276,10 @@ export default function Viewer() {
     return () => clearTimeout(timeout);
   }, [notice]);
 
+  // Checked once a drag ends; the editor keeps the marks in place meanwhile
   const problems = useMemo(
-    () => analyze(zpl, { dpmm, widthMm, heightMm }),
-    [zpl, dpmm, widthMm, heightMm]
+    () => analyze(previewZpl, { dpmm, widthMm, heightMm }),
+    [previewZpl, dpmm, widthMm, heightMm]
   );
   const blocked = blockingReason(problems);
   // The template shown: the one the ZPL matches, else the one it started from
@@ -245,17 +292,103 @@ export default function Viewer() {
     ? "label"
     : fileName(examples[template].name);
 
-  // The size the preview uses: settings, then ^PW/^LL, then 4 × 6 in
+  // The size the preview uses: settings, then ^PW/^LL, then 4 × 6 in. From
+  // the previewed ZPL like the design, so a drag past ^PW doesn't resize it
   const labelSize = {
     width:
-      widthMm ?? ((lastValue(zpl, "PW") ?? 0) / dpmm || toMm(inches(4), dpmm)),
+      widthMm ??
+      ((lastValue(previewZpl, "PW") ?? 0) / dpmm || toMm(inches(4), dpmm)),
     height:
-      heightMm ?? ((lastValue(zpl, "LL") ?? 0) / dpmm || toMm(inches(6), dpmm)),
+      heightMm ??
+      ((lastValue(previewZpl, "LL") ?? 0) / dpmm || toMm(inches(6), dpmm)),
   };
   const labelDots = {
     width: Math.round(labelSize.width * dpmm),
     height: Math.round(labelSize.height * dpmm),
   };
+  // The fields on the labels the preview shows, measured as it draws them
+  const design = useMemo((): Design => {
+    try {
+      return designFor(previewZpl, {
+        widthMm: labelSize.width,
+        heightMm: labelSize.height,
+        dpmm,
+        fonts: fonts.fonts,
+        font0: fonts.font0?.bytes,
+        limit: PREVIEW_LABELS,
+        antialias: smoothing > 0,
+      });
+    } catch {
+      return { zpl: previewZpl, dpmm, commands: [], labels: [] };
+    }
+  }, [
+    previewZpl,
+    labelSize.width,
+    labelSize.height,
+    dpmm,
+    fonts.fonts,
+    fonts.font0,
+    smoothing,
+  ]);
+  const designRef = useRef(design);
+  designRef.current = design;
+
+  // The selection follows the fields through edits, before it's drawn
+  const designed = useRef(design);
+  useLayoutEffect(() => {
+    const before = designed.current;
+    if (before === design) return;
+    designed.current = design;
+    const edit = edits.current;
+    const changes =
+      edit && edit.from === before.zpl && edit.to === design.zpl
+        ? edit.changes
+        : undefined;
+    if (before.zpl !== design.zpl) edits.current = undefined;
+    const pick = selectAt.current;
+    selectAt.current = undefined;
+    setSelection((current) =>
+      redesigned(before, design, current, { changes, selectAt: pick })
+    );
+    setHover(undefined);
+  }, [design]);
+
+  // The selected and hovered fields' lines in the editor. A drag edits the
+  // text past the design it started from; the editor keeps the lines meanwhile.
+  useEffect(() => {
+    if (frozen !== undefined) return;
+    editor.current?.highlight(highlightOf(design, selection, hover));
+  }, [design, selection, hover, frozen]);
+
+  /** The editor changed the text: keep the change for the selection */
+  const changed = (value: string, changes: ChangeSet) => {
+    // A new document, like a template or a file opened: nothing to follow,
+    // even fields that happen to start the same
+    if (replacesAll(changes)) {
+      setSelection({ keys: [], label: 0 });
+      setHover(undefined);
+    }
+    // The editor taking a text from state, like a template, isn't an edit
+    if (value === latest.current) return;
+    const edit = edits.current;
+    edits.current =
+      edit && edit.to === latest.current
+        ? { from: edit.from, to: value, changes: edit.changes.compose(changes) }
+        : { from: latest.current, to: value, changes };
+    latest.current = value;
+    update({ zpl: value });
+  };
+
+  const hovered = useCallback(
+    (next: Hover) =>
+      setHover((current) =>
+        current?.key === next?.key && current?.label === next?.label
+          ? current
+          : next
+      ),
+    []
+  );
+
   /** A number in the unit, rounded as the unit shows it */
   const shown = (value: number) =>
     Number(value.toFixed(unit === "in" ? 2 : unit === "mm" ? 1 : 0));
@@ -616,7 +749,12 @@ export default function Viewer() {
             ref={editor}
             value={zpl}
             problems={problems}
-            onChange={(value) => update({ zpl: value })}
+            onChange={changed}
+            onCursor={(offset) =>
+              setSelection((current) =>
+                selectAtOffset(designRef.current, offset, current)
+              )
+            }
           />
           <div className="problems" data-open={problems.length > 0}>
             <div className="problems-header">
@@ -649,7 +787,12 @@ export default function Viewer() {
                   x {formatDots(cursor.x, unit, dpmm)}, y{" "}
                   {formatDots(cursor.y, unit, dpmm)} {unit}
                 </span>
-                <span className="hint">Click to copy {originAt(cursor)}</span>
+                {/* Right-click on a field is the browser's menu */}
+                {!hover && (
+                  <span className="hint">
+                    Right-click for {originAt(cursor)}
+                  </span>
+                )}
               </>
             ) : (
               <span>
@@ -671,10 +814,40 @@ export default function Viewer() {
               unit={unit}
               onCursor={setCursor}
               labels={images.length}
-              onPick={pick}
+              quiet={selection.keys.length > 0 || frozen !== undefined}
+              extent={
+                frozen === undefined ? extentOf(design, selection) : undefined
+              }
+              overlay={(boxes) => (
+                <DesignOverlay
+                  design={design}
+                  boxes={boxes}
+                  images={images}
+                  imagesZpl={imagesZpl}
+                  selection={selection}
+                  hover={hover}
+                  problems={problems}
+                  unit={unit}
+                  onSelect={setSelection}
+                  onHover={hovered}
+                  apply={(spec) => editor.current?.apply(spec)}
+                  onDrag={(dragging) =>
+                    setFrozen(dragging ? latest.current : undefined)
+                  }
+                  onSelectAt={(offset) => {
+                    // Only for the text the edit made; an edit that changed
+                    // nothing leaves latest as it was, and the next
+                    // redesign drops it
+                    selectAt.current = { offset, zpl: latest.current };
+                  }}
+                  onPick={pick}
+                  onUndo={() => editor.current?.undo()}
+                  onRedo={() => editor.current?.redo()}
+                />
+              )}
             >
               <zpl-preview
-                zpl={zpl}
+                zpl={previewZpl}
                 width={widthMm}
                 height={heightMm}
                 dpmm={dpmm}
@@ -683,16 +856,19 @@ export default function Viewer() {
                 font0={fonts.font0?.bytes}
                 maxLabels={PREVIEW_LABELS}
                 fade
-                onzpl-render-start={() =>
-                  setRender((current) => ({ ...current, busy: true }))
-                }
+                onzpl-render-start={(event) => {
+                  rendering.current = event.detail.zpl;
+                  setRender((current) => ({ ...current, busy: true }));
+                }}
                 onzpl-render={(event) => {
                   setImages(event.detail.images);
+                  setImagesZpl(rendering.current);
                   setLabelTotal(event.detail.labels);
                   setRender({ busy: false, ms: event.detail.duration });
                 }}
                 onzpl-error={() => {
                   setImages([]);
+                  setImagesZpl(undefined);
                   setLabelTotal(undefined);
                   setRender({ busy: false });
                 }}

@@ -124,6 +124,8 @@ type Element = Common &
   );
 
 type LabelLayout = {
+  /** Index of the label's ^XA in the command list */
+  start: number;
   printWidth?: number;
   /** ^POI: the label prints upside down */
   inverted?: boolean;
@@ -450,6 +452,7 @@ const layout = (
 
     if (command.type === "StartFormat") {
       label = {
+        start: index,
         elements: [],
         unsupported: [],
         copies: copies[labels.length] ?? 1,
