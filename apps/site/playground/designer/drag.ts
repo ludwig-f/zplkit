@@ -21,6 +21,8 @@ type Step = {
   dy: number;
   guides: Guide[];
   readout: string;
+  /** The first selected field's bounds after this step, in dots, to draw it while the label isn't redrawn */
+  bounds?: Rect;
   edit: TransactionSpec | undefined;
 };
 
@@ -188,6 +190,7 @@ const startDrag = (
     let guides: Guide[] = [];
     let changes: TextChange[] = [];
     let readout = "";
+    let bounds: Rect | undefined;
     if (kind.kind === "move" && selected.length > 0) {
       if (opts.snap) {
         const snapped = snapMove(
@@ -201,11 +204,13 @@ const startDrag = (
       }
       changes = moveFields(design, selection.keys, dx, dy);
       readout = moveReadout(design, selected[0], changes);
+      const { x, y, width, height } = selected[0].bounds;
+      bounds = { x: x + dx, y: y + dy, width, height };
     } else if (kind.kind === "resize" && selected.length > 0) {
       const [field] = selected;
       const handles = resizeHandles(design, field);
       if (handles !== "none") {
-        const bounds = resized(
+        bounds = resized(
           field.bounds,
           kind.handle,
           dx,
@@ -227,11 +232,11 @@ const startDrag = (
       ...designerEdit([], { drag: id }),
       changes: composed,
     };
-    return { started, dx, dy, guides, readout, edit };
+    return { started, dx, dy, guides, readout, bounds, edit };
   };
 
   return { moveTo, started: () => started };
 };
 
 export { startDrag };
-export type { Drag, DragKind };
+export type { Drag, DragKind, Handle };

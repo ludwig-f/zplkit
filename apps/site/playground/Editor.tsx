@@ -16,6 +16,8 @@ import {
   defaultKeymap,
   historyKeymap,
   indentWithTab,
+  redo,
+  undo,
 } from "@codemirror/commands";
 import { lintGutter, setDiagnostics } from "@codemirror/lint";
 import { zplHighlighting, zplLanguage } from "./zpl-language";
@@ -42,6 +44,9 @@ type EditorHandle = {
   apply: (spec: TransactionSpec) => void;
   /** Set which lines are drawn as selected and hovered */
   highlight: (highlight: Highlight) => void;
+  /** Undo or redo the latest edit, as the editor's own keys do */
+  undo: () => void;
+  redo: () => void;
 };
 
 type EditorProps = {
@@ -244,6 +249,12 @@ const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
     },
     highlight(highlight) {
       view.current?.dispatch({ effects: setHighlight.of(highlight) });
+    },
+    undo() {
+      if (view.current) undo(view.current);
+    },
+    redo() {
+      if (view.current) redo(view.current);
     },
   }));
 

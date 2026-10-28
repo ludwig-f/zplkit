@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import type { CSSProperties, MouseEvent, ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { CSSProperties, MouseEvent, ReactNode, RefObject } from "react";
 import "./bench.css";
+import { labelAt, type LabelBox } from "./designer/geometry";
 import type { Unit } from "./settings";
 import { formatDots, formatSize, fromDots, ticksFor } from "./units";
 import type { Tick } from "./units";
@@ -27,6 +28,18 @@ type BenchProps = {
   onCursor?: (cursor: Cursor | undefined) => void;
   /** Called when a label is clicked, with the position clicked */
   onPick?: (cursor: Cursor) => void;
+  /** Drawn over the labels, given where each label image is */
+  overlay?: (boxes: LabelBox[]) => ReactNode;
+  /** Hide the pointer's guide lines, e.g. while the overlay has a selection */
+  quiet?: boolean;
+  /** A span to mark on the rulers, in dots on a label, e.g. the selected fields */
+  extent?: {
+    label: number;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
   /**
    * How many labels are shown, each with its own vertical ruler
    * @defaultValue 1
@@ -40,6 +53,98 @@ type Hover = Cursor & {
   fx: number;
   fy: number;
   box: { left: number; top: number; width: number; height: number };
+};
+
+/** Whether two lists of boxes are the same, to px */
+const sameBoxes = (a: LabelBox[], b: LabelBox[]) =>
+  a.length === b.length &&
+  a.every((box, i) =>
+    (Object.keys(box) as (keyof LabelBox)[]).every(
+      (key) => Math.abs(box[key] - b[i][key]) < 0.5
+    )
+  );
+
+/**
+ * Keep track of where <zpl-preview>'s label images are in an element, in
+ * px from its top-left corner. The images are in the preview's shadow root
+ * and replaced on every render; their size is known once they've loaded.
+ */
+const useLabelBoxes = (area: RefObject<HTMLDivElement | null>) => {
+  const [boxes, setBoxes] = useState<LabelBox[]>([]);
+  useEffect(() => {
+    const element = area.current;
+    if (!element) return;
+    let frame = 0;
+    let root: ShadowRoot | undefined;
+
+    const measure = () => {
+      frame = 0;
+      const origin = element.getBoundingClientRect();
+      const images = root
+        ? [...root.querySelectorAll<HTMLImageElement>('img[part="label"]')]
+        : [];
+      const next = images.map((image) => {
+        const rect = image.getBoundingClientRect();
+        return {
+          left: rect.left - origin.left,
+          top: rect.top - origin.top,
+          width: rect.width,
+          height: rect.height,
+          dotsWide: image.naturalWidth,
+          dotsHigh: image.naturalHeight,
+        };
+      });
+      setBoxes((current) => (sameBoxes(current, next) ? current : next));
+    };
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(measure);
+    };
+
+    // Images change size when they load and when the bench does
+    const sizes = new ResizeObserver(schedule);
+    const observeImages = () => {
+      sizes.disconnect();
+      sizes.observe(element);
+      root
+        ?.querySelectorAll('img[part="label"]')
+        .forEach((image) => sizes.observe(image));
+      schedule();
+    };
+    const images = new MutationObserver(observeImages);
+
+    /** Follow the preview element's shadow root, once it has one */
+    const connect = () => {
+      const next =
+        element.querySelector("zpl-preview")?.shadowRoot ?? undefined;
+      if (next === root) return;
+      root?.removeEventListener("load", schedule, true);
+      images.disconnect();
+      root = next;
+      if (root) {
+        images.observe(root, { childList: true, subtree: true });
+        // load doesn't bubble, so it's caught on the way down
+        root.addEventListener("load", schedule, true);
+      }
+      observeImages();
+    };
+    const children = new MutationObserver(connect);
+    children.observe(element, { childList: true });
+    connect();
+    let live = true;
+    void customElements.whenDefined("zpl-preview").then(() => {
+      if (live) connect();
+    });
+
+    return () => {
+      live = false;
+      cancelAnimationFrame(frame);
+      sizes.disconnect();
+      images.disconnect();
+      children.disconnect();
+      root?.removeEventListener("load", schedule, true);
+    };
+  }, [area]);
+  return boxes;
 };
 
 const tickClass = (tick: Tick) =>
@@ -57,10 +162,15 @@ export default function Bench({
   unit,
   onCursor,
   onPick,
+  overlay,
+  quiet = false,
+  extent,
   labels = 1,
   children,
 }: BenchProps) {
   const [hover, setHover] = useState<Hover>();
+  const area = useRef<HTMLDivElement>(null);
+  const boxes = useLabelBoxes(area);
   const widthDots = Math.round(widthMm * dpmm);
   const heightDots = Math.round(heightMm * dpmm);
   // The sides in the ruler's unit
@@ -72,41 +182,29 @@ export default function Bench({
     ticksFor(longest, unit).filter((tick) => tick.at <= length + 1e-9);
   const tracking = Boolean(onCursor || onPick);
 
-  /** The label image under the pointer, inside <zpl-preview>'s shadow root */
+  /** The label under the pointer, and where on it */
   const locate = (event: MouseEvent<HTMLDivElement>): Hover | undefined => {
-    const image = event.nativeEvent
-      .composedPath()
-      .find(
-        (target): target is HTMLImageElement =>
-          target instanceof HTMLImageElement &&
-          target.getAttribute("part") === "label"
-      );
-    if (!image?.naturalWidth) return undefined;
-    const rect = image.getBoundingClientRect();
-    const area = event.currentTarget.getBoundingClientRect();
-    const fx = Math.min(
-      Math.max((event.clientX - rect.left) / rect.width, 0),
-      1
-    );
-    const fy = Math.min(
-      Math.max((event.clientY - rect.top) / rect.height, 0),
-      1
-    );
-    const labels = [...(image.parentElement?.children ?? [])];
+    const origin = event.currentTarget.getBoundingClientRect();
+    const px = event.clientX - origin.left;
+    const py = event.clientY - origin.top;
+    const label = labelAt(boxes, px, py);
+    const box = label === undefined ? undefined : boxes[label];
+    if (label === undefined || !box?.dotsWide || !box.dotsHigh) {
+      return undefined;
+    }
+    const fx = Math.min(Math.max((px - box.left) / box.width, 0), 1);
+    const fy = Math.min(Math.max((py - box.top) / box.height, 0), 1);
     return {
-      x: Math.min(Math.floor(fx * image.naturalWidth), image.naturalWidth - 1),
-      y: Math.min(
-        Math.floor(fy * image.naturalHeight),
-        image.naturalHeight - 1
-      ),
-      label: Math.max(labels.indexOf(image), 0),
+      x: Math.min(Math.floor(fx * box.dotsWide), box.dotsWide - 1),
+      y: Math.min(Math.floor(fy * box.dotsHigh), box.dotsHigh - 1),
+      label,
       fx,
       fy,
       box: {
-        left: rect.left - area.left,
-        top: rect.top - area.top,
-        width: rect.width,
-        height: rect.height,
+        left: box.left,
+        top: box.top,
+        width: box.width,
+        height: box.height,
       },
     };
   };
@@ -155,6 +253,16 @@ export default function Bench({
                 )}
               </span>
             ))}
+            {extent && (
+              <span
+                className="extent"
+                style={{
+                  left: `${(extent.x / widthDots) * 100}%`,
+                  width: `${(extent.width / widthDots) * 100}%`,
+                }}
+                aria-hidden="true"
+              />
+            )}
             {hover && (
               <span
                 className="marker"
@@ -187,6 +295,16 @@ export default function Bench({
                     )}
                   </span>
                 ))}
+                {extent?.label === index && (
+                  <span
+                    className="extent"
+                    style={{
+                      top: `${(extent.y / heightDots) * 100}%`,
+                      height: `${(extent.height / heightDots) * 100}%`,
+                    }}
+                    aria-hidden="true"
+                  />
+                )}
                 {hover?.label === index && (
                   <span
                     className="marker"
@@ -198,7 +316,8 @@ export default function Bench({
             ))}
           </div>
           <div
-            className={`labels${tracking ? " tracking" : ""}`}
+            ref={area}
+            className={`labels${tracking && !overlay ? " tracking" : ""}`}
             onPointerMove={tracking ? move : undefined}
             onPointerDown={tracking ? move : undefined}
             onPointerLeave={tracking ? leave : undefined}
@@ -212,7 +331,8 @@ export default function Bench({
             }
           >
             {children}
-            {hover && (
+            {overlay?.(boxes)}
+            {hover && !quiet && (
               <div
                 className="guides"
                 style={{

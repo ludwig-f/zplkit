@@ -203,6 +203,47 @@ describe("startDrag resize", () => {
   });
 });
 
+describe("startDrag bounds", () => {
+  test("a move gives the first field's bounds after the step", () => {
+    const { design, selection } = setup("^XA^FO20,30^GB10,10,10^FS^XZ");
+    const step = startDrag(
+      design,
+      selection,
+      0,
+      { x: 0, y: 0 },
+      { kind: "move" }
+    ).moveTo({ x: 5, y: 7 }, move);
+    expect(step.bounds).toEqual({ x: 25, y: 37, width: 10, height: 10 });
+  });
+
+  test("a resize gives the resized bounds, keeping text's shape", () => {
+    const { design, selection } = setup("^XA^FO10,10^A0N,30,30^FDHi^FS^XZ");
+    const old = design.labels[0].fields[0].bounds;
+    const step = startDrag(
+      design,
+      selection,
+      0,
+      { x: old.x + old.width, y: old.y + old.height },
+      { kind: "resize", handle: "se" }
+    ).moveTo({ x: old.x + old.width, y: old.y + old.height * 2 }, move);
+    expect(step.bounds?.x).toBe(old.x);
+    expect(step.bounds?.height).toBeCloseTo(old.height * 2);
+    expect(step.bounds?.width).toBeCloseTo(old.width * 2);
+  });
+
+  test("below the threshold there are none", () => {
+    const { design, selection } = setup("^XA^FO20,30^GB10,10,10^FS^XZ");
+    const step = startDrag(
+      design,
+      selection,
+      0,
+      { x: 0, y: 0 },
+      { kind: "move" }
+    ).moveTo({ x: 1, y: 0 }, move);
+    expect(step.bounds).toBeUndefined();
+  });
+});
+
 describe("startDrag box", () => {
   test("tracks the threshold but writes nothing", () => {
     const { design, selection } = setup("^XA^FO10,10^GB100,50,3^FS^XZ");
