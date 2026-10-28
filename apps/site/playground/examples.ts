@@ -119,9 +119,10 @@ const examples: {
 ^FO20,42^A0,56^SNBOX-001,1,Y^FS
 ^BY2
 ^FO20,110^BCN,60,N,N^SNBOX-001,1,Y^FS
-^FX SF counts through a mask, where A counts letters: A, B, C.
+^FX SF counts through a mask, where A counts letters: X, Y, Z,
+^FX then back around to A on the 4th box.
 ^FO300,16^A0,24^FDShelf^FS
-^FO300,42^A0,56^FDA^SFA,B^FS
+^FO300,42^A0,56^FDX^SFA,B^FS
 ^PQ6
 ^XZ`,
   },
