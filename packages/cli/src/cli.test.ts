@@ -1,4 +1,5 @@
 import { describe, test, expect } from "vitest";
+import { join } from "node:path";
 import { inflateRawSync } from "node:zlib";
 import { run } from "./cli.js";
 import type { Io } from "./cli.js";
@@ -127,9 +128,11 @@ describe("preview", () => {
   test("renders into a temporary folder and opens the PNG", async () => {
     const fake = fakeIo({ "label.zpl": label });
     expect(await run(["preview", "label.zpl"], fake.io)).toBe(0);
-    expect([...fake.written.keys()]).toEqual(["/tmp/zplkit-test/label.png"]);
-    expect(fake.opened).toEqual(["/tmp/zplkit-test/label.png"]);
-    expect(fake.out).toEqual(["/tmp/zplkit-test/label.png"]);
+    expect([...fake.written.keys()]).toEqual([
+      join("/tmp/zplkit-test", "label.png"),
+    ]);
+    expect(fake.opened).toEqual([join("/tmp/zplkit-test", "label.png")]);
+    expect(fake.out).toEqual([join("/tmp/zplkit-test", "label.png")]);
   });
 
   test("opens the first 20 labels, or --limit", async () => {
@@ -144,9 +147,9 @@ describe("preview", () => {
     const limited = fakeIo({ "box.zpl": serial });
     await run(["preview", "box.zpl", "--limit", "3"], limited.io);
     expect(limited.opened).toEqual([
-      "/tmp/zplkit-test/box-1.png",
-      "/tmp/zplkit-test/box-2.png",
-      "/tmp/zplkit-test/box-3.png",
+      join("/tmp/zplkit-test", "box-1.png"),
+      join("/tmp/zplkit-test", "box-2.png"),
+      join("/tmp/zplkit-test", "box-3.png"),
     ]);
   });
 
