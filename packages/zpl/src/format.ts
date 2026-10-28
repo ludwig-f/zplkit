@@ -1,4 +1,4 @@
-import { parse } from "@zplkit/core";
+import { parse } from "./parse.js";
 
 /** Commands that start a field, which runs until ^FS */
 const FIELD_STARTS = new Set(["FO", "FT"]);
@@ -7,10 +7,17 @@ const FIELD_STARTS = new Set(["FO", "FT"]);
 const TEXT_ENDS = new Set(["FD", "FV", "FX"]);
 
 /**
- * ZPL with one field or setting per line and a blank line between labels.
- * Printers ignore line breaks, so it prints the same labels.
+ * Lay out ZPL to read: one field or setting per line, and a blank line
+ * between labels. Printers ignore line breaks, so it prints the same labels.
+ *
+ * @example
+ * format("^XA^PW406^FO20,20^A0N,40^FDHi^FS^XZ");
+ * // ^XA
+ * // ^PW406
+ * // ^FO20,20^A0N,40^FDHi^FS
+ * // ^XZ
  */
-const formatZpl = (zpl: string): string => {
+const format = (zpl: string): string => {
   const starts = parse(zpl).commands.flatMap((command) =>
     command.span ? [command.span.start] : []
   );
@@ -54,4 +61,4 @@ const formatZpl = (zpl: string): string => {
   return `${before ? `${before}\n` : ""}${lines.join("\n")}\n`;
 };
 
-export { formatZpl };
+export { format };

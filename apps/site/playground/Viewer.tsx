@@ -7,6 +7,7 @@ import { PopoverClose } from "fumadocs-ui/components/ui/popover";
 import Editor from "./Editor";
 import ProblemList from "./ProblemList";
 import { Code, FileArchive, ImageDown, Link2, WrapText } from "lucide-react";
+import { format } from "@zplkit/core";
 import { convert } from "@zplkit/core/convert";
 import type { ConvertOptions } from "@zplkit/core/convert";
 import Bench from "./Bench";
@@ -14,7 +15,6 @@ import { useFonts } from "./fonts";
 import CodePanel from "./CodePanel";
 import examples from "./examples";
 import { analyze } from "./analyze";
-import { formatZpl } from "./format";
 import { decodeShare, encodeCodeShare, encodeShare } from "./share";
 import { useSettings } from "./settings";
 import {
@@ -406,8 +406,8 @@ export default function Viewer() {
   };
 
   /** One field or setting per line; undo brings the old text back */
-  const format = () => {
-    const formatted = formatZpl(zpl);
+  const formatZpl = () => {
+    const formatted = format(zpl);
     if (formatted === zpl) {
       setNotice("Already formatted");
     } else {
@@ -603,7 +603,7 @@ export default function Viewer() {
             <button
               type="button"
               className="view-button"
-              onClick={format}
+              onClick={formatZpl}
               title="One field or setting per line"
             >
               <WrapText aria-hidden="true" />

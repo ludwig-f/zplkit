@@ -1,10 +1,10 @@
 ---
 title: Parsing and linting
-description: parse() and lint() from @zplkit/core, and what they return.
+description: parse(), lint() and format() from @zplkit/core, and what they return.
 ---
 
 ```ts
-import { parse, lint } from "@zplkit/core";
+import { parse, lint, format } from "@zplkit/core";
 ```
 
 [Parsing ZPL](/docs/parsing) and [Linting](/docs/linting) explain how to use them, and every rule.
@@ -44,3 +44,19 @@ serialize(commands: Command[], options?: { minify?: boolean }): string
 ```
 
 Turns command nodes back into ZPL. Pass `{ minify: false }` to put each command on its own line.
+
+## format
+
+```ts
+format(zpl: string): string
+```
+
+Lays out ZPL to read: one field or setting per line, and a blank line between labels. Unlike `serialize()`, it keeps the ZPL as written, only moving line breaks, so the labels print the same.
+
+```ts
+format("^XA^PW406^FO20,20^A0N,40^FDHi^FS^XZ");
+// ^XA
+// ^PW406
+// ^FO20,20^A0N,40^FDHi^FS
+// ^XZ
+```
