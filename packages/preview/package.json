@@ -1,6 +1,6 @@
 {
   "name": "@zplkit/preview",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "<zpl-preview>, a web component that shows ZPL labels as images in any framework",
   "type": "module",
   "license": "MIT",

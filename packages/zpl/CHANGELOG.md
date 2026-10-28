@@ -1,5 +1,29 @@
 # Changelog
 
+## [2.1.0](https://github.com/ludwig-f/zplkit/compare/v2.0.0...v2.1.0) (2026-10-28)
+
+
+### Features
+
+* **core:** build ellipses, circles, serial numbers and text options ([f251790](https://github.com/ludwig-f/zplkit/commit/f251790bf8bae953e815f93fc42b092518418bb3))
+* **core:** warn when a label leaves settings on the printer ([e5eb7d0](https://github.com/ludwig-f/zplkit/commit/e5eb7d0d2666955e30b0b7ca2a922c8988c9ae41))
+* draw ellipses with ^GE ([2a1156a](https://github.com/ludwig-f/zplkit/commit/2a1156aa947f279c0ab0db0e6e1c4bc254dce874))
+* draw stored graphics with ^IM ([919f068](https://github.com/ludwig-f/zplkit/commit/919f0683f8d75e8138453666549193e9cc1eefd8))
+* fill in dates and times with ^FC ([b64be3f](https://github.com/ludwig-f/zplkit/commit/b64be3f45d9c05dcd4465e0e2773d8b2104391fc))
+* measure in millimeters or inches with ^MU ([753fc52](https://github.com/ludwig-f/zplkit/commit/753fc5229e6cf82b6c14248000a481b342deb096))
+* print mirror images with ^PM ([b320d29](https://github.com/ludwig-f/zplkit/commit/b320d291783a83b61599d5f6f8a89ff07e3d130d))
+* print text down, right to left or spaced out with ^FP ([ebb21fa](https://github.com/ludwig-f/zplkit/commit/ebb21fa9f369107b3ac38c918be7e2cdfb1b3f74))
+* render copies and serial numbers with ^PQ, ^SN and ^SF ([aa470bf](https://github.com/ludwig-f/zplkit/commit/aa470bfeae9f2a44df645a5a8f6ddbae3fdf6bd5))
+* shift labels with ^LS and ^LT ([ae249c2](https://github.com/ludwig-f/zplkit/commit/ae249c27970954a512f129db08e1a42e2e5d2f86))
+* wrap text in ^TB text blocks ([edd54ae](https://github.com/ludwig-f/zplkit/commit/edd54ae7a1ef4610bca19153860678fff9f0674f))
+
+
+### Bug Fixes
+
+* **core:** ignore spaces around parameters, as printers do ([84ecf20](https://github.com/ludwig-f/zplkit/commit/84ecf2099e4bf7afc17d980bfa7d6c60ef190c41))
+* **core:** keep labels in millimeters or inches as ZPL when converting ([0cef70e](https://github.com/ludwig-f/zplkit/commit/0cef70e3b6b5426309e8f00eb7b4d73d4f1c16af))
+* **render:** space single-row GS1 DataBar Expanded as printers do ([c0a47a2](https://github.com/ludwig-f/zplkit/commit/c0a47a2f0c69ed169e01099af99a6c6987c89d28))
+
 ## [2.0.0](https://github.com/ludwig-f/zplkit/compare/v1.0.5...v2.0.0) (2026-10-27)
 
 

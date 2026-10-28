@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/ludwig-f/zplkit/compare/preview-v0.1.0...preview-v0.2.0) (2026-10-28)
+
+
+### Features
+
+* **preview:** show copies and cap how many labels show ([a9f28ba](https://github.com/ludwig-f/zplkit/commit/a9f28bae620aedbc8857771b74342ea4193d9527))
+
 ## 0.1.0 (2026-10-27)
 
 
