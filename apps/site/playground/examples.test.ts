@@ -3,9 +3,7 @@ import { countLabels } from "@zplkit/render";
 import { analyze } from "./analyze";
 import examples from "./examples";
 
-const clean = examples.filter((example) => example.name !== "Common mistakes");
-
-test.each(clean.map((example) => [example.name, example]))(
+test.each(examples.map((example) => [example.name, example]))(
   "%s prints without problems",
   (_name, example) => {
     expect(analyze(example.zpl, { dpmm: example.dpmm })).toStrictEqual([]);
