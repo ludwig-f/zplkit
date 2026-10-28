@@ -5,6 +5,7 @@
  * baseline.
  */
 import { encodeBars, encodeMatrix, encodeMaxiCode } from "./barcodes/bwip.js";
+import { allMasks, bestMasked } from "./barcodes/qr-mask.js";
 import { encodeCode11 } from "./barcodes/code11.js";
 import { encodeCode128 } from "./barcodes/code128.js";
 import { encodeCode39 } from "./barcodes/code39.js";
@@ -690,7 +691,7 @@ const encode = (barcode: Barcode, dpmm: number): Linear | Matrix | Postal => {
       const { eclevel, text } = qrData(data, symbology.errorCorrection ?? "Q");
       return {
         kind: "matrix",
-        ...matrix("qrcode", text, [`eclevel=${eclevel}`]),
+        ...bestMasked(allMasks(matrix("qrcode", text, [`eclevel=${eclevel}`]))),
         moduleSize: size,
         shift: { origin: 10, typeset: 3 * size },
       };
