@@ -15,7 +15,8 @@ type LintRule =
   | "databar-parentheses"
   | "barcode-without-data"
   | "unknown-command"
-  | "printer-command-in-label";
+  | "printer-command-in-label"
+  | "setting-kept-after-label";
 
 /** A problem lint() found */
 type LintDiagnostic = {
@@ -192,6 +193,34 @@ const lint = (
     });
   };
 
+  /**
+   * Settings the printer keeps for the labels after, last set in this
+   * format, and whether a field was drawn: a format without fields only
+   * sets the printer up
+   */
+  let kept = new Map<string, { index: number; isDefault: boolean }>();
+  let hasFields = false;
+  const keptAdvice: Record<string, string> = {
+    "^PM": "Set it once with PrinterSetup.setMirror() instead.",
+    "^LT": "Set it once with PrinterSetup.setLabelTop() instead.",
+    "^LS":
+      "Add ^LS0 after the last field, or set it once with PrinterSetup.setLabelShift().",
+    "^MU": "Add ^MUD after the last field to go back to dots.",
+  };
+  const reportKept = () => {
+    if (!hasFields) return;
+    const settings = [...kept].sort(([, a], [, b]) => a.index - b.index);
+    for (const [code, { index, isDefault }] of settings) {
+      if (isDefault) continue;
+      report(
+        index,
+        "setting-kept-after-label",
+        "warning",
+        `${code} stays on for the labels printed after this one, also from other software, until it's set again. ${keptAdvice[code]}`
+      );
+    }
+  };
+
   const closeField = () => {
     if (field?.barcode !== undefined && !field.hasData) {
       report(
@@ -207,6 +236,8 @@ const lint = (
   commands.forEach((command, index) => {
     // Label structure
     if (command.type === "StartFormat") {
+      kept = new Map();
+      hasFields = false;
       formatStart = index;
       hasStarted = true;
       reportedOutside = false;
@@ -258,6 +289,7 @@ const lint = (
     }
 
     if (command.type === "EndFormat") {
+      reportKept();
       if (field) {
         report(
           field.index,
@@ -306,9 +338,26 @@ const lint = (
         break;
       case "MeasurementUnits":
         unit = command.unit ?? unit;
+        if (command.unit) {
+          kept.set("^MU", { index, isDefault: command.unit === "D" });
+        }
+        break;
+      case "PrintMirror":
+        kept.set("^PM", { index, isDefault: !command.mirror });
+        break;
+      case "LabelShift":
+        if (command.shift !== undefined) {
+          kept.set("^LS", { index, isDefault: command.shift === 0 });
+        }
+        break;
+      case "LabelTop":
+        if (command.offset !== undefined) {
+          kept.set("^LT", { index, isDefault: command.offset === 0 });
+        }
         break;
       case "FieldOrigin":
       case "FieldTypeset": {
+        hasFields = true;
         if (field) {
           report(
             field.index,
