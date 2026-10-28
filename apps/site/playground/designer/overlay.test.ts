@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { designFor } from "./fields";
 import {
   captionOf,
+  captionSide,
   cropsFor,
   describeSelection,
   extentOf,
@@ -244,5 +245,25 @@ describe("extentOf", () => {
       extentOf(design, { keys: fields.map((f) => f.key), label: 0 })
     ).toEqual({ label: 0, x: 10, y: 10, width: 240, height: 140 });
     expect(extentOf(design, { keys: [], label: 0 })).toBeUndefined();
+  });
+});
+
+describe("captionSide", () => {
+  test("above the field, like the tag", () => {
+    expect(captionSide({ top: 100, labelTop: 0, selected: false })).toBe(
+      "above"
+    );
+  });
+
+  test("below when there's no room above the label's top", () => {
+    expect(captionSide({ top: 10, labelTop: 0, selected: false })).toBe(
+      "below"
+    );
+  });
+
+  test("below when the tag of a selected field is above", () => {
+    expect(captionSide({ top: 100, labelTop: 0, selected: true })).toBe(
+      "below"
+    );
   });
 });

@@ -172,6 +172,25 @@ const captionOf = (design: Design, field: DesignField): string =>
     ? ""
     : `${barcodeCommand(design, field) ?? kindOf(design, field)} · not drawn`;
 
+/** How much room a caption or tag takes above a field's outline, in px */
+const CAPTION_ROOM = 20;
+
+/**
+ * Where a not-drawn field's caption goes, never over the field: above its
+ * outline like the tag, or below when the label's top leaves no room or a
+ * selected field's tag is above. `top` and `labelTop` are in px.
+ */
+const captionSide = ({
+  top,
+  labelTop,
+  selected,
+}: {
+  top: number;
+  labelTop: number;
+  selected: boolean;
+}): "above" | "below" =>
+  selected || top - CAPTION_ROOM < labelTop ? "below" : "above";
+
 /** The keys of the fields with a problem, by where each problem starts */
 const problemKeys = (
   design: Design,
@@ -304,6 +323,7 @@ const extentOf = (
 
 export {
   captionOf,
+  captionSide,
   cropsFor,
   describeSelection,
   extentOf,

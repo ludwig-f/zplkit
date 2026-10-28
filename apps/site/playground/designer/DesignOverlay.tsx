@@ -31,6 +31,7 @@ import {
 import { alignEdit, alignedEdges, keyEdit } from "./keys";
 import {
   captionOf,
+  captionSide,
   cropsFor,
   describeSelection,
   guideName,
@@ -418,6 +419,9 @@ export default function DesignOverlay({
   const pointerUp = (event: PointerEvent<HTMLDivElement>) => {
     const drag = active.current;
     if (!drag || drag.pointer !== event.pointerId) return;
+    // Finished before letting go, so a lostpointercapture fired right away
+    // finds no drag
+    active.current = undefined;
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
@@ -508,13 +512,24 @@ export default function DesignOverlay({
       if (isHovered) classes.push("hovered");
       if (isSelected) classes.push("selected");
       const showHandles = isSelected && single && !dragging;
+      const placed = outline(label, rect);
       drawn.push(
         <div
           key={`${label}-${field.key}`}
           className={classes.join(" ")}
-          style={place(outline(label, rect))}
+          style={place(placed)}
         >
-          {caption && <span className="caption">{caption}</span>}
+          {caption && (
+            <span
+              className={`caption ${captionSide({
+                top: placed.y,
+                labelTop: box.top,
+                selected: isSelected && single && !dragging,
+              })}`}
+            >
+              {caption}
+            </span>
+          )}
           {warn && <span className="diamond" />}
           {isSelected && single && !dragging && (
             <span className="tag">{tagOf(design, field)}</span>
