@@ -28,7 +28,10 @@ suite("entry points", () => {
   });
 
   test("the internal entry is for zplkit's own packages", () => {
-    expect(Object.keys(internal)).toStrictEqual(["measuredFields"]);
+    expect(Object.keys(internal)).toStrictEqual([
+      "editParameters",
+      "measuredFields",
+    ]);
   });
 
   test("the image converter has its own Node-only entry", () => {
