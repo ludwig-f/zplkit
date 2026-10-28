@@ -20,6 +20,11 @@
       "release-type": "node",
       "package-name": "@zplkit/print",
       "initial-version": "0.1.0"
+    },
+    "packages/cli": {
+      "release-type": "node",
+      "package-name": "@zplkit/cli",
+      "initial-version": "0.1.0"
     }
   }
 }
