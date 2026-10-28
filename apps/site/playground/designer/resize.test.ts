@@ -55,6 +55,25 @@ describe("resizeField", () => {
     ).toBe("^XA^FO10,10^A0N,80,60^FDHi^FS^XZ");
   });
 
+  test("moves a ^FT field resized downward", () => {
+    expect(
+      resize("^XA^FT10,60^A0N,40,30^FDHi^FS^XZ", (b) => ({
+        ...b,
+        height: b.height + 20,
+      }))
+    ).toMatch(/^\^XA\^FT10,80\^A0N,\d+,\d+\^FDHi/);
+  });
+
+  test("text doesn't shrink below 10 dots", () => {
+    expect(
+      resize("^XA^FO10,10^A0N,40,30^FDHi^FS^XZ", (b) => ({
+        ...b,
+        width: 1,
+        height: 1,
+      }))
+    ).toBe("^XA^FO10,10^A0N,10,10^FDHi^FS^XZ");
+  });
+
   test("text without its own font doesn't resize", () => {
     const design = designFor("^XA^CF0,40^FO10,10^FDHi^FS^XZ", options);
     const field = design.labels[0].fields[0];

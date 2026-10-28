@@ -47,8 +47,14 @@ const resizeHandles = (design: Design, field: DesignField): Handles =>
   sizing(design, field)?.handles ?? "none";
 
 /** A size in dots as written in the field's ^MU units: whole dots, or 2 decimals */
-const inUnits = (dots: number, perUnit: number): number =>
-  Math.max(perUnit === 1 ? Math.round(dots) : round(dots / perUnit), 1);
+const inUnits = (dots: number, perUnit: number, min = 1): number =>
+  Math.max(
+    perUnit === 1 ? Math.round(dots) : round(dots / perUnit),
+    perUnit === 1 ? min : round(min / perUnit)
+  );
+
+/** The smallest text ^A can print, in dots */
+const MIN_TEXT = 10;
 
 /**
  * Resize a field to new bounds on screen, moving it if its top or left moved
@@ -71,7 +77,7 @@ const resizeField = (
   const sizes: Record<number, number> = {};
   /** A written parameter times how much bigger the bounds got */
   const scaled = (value: number, ratio: number): number =>
-    inUnits(value * perUnit * ratio, perUnit);
+    inUnits(value * perUnit * ratio, perUnit, MIN_TEXT);
 
   switch (command.type) {
     case "GraphicBox":
@@ -125,13 +131,15 @@ const resizeField = (
     changes.push(editParameters(design.zpl, command, sizes));
   }
 
-  // The origin sits on the screen's top left, unless the label is turned over
+  // The origin sits on the screen's top left, unless the label is turned over.
+  // ^FT puts it on the baseline, at the bottom, so that edge is the one to follow.
+  const origin = design.commands[field.commands[0]];
   const flipX = Boolean(label.mirrored) !== Boolean(label.inverted);
-  const flipY = Boolean(label.inverted);
+  const bottom = Boolean(label.inverted) !== (origin.type === "FieldTypeset");
   const dx = flipX
     ? bounds.x + bounds.width - (old.x + old.width)
     : bounds.x - old.x;
-  const dy = flipY
+  const dy = bottom
     ? bounds.y + bounds.height - (old.y + old.height)
     : bounds.y - old.y;
   if (dx !== 0 || dy !== 0) {
