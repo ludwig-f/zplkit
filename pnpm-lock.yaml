@@ -142,6 +142,28 @@ importers:
         specifier: ^5.0.5
         version: 5.0.5(@types/node@22.20.5)(happy-dom@14.12.3)(vite@8.3.5(@types/node@22.20.5)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.1))
 
+  packages/cli:
+    dependencies:
+      '@zplkit/core':
+        specifier: workspace:^
+        version: link:../zpl
+      '@zplkit/print':
+        specifier: workspace:^
+        version: link:../print
+      '@zplkit/render':
+        specifier: workspace:^
+        version: link:../render
+    devDependencies:
+      '@types/node':
+        specifier: ^22.20.5
+        version: 22.20.5
+      typescript:
+        specifier: ~5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^1.6.1
+        version: 1.6.1(@types/node@22.20.5)(happy-dom@14.12.3)(lightningcss@1.33.0)
+
   packages/preview:
     dependencies:
       '@zplkit/render':

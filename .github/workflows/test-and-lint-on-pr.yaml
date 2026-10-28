@@ -21,3 +21,39 @@ jobs:
       # The supported commands table is generated from the code
       - run: pnpm commands --check
       - run: pnpm test
+
+  # The zplkit command on each platform people run it on
+  cli:
+    strategy:
+      # Each platform reports, even when another fails
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter "./packages/*" build
+      - run: pnpm --filter @zplkit/cli test
+      - name: Run zplkit on a label
+        working-directory: ${{ runner.temp }}
+        run: |
+          zplkit="$GITHUB_WORKSPACE/packages/cli/bin/zplkit.js"
+          printf '^XA\r\n^PW406^LL203\r\n^FO20,20^A0N,40^SN001,1,Y^FS\r\n^PQ3\r\n^XZ\r\n' > box.zpl
+          node "$zplkit" render box.zpl
+          test -s box-3.png
+          node "$zplkit" lint box.zpl
+          node "$zplkit" convert box.zpl | grep -q "build("
+          node "$zplkit" view box.zpl --no-open | grep -q "^https://zplkit.fingal.dev/viewer#"
+          cat box.zpl | node "$zplkit" render - -o stdin.png
+          test -s stdin-1.png
