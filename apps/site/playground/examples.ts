@@ -117,12 +117,8 @@ const examples: {
 ^FX SN counts the number at the end: BOX-001, BOX-002 and on.
 ^FO20,16^A0,24^FDBox^FS
 ^FO20,42^A0,56^SNBOX-001,1,Y^FS
-^BY2
-^FO20,110^BCN,60,N,N^SNBOX-001,1,Y^FS
-^FX SF counts through a mask, where A counts letters: X, Y, Z,
-^FX then back around to A on the 4th box.
-^FO300,16^A0,24^FDShelf^FS
-^FO300,42^A0,56^FDX^SFA,B^FS
+^BY3
+^FO20,110^BCN,70,N,N^SNBOX-001,1,Y^FS
 ^PQ6
 ^XZ`,
   },
