@@ -62,6 +62,11 @@ const commandCases: [Command, string][] = [
     "^IMR:LOGO.GRF",
   ],
   [{ type: "ImageMove", name: "LOGO" }, "^IMLOGO"],
+  [{ type: "FieldClock", primary: "%" }, "^FC%"],
+  [
+    { type: "FieldClock", primary: "%", secondary: "{", third: "#" },
+    "^FC%,{,#",
+  ],
   [
     { type: "TextBlock", orientation: "N", width: 300, height: 80 },
     "^TBN,300,80",

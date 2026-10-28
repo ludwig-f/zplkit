@@ -607,6 +607,22 @@ describe("renderLabels", () => {
     });
   });
 
+  describe("^FC", () => {
+    const at = (body: string) =>
+      renderLabels(`^XA^PW203^FO10,10^A0N,30${body}^FS^XZ`, {
+        ...size,
+        clock: new Date(2026, 9, 28, 7, 38),
+      })[0].ink;
+
+    test("fills in clock codes from the clock option", () => {
+      expect(at("^FC%^FD%Y-%m-%d")).toStrictEqual(at("^FD2026-10-28"));
+    });
+
+    test("prints codes as they are without ^FC", () => {
+      expect(at("^FD%Y")).not.toStrictEqual(at("^FD2026"));
+    });
+  });
+
   describe("^IM", () => {
     const logo = "~DGR:LOGO.GRF,4,2,F00F0FF0";
     const at = (body: string) =>

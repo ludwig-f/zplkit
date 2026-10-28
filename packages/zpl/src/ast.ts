@@ -80,6 +80,14 @@ type TextBlock = Node<
   "TextBlock",
   { orientation?: Orientation; width?: number; height?: number }
 >;
+/**
+ * `^FCa,b,c`: clock codes in the field's data, like %Y-%m-%d, are filled in
+ * from the printer's clock. a, b and c are the characters that start them.
+ */
+type FieldClock = Node<
+  "FieldClock",
+  { primary?: string; secondary?: string; third?: string }
+>;
 /** `^LRa` */
 type LabelReverse = Node<"LabelReverse", { reverse: boolean }>;
 /** `^CIa` */
@@ -672,6 +680,7 @@ type Command =
   | FieldParameter
   | TextBlock
   | ImageMove
+  | FieldClock
   | SerializationField
   | ChangeEncoding
   | DefaultFont
@@ -756,6 +765,7 @@ export type {
   FieldParameter,
   TextBlock,
   ImageMove,
+  FieldClock,
   SerializationField,
   ChangeEncoding,
   DefaultFont,

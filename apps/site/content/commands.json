@@ -452,8 +452,8 @@
       "code": "^FC",
       "name": "Field Clock (or Real Time Clock)",
       "category": "Fields",
-      "support": "no",
-      "drawn": false,
+      "support": "yes",
+      "drawn": true,
       "note": ""
     },
     {

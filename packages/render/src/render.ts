@@ -38,6 +38,11 @@ type RenderOptions = {
    * previews of many serialized labels
    */
   limit?: number;
+  /**
+   * The printer's clock, for dates and times in ^FC fields, read in local
+   * time. Now if not given.
+   */
+  clock?: Date;
 };
 
 type TextElement = Extract<Element, { kind: "text" }>;
@@ -228,6 +233,7 @@ const renderLabels = (
     font0: options.font0,
     dpmm: options.dpmm,
     limit: options.limit,
+    clock: options.clock,
   }).map((label) => {
     const printWidth = Math.min(width, label.printWidth ?? width);
     const printed = new Raster(printWidth, height, sampling);

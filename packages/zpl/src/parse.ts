@@ -242,6 +242,12 @@ const parsers: Record<string, CommandParser> = {
       extension: match[3],
     };
   }),
+  "^FC": withParams("^FC", (p) => ({
+    type: "FieldClock",
+    primary: p.string(0),
+    secondary: p.string(1),
+    third: p.string(2),
+  })),
   "^TB": withParams("^TB", (p) => ({
     type: "TextBlock",
     orientation: p.oneOf(0, "orientation", orientations),
