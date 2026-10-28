@@ -607,6 +607,32 @@ describe("renderLabels", () => {
     });
   });
 
+  describe("^IM", () => {
+    const logo = "~DGR:LOGO.GRF,4,2,F00F0FF0";
+    const at = (body: string) =>
+      renderLabels(`${logo}^XA^PW203${body}^XZ`, size)[0].ink;
+
+    test("draws a stored graphic like ^XG at its size", () => {
+      expect(at("^FO10,10^IMR:LOGO.GRF^FS")).toStrictEqual(
+        at("^FO10,10^XGR:LOGO.GRF,1,1^FS")
+      );
+    });
+
+    test("finds the graphic without a device or extension", () => {
+      expect(at("^FO10,10^IMLOGO^FS")).toStrictEqual(
+        at("^FO10,10^XGR:LOGO.GRF,1,1^FS")
+      );
+    });
+
+    test("^FT places its bottom-left corner", () => {
+      expect(
+        dots(
+          renderLabels(`${logo}^XA^PW203^FT10,20^IMR:LOGO.GRF^FS^XZ`, size)[0]
+        ).y
+      ).toStrictEqual([18, 19]);
+    });
+  });
+
   describe("reverse printing", () => {
     test("^FR inverts what is under the field", () => {
       const raster = render("^FO10,10^GB20,10,10^FS^FO20,10^FR^GB20,10,10^FS");

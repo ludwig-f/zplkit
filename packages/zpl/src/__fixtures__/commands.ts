@@ -58,6 +58,11 @@ const commandCases: [Command, string][] = [
   [{ type: "LabelShift", shift: 40 }, "^LS40"],
   [{ type: "FieldParameter", direction: "V", gap: 4 }, "^FPV,4"],
   [
+    { type: "ImageMove", device: "R", name: "LOGO", extension: "GRF" },
+    "^IMR:LOGO.GRF",
+  ],
+  [{ type: "ImageMove", name: "LOGO" }, "^IMLOGO"],
+  [
     { type: "TextBlock", orientation: "N", width: 300, height: 80 },
     "^TBN,300,80",
   ],
