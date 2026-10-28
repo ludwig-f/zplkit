@@ -2375,7 +2375,8 @@
         "values": "-9999 to 9999",
         "default": "0"
       }
-    ]
+    ],
+    "example": "^XA\n^LS30\n^FO80,50^A0N,30,30^FDShifted 30 dots left^FS\n^XZ"
   },
   "^LT": {
     "summary": "Moves the whole label image up or down relative to the label's top edge. Corrects vertical alignment without changing field positions.",
@@ -2386,7 +2387,8 @@
         "description": "Offset, in dot rows",
         "values": "-120 to 120 on most printers (negative moves the format toward the top)"
       }
-    ]
+    ],
+    "example": "^XA\n^LT30\n^FO50,20^A0N,30,30^FDMoved 30 dots down^FS\n^XZ"
   },
   "^MC": {
     "summary": "Controls whether the label image is cleared after printing. With ^MCN the image is kept, so the next label only redraws its ^FV fields.",
@@ -2514,7 +2516,8 @@
         "name": "c",
         "description": "Desired resolution, in dpi"
       }
-    ]
+    ],
+    "example": "^XA\n^MUM\n^FO5,5^GB40,15,0.5^FS\n^FO8,9^A0N,4,4^FDMillimeters^FS\n^XZ"
   },
   "^MW": {
     "summary": "Turns the printhead cold warning on or off.",
@@ -3053,6 +3056,27 @@
         "default": "Last permanently saved value"
       }
     ]
+  },
+  "^TB": {
+    "summary": "Wraps a field's text in a block of a given width and height. Unlike ^FB, text that doesn't fit the block's height isn't printed.",
+    "syntax": "^TBa,b,c",
+    "params": [
+      {
+        "name": "a",
+        "description": "Block orientation",
+        "values": "N normal, R rotated 90°, I inverted 180°, B read from bottom up",
+        "default": "Orientation of ^FW"
+      },
+      {
+        "name": "b",
+        "description": "Block width, in dots"
+      },
+      {
+        "name": "c",
+        "description": "Block height, in dots"
+      }
+    ],
+    "example": "^XA\n^FO50,50^TBN,300,80^A0N,30,30^FDText that wraps in a block and is cut off where the block ends^FS\n^XZ"
   },
   "^TO": {
     "summary": "Copies an object, such as a graphic or format, from one memory device to another. Wildcards (*) are allowed.",
