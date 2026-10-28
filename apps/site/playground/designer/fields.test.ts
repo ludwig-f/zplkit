@@ -22,6 +22,17 @@ describe("fields", () => {
     expect(fieldAt(label, 300, 150)).toBeUndefined();
   });
 
+  test("Alt-click selects what's underneath", () => {
+    const { labels } = designFor(
+      "^XA^FO10,10^GB100,100,100^FS^FO50,50^GB100,100,100^FS^XZ",
+      options
+    );
+    const [label] = labels;
+    const [lower, top] = label.fields;
+    expect(fieldAt(label, 60, 60, top)).toBe(lower);
+    expect(fieldAt(label, 60, 60, lower)).toBe(top);
+  });
+
   test("selects empty fields near their position", () => {
     const { labels } = designFor("^XA^FO30,40^A0N,30^FD^FS^XZ", options);
     expect(fieldAt(labels[0], 32, 42)).toBe(labels[0].fields[0]);

@@ -36,12 +36,17 @@ const target = ({ bounds }: DesignField): Rect =>
       }
     : bounds;
 
-/** The topmost field under a point on a label, in dots */
+/**
+ * The topmost field under a point on a label, in dots. With `under`, the next
+ * field below that one at the point, or the topmost again after the lowest.
+ */
 const fieldAt = (
   label: DesignLabel,
   x: number,
-  y: number
+  y: number,
+  under?: DesignField
 ): DesignField | undefined => {
+  const hits: DesignField[] = [];
   for (let i = label.fields.length - 1; i >= 0; i--) {
     const rect = target(label.fields[i]);
     if (
@@ -50,10 +55,11 @@ const fieldAt = (
       y >= rect.y &&
       y < rect.y + rect.height
     ) {
-      return label.fields[i];
+      hits.push(label.fields[i]);
     }
   }
-  return undefined;
+  const at = under ? hits.indexOf(under) : -1;
+  return hits[at + 1] ?? hits[0];
 };
 
 /** Fields whose bounds overlap a rectangle, like a selection box */

@@ -154,6 +154,15 @@ describe("duplicateFields", () => {
 });
 
 describe("deleteFields", () => {
+  test("deletes a barcode command zplkit doesn't model with its field", () => {
+    const zpl = "^XA^FO10,10^B4N,20^FDAB^FS^FO10,60^A0N,30^FDx^FS^XZ";
+    const design = designFor(zpl, options);
+    const key = design.labels[0].fields[0].key;
+    expect(apply(zpl, deleteFields(design, [key]))).toBe(
+      "^XA^FO10,60^A0N,30^FDx^FS^XZ"
+    );
+  });
+
   test("deletes a field and nothing else", () => {
     const zpl = "^XA^BY3^FO10,10^BCN,60^FD1^FS^FO10,90^BCN,60^FD2^FS^XZ";
     const design = designFor(zpl, options);

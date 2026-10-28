@@ -84,6 +84,15 @@ const FIELD_SCOPED = new Set<Command["type"]>([
   "Comment",
 ]);
 
+/**
+ * Whether a command is a barcode zplkit doesn't model: raw ^B and a letter or
+ * digit, except ^BY, which sets what later barcodes use
+ */
+const isRawBarcode = ({ type, zpl }: Command & { zpl?: string }): boolean =>
+  type === "Raw" &&
+  /^.B[A-Za-z0-9]/.test(zpl ?? "") &&
+  !/^.BY/i.test(zpl ?? "");
+
 /** The first and last character a field's commands take, if it has any */
 const rangeOf = (
   design: Design,
@@ -234,9 +243,10 @@ const deleteFields = (design: Design, keys: number[]): TextChange[] =>
     const changes: TextChange[] = [];
     // Whether the last command was removed, so this one joins its change
     let joined = false;
-    for (const { type, span } of design.commands) {
+    for (const command of design.commands) {
+      const { type, span } = command;
       if (!span || span.start < range.from || span.end > range.to) continue;
-      if (!FIELD_SCOPED.has(type)) {
+      if (!FIELD_SCOPED.has(type) && !isRawBarcode(command)) {
         joined = false;
       } else if (joined) {
         changes[changes.length - 1].to = span.end;
