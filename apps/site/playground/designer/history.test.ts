@@ -105,3 +105,12 @@ describe("designerHistory", () => {
     expect(undoOnce(state).doc.toString()).toBe("^FO20,30");
   });
 });
+
+describe("designerEdit dispatched through a state, as the editor's apply does", () => {
+  it("keeps one undo step for a two-step drag", () => {
+    let state = start("^FO20,30");
+    state = step(step(state, 7), 7);
+    expect(state.doc.toString()).toBe("^FO22,30");
+    expect(undoOnce(state).doc.toString()).toBe("^FO20,30");
+  });
+});
