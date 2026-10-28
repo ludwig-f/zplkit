@@ -30,6 +30,15 @@ const zpl = build(
 | [`@zplkit/mcp`](./packages/mcp) | An MCP server for AI assistants: render labels and see them, lint, convert and look up commands |
 | [`@zplkit/cli`](./packages/cli) | The `zplkit` command: render, lint, convert, view and print labels from a terminal |
 
+
+### Claude Code
+
+The zplkit plugin gives Claude Code the MCP server and a skill for writing and checking labels:
+
+```
+/plugin install zplkit --marketplace ludwig-f/zplkit
+```
+
 ## Contributing
 
 Bug reports, ideas and pull requests are welcome. [CONTRIBUTING.md](./CONTRIBUTING.md) explains how to set up the repository and run the tests.
