@@ -3,5 +3,7 @@
   "packages/render": "0.2.0",
   "packages/preview": "0.2.0",
   "packages/print": "0.1.0",
-  "packages/cli": "0.1.0"
+  "packages/cli": "0.1.0",
+  "packages/mcp": "0.0.0",
+  "plugins/zplkit": "0.0.0"
 }
