@@ -86,4 +86,22 @@ describe("designerHistory", () => {
     expect(state.doc.toString()).toBe("Abcd");
     expect(undoOnce(state).doc.toString()).toBe("A");
   });
+
+  it("a drag that moves the selection is still one undo step", () => {
+    let state = start("^FO20,30");
+    for (let i = 0; i < 2; i++) {
+      const text = state.doc.toString();
+      const at = text.indexOf("^FO") + 3;
+      const value = parseInt(text.slice(at), 10);
+      state = state.update(
+        designerEdit(
+          [{ from: at, to: at + String(value).length, insert: `${value + 1}` }],
+          { drag: 1, selection: { anchor: 0, head: 3 } }
+        )
+      ).state;
+    }
+    expect(state.doc.toString()).toBe("^FO22,30");
+    expect(state.selection.main).toMatchObject({ anchor: 0, head: 3 });
+    expect(undoOnce(state).doc.toString()).toBe("^FO20,30");
+  });
 });

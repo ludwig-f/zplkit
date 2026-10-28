@@ -83,4 +83,41 @@ describe("moveFields", () => {
     expect(changes).toHaveLength(1);
     expect(result).toBe("^XA\n^FO 21,30 ^GB10,10,10^FS\n^XZ");
   });
+
+  test("writes whole dots", () => {
+    expect(moveAll("^XA^FO20,30^GB10,10,10^FS^XZ", 3.5, 0).result).toBe(
+      "^XA^FO24,30^GB10,10,10^FS^XZ"
+    );
+  });
+
+  test("stops at the label's left and top edges", () => {
+    expect(moveAll("^XA^FO20,30^GB10,10,10^FS^XZ", -50, -40).result).toBe(
+      "^XA^FO0,0^GB10,10,10^FS^XZ"
+    );
+    expect(moveAll("^XA^GB10,10,10^FS^XZ", -30, 5).result).toBe(
+      "^XA^FO0,5^GB10,10,10^FS^XZ"
+    );
+  });
+
+  test("fills in a ^FT's missing values from where it was drawn", () => {
+    const zpl = "^XA^FO20,20^A0N,30^FDa^FS^FT^A0N,30^FDb^FS^XZ";
+    const design = designFor(zpl, options);
+    const [, field] = design.labels[0].fields;
+    const result = apply(zpl, moveFields(design, [field.key], 5, 5));
+    expect(result).toBe("^XA^FO20,20^A0N,30^FDa^FS^FT5,5^A0N,30^FDb^FS^XZ");
+
+    // A visible field: drawn where it was, plus the move
+    const partial = "^XA^FT,60^A0N,30^FDb^FS^XZ";
+    const before = designFor(partial, options).labels[0].fields[0].bounds;
+    const { result: moved } = moveAll(partial, 5, 5);
+    expect(moved).toBe("^XA^FT5,65^A0N,30^FDb^FS^XZ");
+    const after = designFor(moved, options).labels[0].fields[0].bounds;
+    expect(after).toEqual({ ...before, x: before.x + 5, y: before.y + 5 });
+  });
+
+  test("keeps a ^FT's written value when only the other moves", () => {
+    expect(moveAll("^XA^FT,60^A0N,30^FDb^FS^XZ", 4, 0).result).toBe(
+      "^XA^FT4,60^A0N,30^FDb^FS^XZ"
+    );
+  });
 });

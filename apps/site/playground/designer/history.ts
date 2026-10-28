@@ -37,19 +37,23 @@ const designerHistory = (): Extension => [
 /**
  * A transaction applying designer changes. `drag` names the drag it belongs
  * to; transactions with the same drag join one undo step, and a new drag
- * starts a new one.
+ * starts a new one. `selection`, if given, moves the editor's selection in
+ * the same transaction, so it doesn't split the step.
  */
 const designerEdit = (
   changes: TextChange[],
-  options: { drag?: number }
+  options: { drag?: number; selection?: { anchor: number; head?: number } }
 ): TransactionSpec => {
-  const { drag } = options;
+  const { drag, selection } = options;
+  const spec: TransactionSpec = selection
+    ? { changes, selection }
+    : { changes };
   if (drag === undefined) {
     // Each edit without a drag is its own step
-    return { changes, annotations: [isolateHistory.of("full")] };
+    return { ...spec, annotations: [isolateHistory.of("full")] };
   }
   return {
-    changes,
+    ...spec,
     // A fixed time, so a pause mid-drag never splits the step
     annotations: [dragId.of(drag), Transaction.time.of(0)],
   };

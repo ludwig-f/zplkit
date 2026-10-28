@@ -3,7 +3,7 @@ import type { Command } from "@zplkit/core";
 import type { TextChange } from "@zplkit/core/internal";
 import type { DesignField, Rect } from "@zplkit/render/internal";
 import type { Design } from "./fields";
-import { dotsPerUnit, moveFields, round } from "./move";
+import { dotsPerUnit, inUnits, moveFields } from "./move";
 
 type Handles = "none" | "corners" | "proportional";
 
@@ -46,12 +46,9 @@ const sizing = (
 const resizeHandles = (design: Design, field: DesignField): Handles =>
   sizing(design, field)?.handles ?? "none";
 
-/** A size in dots as written in the field's ^MU units: whole dots, or 2 decimals */
-const inUnits = (dots: number, perUnit: number, min = 1): number =>
-  Math.max(
-    perUnit === 1 ? Math.round(dots) : round(dots / perUnit),
-    perUnit === 1 ? min : round(min / perUnit)
-  );
+/** A size in dots as written in the field's ^MU units, at least `min` dots */
+const sized = (dots: number, perUnit: number, min = 1): number =>
+  Math.max(inUnits(dots, perUnit), inUnits(min, perUnit));
 
 /** The smallest text ^A can print, in dots */
 const MIN_TEXT = 10;
@@ -77,17 +74,17 @@ const resizeField = (
   const sizes: Record<number, number> = {};
   /** A written parameter times how much bigger the bounds got */
   const scaled = (value: number, ratio: number): number =>
-    inUnits(value * perUnit * ratio, perUnit, MIN_TEXT);
+    sized(value * perUnit * ratio, perUnit, MIN_TEXT);
 
   switch (command.type) {
     case "GraphicBox":
     case "GraphicEllipse":
     case "GraphicDiagonal":
-      sizes[0] = inUnits(bounds.width, perUnit);
-      sizes[1] = inUnits(bounds.height, perUnit);
+      sizes[0] = sized(bounds.width, perUnit);
+      sizes[1] = sized(bounds.height, perUnit);
       break;
     case "GraphicCircle":
-      sizes[0] = inUnits(bounds.width, perUnit);
+      sizes[0] = sized(bounds.width, perUnit);
       break;
     case "Font": {
       // Turned text is as long as it is tall
@@ -100,13 +97,16 @@ const resizeField = (
       if (command.width !== undefined) sizes[2] = scaled(command.width, ratio);
       break;
     }
-    case "Code128":
-      // Bounds include the interpretation line, so only the difference counts
-      sizes[1] = inUnits(
-        (command.height ?? 0) * perUnit + bounds.height - old.height,
-        perUnit
-      );
+    case "Code128": {
+      // Bounds include the interpretation line, so only the difference
+      // counts. Turned bars run across the screen.
+      const turned = command.orientation === "R" || command.orientation === "B";
+      const grown = turned
+        ? bounds.width - old.width
+        : bounds.height - old.height;
+      sizes[1] = sized((command.height ?? 0) * perUnit + grown, perUnit);
       break;
+    }
     case "QrCode": {
       const ratio = bounds.width / old.width;
       if (!Number.isFinite(ratio) || ratio <= 0) return [];

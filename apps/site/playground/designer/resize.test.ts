@@ -108,6 +108,25 @@ describe("resizeField", () => {
       }))
     ).toBe("^XA^MUM^FO1,1^GB12,5,1^FS^XZ");
   });
+
+  test("makes a turned Code 128 taller along its width", () => {
+    expect(
+      resize("^XA^FO10,10^BCR,60^FD123^FS^XZ", (b) => ({
+        ...b,
+        width: b.width + 20,
+      }))
+    ).toBe("^XA^FO10,10^BCR,80^FD123^FS^XZ");
+  });
+
+  test("writes whole dots", () => {
+    expect(
+      resize("^XA^FO10,10^GB100,50,3^FS^XZ", (b) => ({
+        ...b,
+        width: 120.4,
+        height: 59.6,
+      }))
+    ).toBe("^XA^FO10,10^GB120,60,3^FS^XZ");
+  });
 });
 
 describe("resizeHandles", () => {
