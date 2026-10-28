@@ -154,12 +154,12 @@ const sharing = (design: Design, key: number) => {
   };
 };
 
-/** The tag above a selected field: its kind and line, or the labels sharing it */
+/**
+ * The tag above a selected field: its kind and line. A field shared by
+ * several labels is named the same way; its twins on the other labels show
+ * that it's shared.
+ */
 const tagOf = (design: Design, field: DesignField): string => {
-  const shared = sharing(design, field.key);
-  if (shared.count > 1) {
-    return `Shared by ${shared.count} ${shared.copies ? "copies" : "labels"}`;
-  }
   const kind = field.drawn
     ? kindOf(design, field)
     : barcodeCommand(design, field) ?? kindOf(design, field);
@@ -333,5 +333,6 @@ export {
   handlesFor,
   positionIn,
   problemKeys,
+  sharing,
   tagOf,
 };

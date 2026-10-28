@@ -50,8 +50,10 @@
   border: 1px dashed var(--on-paper-view);
 }
 
+/* The same field on the other labels: tinted, so it's clear what else changes */
 .designer .field.twin {
   border: 1.5px dashed var(--on-paper-view);
+  background: rgb(11 107 116 / 0.12);
 }
 
 .designer .field.warn {

@@ -10,6 +10,7 @@ import {
   handlesFor,
   positionIn,
   problemKeys,
+  sharing,
   tagOf,
 } from "./overlay";
 
@@ -37,34 +38,39 @@ describe("tagOf", () => {
     expect(tagOf(design, fields[1])).toBe("QR code · L3");
   });
 
-  test("says how many labels share a field from a stored format", () => {
+  test("names a shared field like any other", () => {
+    const zpl = "^XA\n^FO10,10^A0N,30^SN001,1^FS\n^PQ3^XZ";
+    const design = designFor(zpl, options);
+    expect(design.labels).toHaveLength(3);
+    expect(tagOf(design, design.labels[1].fields[0])).toBe("Text · L2");
+  });
+});
+
+describe("sharing", () => {
+  test("counts the labels sharing a field from a stored format", () => {
     const zpl =
       "^XA^DFR:A.ZPL^FS^FO10,10^A0N,30^FN1^FS^XZ\n" +
       "^XA^XFR:A.ZPL^FN1^FDOne^FS^XZ\n" +
       "^XA^XFR:A.ZPL^FN1^FDTwo^FS^XZ\n";
     const design = designFor(zpl, options);
     const field = design.labels[0].fields[0];
-    expect(tagOf(design, field)).toBe("Shared by 2 labels");
+    expect(sharing(design, field.key)).toEqual({ count: 2, copies: false });
   });
 
   test("says copies when the labels are copies of one", () => {
     const zpl = "^XA^FO10,10^A0N,30^SN001,1^FS^PQ3^XZ";
     const design = designFor(zpl, options);
-    expect(design.labels).toHaveLength(3);
-    expect(tagOf(design, design.labels[1].fields[0])).toBe(
-      "Shared by 3 copies"
-    );
+    expect(sharing(design, design.labels[1].fields[0].key)).toEqual({
+      count: 3,
+      copies: true,
+    });
   });
-});
 
-describe("tagOf past the labels shown", () => {
   test("counts every copy, not only the ones designed", () => {
     const zpl = "^XA^FO10,10^A0N,30^SN001,1^FS^PQ6^XZ";
     const design = designFor(zpl, { ...options, limit: 5 });
     expect(design.labels).toHaveLength(5);
-    expect(tagOf(design, design.labels[0].fields[0])).toBe(
-      "Shared by 6 copies"
-    );
+    expect(sharing(design, design.labels[0].fields[0].key).count).toBe(6);
   });
 
   test("counts every label recalling the format", () => {
@@ -74,9 +80,7 @@ describe("tagOf past the labels shown", () => {
     ).join("");
     const zpl = "^XA^DFR:A.ZPL^FS^FO10,10^A0N,30^FN1^FS^XZ\n" + recalls;
     const design = designFor(zpl, { ...options, limit: 5 });
-    expect(tagOf(design, design.labels[0].fields[0])).toBe(
-      "Shared by 7 labels"
-    );
+    expect(sharing(design, design.labels[0].fields[0].key).count).toBe(7);
   });
 
   test("counts copies of each recalling label", () => {
@@ -84,9 +88,7 @@ describe("tagOf past the labels shown", () => {
       "^XA^DFR:A.ZPL^FS^FO10,10^A0N,30^SN1,1^FS^XZ\n" +
       "^XA^XFR:A.ZPL^PQ2^XZ\n^XA^XFR:A.ZPL^PQ3^XZ\n";
     const design = designFor(zpl, options);
-    expect(tagOf(design, design.labels[0].fields[0])).toBe(
-      "Shared by 5 labels"
-    );
+    expect(sharing(design, design.labels[0].fields[0].key).count).toBe(5);
   });
 });
 
