@@ -4,11 +4,12 @@
  * without files, a browser or a printer.
  */
 import { createRequire } from "node:module";
+import { join } from "node:path";
 import { deflateRawSync } from "node:zlib";
 import { parseArgs } from "node:util";
 import { lint, parse } from "@zplkit/core";
 import { convert } from "@zplkit/core/convert";
-import { encodePng, renderLabels } from "@zplkit/render";
+import { countLabels, encodePng, renderLabels } from "@zplkit/render";
 import type { Command } from "@zplkit/core";
 
 /** A printer, as far as the CLI needs one */
@@ -25,7 +26,9 @@ type Io = {
   readFile(path: string): Promise<string>;
   readStdin(): Promise<string>;
   writeFile(path: string, data: Uint8Array): Promise<void>;
-  /** Open a link in the browser */
+  /** A new folder for temporary files */
+  tempDir(): Promise<string>;
+  /** Open a link in the browser, or a file in its app */
   open(url: string): Promise<void>;
   connect(host: string, port: number): Promise<PrinterLike>;
 };
@@ -36,6 +39,7 @@ const usage = `Usage: zplkit <command> [options]
 
 Commands:
   zplkit render <file>   Render labels to PNG files
+  zplkit preview <file>  Render labels and open them in your image viewer
   zplkit lint <file...>  List problems the printer won't report
   zplkit convert <file>  Turn ZPL into zplkit code
   zplkit view <file>     Open labels in the web viewer
@@ -49,8 +53,12 @@ Options:
   --width, --height      Label size, like 4in, 101.6mm or 812 (dots);
                          from ^PW and ^LL, else 4 × 6 in
   -o, --output <file>    render: where to write the PNG
-  --limit <n>            render: only the first n different labels
-  --clock <date>         render: the printer's time for ^FC, like 2026-10-28T08:00
+  --limit <n>            render, preview: only the first n different labels
+                         (preview shows 20 unless told)
+  --clock <date>         render, preview: the printer's time for ^FC,
+                         like 2026-10-28T08:00
+  --smooth               render, preview: smooth edges instead of the
+                         printer's exact dots
   --strict               lint: fail on warnings too
   --style jsx|builder    convert: the code to write (default jsx)
   --units mm|dots        convert: lengths in millimeters where exact, or dots
@@ -122,20 +130,32 @@ const onlyFile = (positionals: string[], command: string) => {
   return positionals[0];
 };
 
-const render = async (io: Io, args: string[]) => {
-  const { values, positionals } = parseArgs({
-    args,
-    allowPositionals: true,
-    options: {
-      output: { type: "string", short: "o" },
-      dpi: { type: "string" },
-      width: { type: "string" },
-      height: { type: "string" },
-      limit: { type: "string" },
-      clock: { type: "string" },
-    },
-  });
-  const file = onlyFile(positionals, "render");
+/** Options render and preview share */
+const renderOptions = {
+  dpi: { type: "string" },
+  width: { type: "string" },
+  height: { type: "string" },
+  limit: { type: "string" },
+  clock: { type: "string" },
+  smooth: { type: "boolean" },
+} as const;
+
+type RenderValues = {
+  [K in keyof typeof renderOptions]?: (typeof renderOptions)[K]["type"] extends "boolean"
+    ? boolean
+    : string;
+};
+
+/**
+ * Render a file's labels to PNGs: next to `output`, or the file, or in
+ * `dir`. Says each path, with how many times identical copies print.
+ */
+const renderFiles = async (
+  io: Io,
+  file: string,
+  values: RenderValues & { output?: string },
+  { dir, defaultLimit }: { dir?: string; defaultLimit?: number } = {}
+) => {
   const zpl = await read(io, file);
   const printer = resolution(values.dpi);
   const { commands } = parse(zpl);
@@ -145,7 +165,8 @@ const render = async (io: Io, args: string[]) => {
   const height = values.height
     ? lengthInDots(values.height, "height", printer)
     : lastOf(commands, "LabelLength")?.length ?? 6 * printer.dpi;
-  const limit = values.limit === undefined ? undefined : Number(values.limit);
+  const limit =
+    values.limit === undefined ? defaultLimit : Number(values.limit);
   if (limit !== undefined && !(Number.isInteger(limit) && limit > 0)) {
     throw new UsageError(
       `--limit must be a whole number above 0, got ${values.limit}`
@@ -162,28 +183,76 @@ const render = async (io: Io, args: string[]) => {
     widthMm: width / printer.dpmm,
     heightMm: height / printer.dpmm,
     dpmm: printer.dpmm,
+    antialias: values.smooth,
     limit,
     clock,
   });
   if (!rasters.length) {
     throw new Error("No labels: labels start with ^XA and end with ^XZ");
   }
+  if (limit !== undefined && values.limit === undefined) {
+    const { labels } = countLabels(zpl);
+    if (labels > rasters.length) {
+      io.stderr(
+        `Showing the first ${rasters.length} of ${labels} different labels; --limit shows more or fewer`
+      );
+    }
+  }
 
-  const base = (values.output ?? (file === "-" ? "label" : file)).replace(
-    /\.(png|zpl|txt)$/i,
-    ""
-  );
+  const name = (values.output ?? (file === "-" ? "label" : file))
+    .replace(/\.(png|zpl|txt)$/i, "")
+    .split(/[\\/]/)
+    .pop()!;
+  const base = dir
+    ? join(dir, name)
+    : (values.output ?? (file === "-" ? "label" : file)).replace(
+        /\.(png|zpl|txt)$/i,
+        ""
+      );
   const digits = String(rasters.length).length;
+  const paths: string[] = [];
   for (const [index, raster] of rasters.entries()) {
     const path =
       rasters.length === 1
-        ? values.output ?? `${base}.png`
+        ? !dir && values.output
+          ? values.output
+          : `${base}.png`
         : `${base}-${String(index + 1).padStart(digits, "0")}.png`;
     await io.writeFile(path, await encodePng(raster));
     io.stdout(
       raster.copies > 1 ? `${path} (prints ${raster.copies} times)` : path
     );
+    paths.push(path);
   }
+  return paths;
+};
+
+const render = async (io: Io, args: string[]) => {
+  const { values, positionals } = parseArgs({
+    args,
+    allowPositionals: true,
+    options: { ...renderOptions, output: { type: "string", short: "o" } },
+  });
+  await renderFiles(io, onlyFile(positionals, "render"), values);
+  return 0;
+};
+
+/** Labels preview opens unless told otherwise */
+const PREVIEW_LABELS = 20;
+
+const preview = async (io: Io, args: string[]) => {
+  const { values, positionals } = parseArgs({
+    args,
+    allowPositionals: true,
+    options: renderOptions,
+  });
+  const paths = await renderFiles(
+    io,
+    onlyFile(positionals, "preview"),
+    values,
+    { dir: await io.tempDir(), defaultLimit: PREVIEW_LABELS }
+  );
+  for (const path of paths) await io.open(path);
   return 0;
 };
 
@@ -378,6 +447,7 @@ const status = async (io: Io, args: string[]) => {
 
 const commands: Record<string, (io: Io, args: string[]) => Promise<number>> = {
   render,
+  preview,
   lint: lintFiles,
   convert: convertFile,
   view,
@@ -416,7 +486,8 @@ const run = async (args: string[], io: Io): Promise<number> => {
 
 /** The io of a real terminal: files, the browser and network printers */
 const systemIo = async (): Promise<Io> => {
-  const { readFile, writeFile } = await import("node:fs/promises");
+  const { mkdtemp, readFile, writeFile } = await import("node:fs/promises");
+  const { tmpdir } = await import("node:os");
   const { execFile } = await import("node:child_process");
   const { connectNetworkPrinter } = await import("@zplkit/print/network");
   return {
@@ -429,6 +500,7 @@ const systemIo = async (): Promise<Io> => {
       return Buffer.concat(chunks).toString("utf8");
     },
     writeFile: (path, data) => writeFile(path, data),
+    tempDir: () => mkdtemp(join(tmpdir(), "zplkit-")),
     open: (url) =>
       new Promise((resolve) => {
         const [command, ...args] =

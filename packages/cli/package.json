@@ -1,7 +1,7 @@
 {
   "name": "@zplkit/cli",
   "version": "0.0.0",
-  "description": "Render, lint, convert, view and print ZPL labels from the command line",
+  "description": "Render, preview, lint, convert, view and print ZPL labels from the command line",
   "type": "module",
   "license": "MIT",
   "repository": {
