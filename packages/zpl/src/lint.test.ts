@@ -242,7 +242,8 @@ suite("lint", () => {
           { type: "MeasurementUnits", unit: "M" },
           { type: "FieldOrigin", x: 5, y: 5 },
           { type: "GraphicBox", width: 10, height: 5, thickness: 0.5 },
-          { type: "FieldSeparator" }
+          { type: "FieldSeparator" },
+          { type: "MeasurementUnits", unit: "D" }
         )
       ).toStrictEqual([]);
     });
@@ -270,6 +271,67 @@ suite("lint", () => {
         "^PR speed is 20, but the printer only accepts 1 to 14.",
         "^PQ quantity is 0, but the printer only accepts 1 to 99999999.",
       ]);
+    });
+  });
+
+  describe("settings kept after the label", () => {
+    const field: Command[] = [
+      { type: "FieldOrigin", x: 10, y: 10 },
+      { type: "FieldData", data: "Hi" },
+      { type: "FieldSeparator" },
+    ];
+
+    test("warns about ^PM and ^LT, which can't be reset in the label", () => {
+      const diagnostics = lintLabel(
+        { type: "PrintMirror", mirror: true },
+        { type: "LabelTop", offset: 20 },
+        ...field
+      );
+      expect(diagnostics.map((d) => [d.rule, d.severity, d.index])).toEqual([
+        ["setting-kept-after-label", "warning", 3],
+        ["setting-kept-after-label", "warning", 4],
+      ]);
+      expect(diagnostics[0].message).toBe(
+        "^PM stays on for the labels printed after this one, also from other software, until it's set again. Set it once with PrinterSetup.setMirror() instead."
+      );
+      expect(diagnostics[1].message).toBe(
+        "^LT stays on for the labels printed after this one, also from other software, until it's set again. Set it once with PrinterSetup.setLabelTop() instead."
+      );
+    });
+
+    test("warns about ^LS and ^MU, and says how to reset them", () => {
+      const diagnostics = lintLabel(
+        { type: "LabelShift", shift: 20 },
+        { type: "MeasurementUnits", unit: "M" },
+        ...field
+      );
+      expect(diagnostics.map((d) => d.message)).toEqual([
+        "^LS stays on for the labels printed after this one, also from other software, until it's set again. Add ^LS0 after the last field, or set it once with PrinterSetup.setLabelShift().",
+        "^MU stays on for the labels printed after this one, also from other software, until it's set again. Add ^MUD after the last field to go back to dots.",
+      ]);
+    });
+
+    test("says nothing when the label ends with the default", () => {
+      expect(
+        lintLabel(
+          { type: "PrintMirror", mirror: false },
+          { type: "LabelShift", shift: 20 },
+          { type: "MeasurementUnits", unit: "M" },
+          ...field,
+          { type: "LabelShift", shift: 0 },
+          { type: "MeasurementUnits", unit: "D" }
+        )
+      ).toEqual([]);
+    });
+
+    test("says nothing for setup formats without fields", () => {
+      expect(
+        lint([
+          { type: "StartFormat" },
+          { type: "PrintMirror", mirror: true },
+          { type: "EndFormat" },
+        ])
+      ).toEqual([]);
     });
   });
 
