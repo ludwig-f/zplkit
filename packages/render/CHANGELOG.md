@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.1](https://github.com/ludwig-f/zplkit/compare/render-v0.2.0...render-v0.2.1) (2026-10-28)
+
+
+### Bug Fixes
+
+* **render:** count letters in ^SF masks ([b95d5fe](https://github.com/ludwig-f/zplkit/commit/b95d5fe58d6bb1f849c7cda5bd8b4a8f7fac06cc))
+* **render:** pick QR masks like reference renders ([0c34350](https://github.com/ludwig-f/zplkit/commit/0c3435061e387760e1cc55a09328a3a9cbe2ef1c))
+
 ## [0.2.0](https://github.com/ludwig-f/zplkit/compare/render-v0.1.0...render-v0.2.0) (2026-10-28)
 
 
