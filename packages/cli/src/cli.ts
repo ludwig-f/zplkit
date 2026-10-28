@@ -54,7 +54,7 @@ Options:
                          from ^PW and ^LL, else 4 × 6 in
   -o, --output <file>    render: where to write the PNG
   --limit <n>            render, preview: only the first n different labels
-                         (preview shows 20 unless told)
+                         (preview shows 5 unless told)
   --clock <date>         render, preview: the printer's time for ^FC,
                          like 2026-10-28T08:00
   --smooth               render, preview: smooth edges instead of the
@@ -238,7 +238,7 @@ const render = async (io: Io, args: string[]) => {
 };
 
 /** Labels preview opens unless told otherwise */
-const PREVIEW_LABELS = 20;
+const PREVIEW_LABELS = 5;
 
 const preview = async (io: Io, args: string[]) => {
   const { values, positionals } = parseArgs({

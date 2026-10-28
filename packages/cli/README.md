@@ -6,10 +6,13 @@ Render, preview, lint, convert, view and print ZPL labels from the command line.
 npx @zplkit/cli render label.zpl
 ```
 
-Or install it to get the `zplkit` command:
+With pnpm, Yarn or Bun, that's `pnpm dlx @zplkit/cli`, `yarn dlx @zplkit/cli` or `bunx @zplkit/cli`.
+
+Or install it to get the `zplkit` command, globally or in a project, for example to lint its labels in CI:
 
 ```bash
 npm install --global @zplkit/cli
+npm install --save-dev @zplkit/cli # then: npx zplkit lint labels/*.zpl
 ```
 
 It needs Node 22 or newer.
@@ -31,7 +34,7 @@ Labels with serial numbers (`^SN`, `^SF`) render one PNG per copy, like `label-1
 
 ### preview
 
-Renders the labels into a temporary folder and opens them in your image viewer, like Preview on macOS or Photos on Windows, without a browser or a network connection. It takes the same options as `render`, and opens the first 20 different labels unless `--limit` says otherwise.
+Renders the labels into a temporary folder and opens them in your image viewer, like Preview on macOS or Photos on Windows, without a browser or a network connection. It takes the same options as `render`, and opens the first 5 different labels unless `--limit` says otherwise.
 
 ```bash
 zplkit preview label.zpl --dpi 300
