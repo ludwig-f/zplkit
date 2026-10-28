@@ -5,17 +5,6 @@ import type { Design } from "./fields";
 /** Round to 2 decimals, so floats don't leak into the ZPL */
 const round = (value: number): number => Math.round(value * 100) / 100;
 
-/** Keep the spaces around the values a change replaces */
-const keepSpaces = (
-  zpl: string,
-  { from, to, insert }: TextChange
-): TextChange => {
-  const old = zpl.slice(from, to);
-  const lead = old.length - old.trimStart().length;
-  const trail = old.length - old.trimEnd().length;
-  return { from: from + lead, to: to - trail, insert: insert.trim() };
-};
-
 /**
  * Move fields by a distance on screen, in dots: their ^FO or ^FT changes,
  * or a ^FO is added to a field that has neither
@@ -65,7 +54,7 @@ const moveFields = (
       if (moveX !== 0) changed[0] = round(x0 + moveX);
       if (moveY !== 0) changed[1] = round(y0 + moveY);
       if (Object.keys(changed).length > 0) {
-        changes.push(keepSpaces(zpl, editParameters(zpl, command, changed)));
+        changes.push(editParameters(zpl, command, changed));
       }
     } else if (command.span && (moveX !== 0 || moveY !== 0)) {
       const { start } = command.span;
