@@ -41,6 +41,7 @@ import type { Problem } from "./analyze";
 import type { LabelLength, ShareState } from "./share";
 import DesignOverlay from "./designer/DesignOverlay";
 import { designFor, type Design } from "./designer/fields";
+import { replacesAll } from "./designer/highlight";
 import { extentOf } from "./designer/overlay";
 import {
   highlightOf,
@@ -358,6 +359,12 @@ export default function Viewer() {
 
   /** The editor changed the text: keep the change for the selection */
   const changed = (value: string, changes: ChangeSet) => {
+    // A new document, like a template or a file opened: nothing to follow,
+    // even fields that happen to start the same
+    if (replacesAll(changes)) {
+      setSelection({ keys: [], label: 0 });
+      setHover(undefined);
+    }
     // The editor taking a text from state, like a template, isn't an edit
     if (value === latest.current) return;
     const edit = edits.current;

@@ -1,6 +1,11 @@
 import { EditorState } from "@codemirror/state";
 import { describe, expect, it } from "vitest";
-import { highlightField, highlightedLines, setHighlight } from "./highlight";
+import {
+  highlightField,
+  highlightedLines,
+  replacesAll,
+  setHighlight,
+} from "./highlight";
 
 const doc = "^XA\n^FO10,10^FDHi^FS\n^XZ";
 const start = (): EditorState =>
@@ -64,5 +69,28 @@ describe("highlightField", () => {
       changes: { from: 0, to: doc.length, insert: "^XA\n^FDA^FS\n^XZ" },
     }).state;
     expect(highlightedLines(state)).toEqual({ selected: [], hovered: [] });
+  });
+});
+
+describe("replacesAll", () => {
+  it("is true for a change of the whole document, like a template", () => {
+    const tr = start().update({
+      changes: { from: 0, to: doc.length, insert: "^XA^XZ" },
+    });
+    expect(replacesAll(tr.changes)).toBe(true);
+  });
+
+  it("is false for an edit inside it, even one that starts at 0", () => {
+    const state = start();
+    expect(
+      replacesAll(
+        state.update({ changes: { from: 6, to: 8, insert: "20" } }).changes
+      )
+    ).toBe(false);
+    expect(
+      replacesAll(
+        state.update({ changes: { from: 0, to: 3, insert: "" } }).changes
+      )
+    ).toBe(false);
   });
 });

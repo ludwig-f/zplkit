@@ -1,11 +1,11 @@
 import {
   RangeSet,
+  type ChangeSet,
   StateEffect,
   StateField,
   type EditorState,
   type Extension,
   type Range,
-  type Transaction,
 } from "@codemirror/state";
 import {
   Decoration,
@@ -37,11 +37,11 @@ class BarMarker extends GutterMarker {
 }
 const bar = new BarMarker();
 
-/** Whether a transaction replaces the whole document in one change */
-const replacesAll = (tr: Transaction) => {
+/** Whether changes replace the whole document in one change, like a template or a file opened, rather than edit it */
+const replacesAll = (changes: ChangeSet): boolean => {
   let all = false;
-  tr.changes.iterChanges((from, to) => {
-    if (from === 0 && to === tr.startState.doc.length) all = true;
+  changes.iterChanges((from, to) => {
+    if (from === 0 && to === changes.length) all = true;
   });
   return all;
 };
@@ -51,7 +51,7 @@ const highlightState = StateField.define<Highlight>({
   create: () => ({ selected: [], hovered: [] }),
   update: (value, tr) => {
     let next = value;
-    if (tr.docChanged && replacesAll(tr)) {
+    if (tr.docChanged && replacesAll(tr.changes)) {
       // A new document, not an edit: nothing to keep in place
       next = { selected: [], hovered: [] };
     } else if (tr.docChanged) {
@@ -128,5 +128,5 @@ const highlightField = (): Extension => [
   lineNumberMarkers.compute([highlightState, "doc"], markers),
 ];
 
-export { highlightField, highlightedLines, setHighlight };
+export { highlightField, highlightedLines, replacesAll, setHighlight };
 export type { Highlight };
