@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/ludwig-f/zplkit/compare/mcp-v0.2.0...mcp-v0.2.1) (2026-10-28)
+
+
+### Bug Fixes
+
+* **mcp:** lookup_command says ^SF is supported ([cda1998](https://github.com/ludwig-f/zplkit/commit/cda19986483bd4ec03eff52d9addffae0bc38717))
+
 ## [0.2.0](https://github.com/ludwig-f/zplkit/compare/mcp-v0.1.0...mcp-v0.2.0) (2026-10-28)
 
 
