@@ -197,6 +197,41 @@ suite("<zpl-preview>", () => {
     });
   });
 
+  describe("copies", () => {
+    const part = (element: HTMLElement, name: string) =>
+      [...element.shadowRoot!.querySelectorAll(`[part="${name}"]`)].map(
+        (node) => node.textContent
+      );
+
+    test("identical copies show once, with how many more print", async () => {
+      const element = create();
+      const rendered = nextRender(element);
+      element.zpl = "^XA^PW400^LL200^FO20,20^A0,40^FDSame^FS^PQ3^XZ";
+
+      const event = await rendered;
+      expect(images(element)).toHaveLength(1);
+      expect(part(element, "copies")).toStrictEqual(["+2 identical"]);
+      expect(event.detail.copies).toStrictEqual([3]);
+    });
+
+    test("serial numbers show the first labels and how many more", async () => {
+      const element = create();
+      element.maxLabels = 5;
+      const rendered = nextRender(element);
+      element.zpl = "^XA^PW400^LL200^FO20,20^A0,40^SN001,1,Y^FS^PQ30^XZ";
+
+      const event = await rendered;
+      expect(images(element)).toHaveLength(5);
+      expect(part(element, "copies")).toStrictEqual([]);
+      expect(part(element, "more")).toStrictEqual(["25 more labels"]);
+      expect(event.detail).toMatchObject({ labels: 30, printed: 30 });
+    });
+
+    test("show up to 20 labels unless told otherwise", () => {
+      expect(create().maxLabels).toBe(20);
+    });
+  });
+
   describe("fading in", () => {
     const labels = (element: HTMLElement) =>
       element.shadowRoot!.querySelector('[part="labels"]')!;

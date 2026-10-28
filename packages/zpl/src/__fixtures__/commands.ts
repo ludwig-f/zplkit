@@ -18,6 +18,12 @@ const commandCases: [Command, string][] = [
   [{ type: "FieldOrientation", orientation: "B", justification: 1 }, "^FWB,1"],
   [{ type: "FieldOrigin", x: 20, y: 30 }, "^FO20,30"],
   [{ type: "FieldOrigin", x: 20, y: 30, justification: 1 }, "^FO20,30,1"],
+  [{ type: "FieldOrigin", x: 2.5, y: 30 }, "^FO2.5,30"],
+  [{ type: "MeasurementUnits", unit: "M" }, "^MUM"],
+  [
+    { type: "MeasurementUnits", unit: "D", baseDpi: 200, targetDpi: 300 },
+    "^MUD,200,300",
+  ],
   [{ type: "FieldTypeset", x: 20, y: 30 }, "^FT20,30"],
   [{ type: "FieldTypeset" }, "^FT"],
   [
@@ -49,6 +55,28 @@ const commandCases: [Command, string][] = [
   ],
   [{ type: "GraphicBox", width: 100, height: 50 }, "^GB100,50"],
   [{ type: "GraphicCircle", diameter: 80, thickness: 4 }, "^GC80,4"],
+  [{ type: "LabelShift", shift: 40 }, "^LS40"],
+  [{ type: "FieldParameter", direction: "V", gap: 4 }, "^FPV,4"],
+  [
+    { type: "ImageMove", device: "R", name: "LOGO", extension: "GRF" },
+    "^IMR:LOGO.GRF",
+  ],
+  [{ type: "ImageMove", name: "LOGO" }, "^IMLOGO"],
+  [{ type: "FieldClock", primary: "%" }, "^FC%"],
+  [
+    { type: "FieldClock", primary: "%", secondary: "{", third: "#" },
+    "^FC%,{,#",
+  ],
+  [
+    { type: "TextBlock", orientation: "N", width: 300, height: 80 },
+    "^TBN,300,80",
+  ],
+  [{ type: "PrintMirror", mirror: true }, "^PMY"],
+  [{ type: "LabelTop", offset: -20 }, "^LT-20"],
+  [
+    { type: "GraphicEllipse", width: 200, height: 100, thickness: 4 },
+    "^GE200,100,4",
+  ],
   [
     { type: "GraphicDiagonal", width: 80, height: 40, direction: "L" },
     "^GD80,40,,,L",
@@ -101,6 +129,16 @@ const commandCases: [Command, string][] = [
   [{ type: "Code128" }, "^BC"],
   [{ type: "Ean13", orientation: "R", height: 50 }, "^BER,50"],
   [{ type: "PrintQuantity", quantity: 2 }, "^PQ2"],
+  [
+    { type: "SerialNumber", start: "001", increment: 1, leadingZeros: true },
+    "^SN001,1,Y",
+  ],
+  [{ type: "SerialNumber", start: "010", increment: -3 }, "^SN010,-3"],
+  [{ type: "SerialNumber" }, "^SN"],
+  [
+    { type: "SerializationField", mask: "%%dddd", increment: "1" },
+    "^SF%%dddd,1",
+  ],
   [
     {
       type: "PrintQuantity",

@@ -1,3 +1,4 @@
+import { measuredFields } from "./measured.js";
 import { unknownCommands } from "./commands.js";
 import type { Command, Span } from "./ast.js";
 
@@ -11,9 +12,11 @@ type LintRule =
   | "box-smaller-than-line"
   | "value-out-of-range"
   | "ean13-data"
+  | "databar-parentheses"
   | "barcode-without-data"
   | "unknown-command"
-  | "printer-command-in-label";
+  | "printer-command-in-label"
+  | "setting-kept-after-label";
 
 /** A problem lint() found */
 type LintDiagnostic = {
@@ -54,6 +57,8 @@ const ranges: {
     ["y", "y", 0, 32000],
   ],
   LabelLength: [["length", "length", 1, 32000]],
+  LabelShift: [["shift", "shift", -9999, 9999]],
+  LabelTop: [["offset", "offset", -120, 120]],
   GraphicBox: [
     ["width", "width", 1, 32000],
     ["height", "height", 1, 32000],
@@ -61,6 +66,11 @@ const ranges: {
   ],
   GraphicCircle: [
     ["diameter", "diameter", 3, 4095],
+    ["thickness", "thickness", 2, 4095],
+  ],
+  GraphicEllipse: [
+    ["width", "width", 3, 4095],
+    ["height", "height", 3, 4095],
     ["thickness", "thickness", 2, 4095],
   ],
   GraphicDiagonal: [
@@ -86,8 +96,11 @@ const ranges: {
 const codes: { [T in Command["type"]]?: string } = {
   FieldOrigin: "^FO",
   LabelLength: "^LL",
+  LabelShift: "^LS",
+  LabelTop: "^LT",
   GraphicBox: "^GB",
   GraphicCircle: "^GC",
+  GraphicEllipse: "^GE",
   GraphicDiagonal: "^GD",
   BarcodeDefaults: "^BY",
   SetDarkness: "~SD",
@@ -160,6 +173,8 @@ const lint = (
   let reportedOutside = false;
   let size = { ...media };
   let home = { x: 0, y: 0 };
+  // ^MU: ranges are in dots, so they don't apply to millimeters or inches
+  let unit: "D" | "I" | "M" = "D";
   let field: { index: number; barcode?: number; hasData: boolean } | undefined;
 
   const report = (
@@ -178,6 +193,34 @@ const lint = (
     });
   };
 
+  /**
+   * Settings the printer keeps for the labels after, last set in this
+   * format, and whether a field was drawn: a format without fields only
+   * sets the printer up
+   */
+  let kept = new Map<string, { index: number; isDefault: boolean }>();
+  let hasFields = false;
+  const keptAdvice: Record<string, string> = {
+    "^PM": "Set it once with PrinterSetup.setMirror() instead.",
+    "^LT": "Set it once with PrinterSetup.setLabelTop() instead.",
+    "^LS":
+      "Add ^LS0 after the last field, or set it once with PrinterSetup.setLabelShift().",
+    "^MU": "Add ^MUD after the last field to go back to dots.",
+  };
+  const reportKept = () => {
+    if (!hasFields) return;
+    const settings = [...kept].sort(([, a], [, b]) => a.index - b.index);
+    for (const [code, { index, isDefault }] of settings) {
+      if (isDefault) continue;
+      report(
+        index,
+        "setting-kept-after-label",
+        "warning",
+        `${code} stays on for the labels printed after this one, also from other software, until it's set again. ${keptAdvice[code]}`
+      );
+    }
+  };
+
   const closeField = () => {
     if (field?.barcode !== undefined && !field.hasData) {
       report(
@@ -193,6 +236,8 @@ const lint = (
   commands.forEach((command, index) => {
     // Label structure
     if (command.type === "StartFormat") {
+      kept = new Map();
+      hasFields = false;
       formatStart = index;
       hasStarted = true;
       reportedOutside = false;
@@ -244,6 +289,7 @@ const lint = (
     }
 
     if (command.type === "EndFormat") {
+      reportKept();
       if (field) {
         report(
           field.index,
@@ -264,6 +310,9 @@ const lint = (
 
     for (const [key, name, min, max] of range ?? []) {
       const value = (command as Record<string, unknown>)[key];
+      if (unit !== "D" && measuredFields[command.type]?.includes(key)) {
+        continue;
+      }
 
       if (typeof value === "number" && (value < min || value > max)) {
         report(
@@ -287,8 +336,28 @@ const lint = (
       case "LabelHome":
         home = { x: command.x, y: command.y };
         break;
+      case "MeasurementUnits":
+        unit = command.unit ?? unit;
+        if (command.unit) {
+          kept.set("^MU", { index, isDefault: command.unit === "D" });
+        }
+        break;
+      case "PrintMirror":
+        kept.set("^PM", { index, isDefault: !command.mirror });
+        break;
+      case "LabelShift":
+        if (command.shift !== undefined) {
+          kept.set("^LS", { index, isDefault: command.shift === 0 });
+        }
+        break;
+      case "LabelTop":
+        if (command.offset !== undefined) {
+          kept.set("^LT", { index, isDefault: command.offset === 0 });
+        }
+        break;
       case "FieldOrigin":
       case "FieldTypeset": {
+        hasFields = true;
         if (field) {
           report(
             field.index,
@@ -318,6 +387,10 @@ const lint = (
         }
         break;
       }
+      case "SerialNumber":
+        // ^SN is the field's data
+        if (field) field.hasData = true;
+        break;
       case "FieldSeparator":
         if (!field) {
           report(
@@ -341,6 +414,22 @@ const lint = (
             "ean13-data",
             "warning",
             `EAN-13 data must be exactly 12 digits (the printer adds the check digit), got '${command.data}'. The printer pads or cuts it to 12.`
+          );
+        }
+
+        if (
+          barcode?.type === "Gs1DataBar" &&
+          barcode.symbology === 6 &&
+          command.data.includes("(")
+        ) {
+          report(
+            index,
+            "databar-parentheses",
+            "warning",
+            `The printer encodes these parentheses as data, so scanners can't read the AIs. Leave them out: ${command.data.replace(
+              /[()]/g,
+              ""
+            )}.`
           );
         }
         break;

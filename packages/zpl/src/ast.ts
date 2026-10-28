@@ -32,6 +32,62 @@ type PrintWidth = Node<"PrintWidth", { width: number }>;
 type LabelLength = Node<"LabelLength", { length: number }>;
 /** `^LHx,y` */
 type LabelHome = Node<"LabelHome", { x: number; y: number }>;
+/** `^LSa`: shifts the fields after it left, kept between labels */
+type LabelShift = Node<"LabelShift", { shift?: number }>;
+/** `^LTx`: moves the whole label down, or up when negative */
+type LabelTop = Node<"LabelTop", { offset?: number }>;
+/** `^PMa`: prints the label as its mirror image, kept between labels */
+type PrintMirror = Node<"PrintMirror", { mirror: boolean }>;
+/**
+ * `^MUa,b,c`: the unit for positions and sizes after it, kept between
+ * labels: D dots, I inches or M millimeters
+ */
+type MeasurementUnits = Node<
+  "MeasurementUnits",
+  { unit?: "D" | "I" | "M"; baseDpi?: number; targetDpi?: number }
+>;
+/**
+ * `^SNv,n,z`: field data that counts up on each copy ^PQ prints. The last
+ * run of digits in v counts by n; z Y keeps its leading zeros, N prints them
+ * as spaces.
+ */
+type SerialNumber = Node<
+  "SerialNumber",
+  { start?: string; increment?: number; leadingZeros?: boolean }
+>;
+/**
+ * `^SFa,b`: counts up the ^FD data on each copy. The mask a lines up with
+ * the data: d decimal, h hex, o octal, a letters, n letters and digits, %
+ * left as it is. The increment b lines up with the mask's end.
+ */
+type SerializationField = Node<
+  "SerializationField",
+  { mask?: string; increment?: string }
+>;
+/**
+ * `^FPd,g`: prints the field's text horizontally (H), down (V) or right to
+ * left (R), with g extra dots between characters
+ */
+type FieldParameter = Node<
+  "FieldParameter",
+  { direction?: "H" | "V" | "R"; gap?: number }
+>;
+/**
+ * `^TBa,b,c`: wraps the field's text in a block b dots wide and c high,
+ * turned to orientation a. Text that doesn't fit is left out.
+ */
+type TextBlock = Node<
+  "TextBlock",
+  { orientation?: Orientation; width?: number; height?: number }
+>;
+/**
+ * `^FCa,b,c`: clock codes in the field's data, like %Y-%m-%d, are filled in
+ * from the printer's clock. a, b and c are the characters that start them.
+ */
+type FieldClock = Node<
+  "FieldClock",
+  { primary?: string; secondary?: string; third?: string }
+>;
 /** `^LRa` */
 type LabelReverse = Node<"LabelReverse", { reverse: boolean }>;
 /** `^CIa` */
@@ -130,6 +186,11 @@ type GraphicCircle = Node<
   "GraphicCircle",
   { diameter?: number; thickness?: number; color?: Color }
 >;
+/** `^GEw,h,t,c` */
+type GraphicEllipse = Node<
+  "GraphicEllipse",
+  { width?: number; height?: number; thickness?: number; color?: Color }
+>;
 /** `^GDw,h,t,c,o` */
 type GraphicDiagonal = Node<
   "GraphicDiagonal",
@@ -155,6 +216,15 @@ type RecallGraphic = Node<
     magnificationX?: number;
     magnificationY?: number;
   }
+>;
+
+/**
+ * `^IMd:o.x`: draws a stored graphic at the field origin, at its size. The
+ * device and the .GRF extension can be left out.
+ */
+type ImageMove = Node<
+  "ImageMove",
+  { device?: StorageDevice; name: string; extension?: string }
 >;
 
 /** `^BYw,r,h` */
@@ -601,7 +671,17 @@ type Command =
   | PrintWidth
   | LabelLength
   | LabelHome
+  | LabelShift
+  | LabelTop
   | LabelReverse
+  | PrintMirror
+  | MeasurementUnits
+  | SerialNumber
+  | FieldParameter
+  | TextBlock
+  | ImageMove
+  | FieldClock
+  | SerializationField
   | ChangeEncoding
   | DefaultFont
   | FieldOrientation
@@ -618,6 +698,7 @@ type Command =
   | Comment
   | GraphicBox
   | GraphicCircle
+  | GraphicEllipse
   | GraphicDiagonal
   | GraphicField
   | RecallGraphic
@@ -675,7 +756,17 @@ export type {
   PrintWidth,
   LabelLength,
   LabelHome,
+  LabelShift,
+  LabelTop,
   LabelReverse,
+  PrintMirror,
+  MeasurementUnits,
+  SerialNumber,
+  FieldParameter,
+  TextBlock,
+  ImageMove,
+  FieldClock,
+  SerializationField,
   ChangeEncoding,
   DefaultFont,
   FieldOrientation,
@@ -692,6 +783,7 @@ export type {
   Comment,
   GraphicBox,
   GraphicCircle,
+  GraphicEllipse,
   GraphicDiagonal,
   GraphicField,
   RecallGraphic,

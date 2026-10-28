@@ -221,13 +221,42 @@ suite("lint", () => {
         { type: "FieldOrigin", x: 10, y: 10 },
         { type: "GraphicCircle", diameter: 5000, thickness: 4 },
         { type: "FieldSeparator" },
+        { type: "FieldOrigin", x: 10, y: 10 },
+        { type: "GraphicEllipse", width: 5000, height: 2 },
+        { type: "FieldSeparator" },
         { type: "BarcodeDefaults", moduleWidth: 12, ratio: 3.5 }
       );
 
       expect(diagnostics.map((d) => d.message)).toStrictEqual([
         "^GC diameter is 5000, but the printer only accepts 3 to 4095.",
+        "^GE width is 5000, but the printer only accepts 3 to 4095.",
+        "^GE height is 2, but the printer only accepts 3 to 4095.",
         "^BY module width is 12, but the printer only accepts 1 to 10.",
         "^BY ratio is 3.5, but the printer only accepts 2 to 3.",
+      ]);
+    });
+
+    test("ranges in dots don't apply to millimeters or inches", () => {
+      expect(
+        lintLabel(
+          { type: "MeasurementUnits", unit: "M" },
+          { type: "FieldOrigin", x: 5, y: 5 },
+          { type: "GraphicBox", width: 10, height: 5, thickness: 0.5 },
+          { type: "FieldSeparator" },
+          { type: "MeasurementUnits", unit: "D" }
+        )
+      ).toStrictEqual([]);
+    });
+
+    test("label shift and top outside the printer's range", () => {
+      const diagnostics = lintLabel(
+        { type: "LabelShift", shift: 10000 },
+        { type: "LabelTop", offset: 121 }
+      );
+
+      expect(diagnostics.map((d) => d.message)).toStrictEqual([
+        "^LS shift is 10000, but the printer only accepts -9999 to 9999.",
+        "^LT offset is 121, but the printer only accepts -120 to 120.",
       ]);
     });
 
@@ -242,6 +271,67 @@ suite("lint", () => {
         "^PR speed is 20, but the printer only accepts 1 to 14.",
         "^PQ quantity is 0, but the printer only accepts 1 to 99999999.",
       ]);
+    });
+  });
+
+  describe("settings kept after the label", () => {
+    const field: Command[] = [
+      { type: "FieldOrigin", x: 10, y: 10 },
+      { type: "FieldData", data: "Hi" },
+      { type: "FieldSeparator" },
+    ];
+
+    test("warns about ^PM and ^LT, which can't be reset in the label", () => {
+      const diagnostics = lintLabel(
+        { type: "PrintMirror", mirror: true },
+        { type: "LabelTop", offset: 20 },
+        ...field
+      );
+      expect(diagnostics.map((d) => [d.rule, d.severity, d.index])).toEqual([
+        ["setting-kept-after-label", "warning", 3],
+        ["setting-kept-after-label", "warning", 4],
+      ]);
+      expect(diagnostics[0].message).toBe(
+        "^PM stays on for the labels printed after this one, also from other software, until it's set again. Set it once with PrinterSetup.setMirror() instead."
+      );
+      expect(diagnostics[1].message).toBe(
+        "^LT stays on for the labels printed after this one, also from other software, until it's set again. Set it once with PrinterSetup.setLabelTop() instead."
+      );
+    });
+
+    test("warns about ^LS and ^MU, and says how to reset them", () => {
+      const diagnostics = lintLabel(
+        { type: "LabelShift", shift: 20 },
+        { type: "MeasurementUnits", unit: "M" },
+        ...field
+      );
+      expect(diagnostics.map((d) => d.message)).toEqual([
+        "^LS stays on for the labels printed after this one, also from other software, until it's set again. Add ^LS0 after the last field, or set it once with PrinterSetup.setLabelShift().",
+        "^MU stays on for the labels printed after this one, also from other software, until it's set again. Add ^MUD after the last field to go back to dots.",
+      ]);
+    });
+
+    test("says nothing when the label ends with the default", () => {
+      expect(
+        lintLabel(
+          { type: "PrintMirror", mirror: false },
+          { type: "LabelShift", shift: 20 },
+          { type: "MeasurementUnits", unit: "M" },
+          ...field,
+          { type: "LabelShift", shift: 0 },
+          { type: "MeasurementUnits", unit: "D" }
+        )
+      ).toEqual([]);
+    });
+
+    test("says nothing for setup formats without fields", () => {
+      expect(
+        lint([
+          { type: "StartFormat" },
+          { type: "PrintMirror", mirror: true },
+          { type: "EndFormat" },
+        ])
+      ).toEqual([]);
     });
   });
 
@@ -260,6 +350,36 @@ suite("lint", () => {
           severity: "warning",
           message:
             "EAN-13 data must be exactly 12 digits (the printer adds the check digit), got '5901234123457'. The printer pads or cuts it to 12.",
+          index: 5,
+        },
+      ]);
+    });
+
+    test("a serial number is a barcode's data", () => {
+      expect(
+        lintLabel(
+          { type: "FieldOrigin", x: 10, y: 10 },
+          { type: "Code128" },
+          { type: "SerialNumber", start: "001" },
+          { type: "FieldSeparator" }
+        )
+      ).toStrictEqual([]);
+    });
+
+    test("GS1 DataBar Expanded data with parentheses", () => {
+      const diagnostics = lintLabel(
+        { type: "FieldOrigin", x: 10, y: 10 },
+        { type: "Gs1DataBar", symbology: 6 },
+        { type: "FieldData", data: "(01)98898765432106(15)991231" },
+        { type: "FieldSeparator" }
+      );
+
+      expect(diagnostics).toStrictEqual([
+        {
+          rule: "databar-parentheses",
+          severity: "warning",
+          message:
+            "The printer encodes these parentheses as data, so scanners can't read the AIs. Leave them out: 019889876543210615991231.",
           index: 5,
         },
       ]);

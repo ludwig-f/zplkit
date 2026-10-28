@@ -7,6 +7,9 @@ import type { Length } from "./units.js";
 import type {
   AztecOptions,
   BoxOptions,
+  CircleOptions,
+  EllipseOptions,
+  TextOptions,
   Code11Options,
   Code128Options,
   Code39Options,
@@ -73,7 +76,11 @@ type FieldOrientationProps = {
   orientation: Orientation;
 };
 type TextProps = Position &
-  Omit<FontOptions, "name"> & {
+  Omit<FontOptions, "name"> &
+  Pick<
+    TextOptions,
+    "direction" | "letterSpacing" | "clock" | "block" | "serial"
+  > & {
     /**
      * One of the printer's fonts, or a font name
      * @defaultValue The label's default font
@@ -83,6 +90,8 @@ type TextProps = Position &
     children: TextChildren;
   };
 type BoxProps = PositionedProps<BoxOptions>;
+type EllipseProps = PositionedProps<EllipseOptions>;
+type CircleProps = PositionedProps<CircleOptions>;
 type GraphicProps = PositionedProps<GraphicOptions>;
 type StoredGraphicProps = PositionedProps<StoredGraphicOptions>;
 type Code11Props = BarcodeProps<Code11Options>;
@@ -257,12 +266,27 @@ const Text = primitive((label, props: TextProps) => {
     font: hasFont
       ? { name: font, file, height, width, orientation }
       : undefined,
+    direction: props.direction,
+    letterSpacing: props.letterSpacing,
+    clock: props.clock,
+    block: props.block,
+    serial: props.serial,
   });
 });
 
 /** A box or line */
 const Box = primitive((label, props: BoxProps) =>
   label.box({ ...props, position: position(props) })
+);
+
+/** An ellipse */
+const Ellipse = primitive((label, props: EllipseProps) =>
+  label.ellipse({ ...props, position: position(props) })
+);
+
+/** A circle */
+const Circle = primitive((label, props: CircleProps) =>
+  label.circle({ ...props, position: position(props) })
 );
 
 /** The builder's options for a barcode element's props */
@@ -425,6 +449,8 @@ export {
   FieldOrientation,
   Text,
   Box,
+  Ellipse,
+  Circle,
   Code11,
   Code128,
   Code39,
@@ -466,6 +492,8 @@ export type {
   FieldOrientationProps,
   TextProps,
   BoxProps,
+  EllipseProps,
+  CircleProps,
   GraphicProps,
   StoredGraphicProps,
   Code11Props,

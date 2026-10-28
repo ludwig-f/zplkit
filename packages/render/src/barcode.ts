@@ -633,17 +633,20 @@ const encode = (barcode: Barcode, dpmm: number): Linear | Matrix | Postal => {
     }
     case "Gs1DataBar": {
       const type = symbology.symbology ?? 1;
-      const options =
-        type === 6 && symbology.segments
-          ? [`segments=${symbology.segments}`]
-          : [];
-      const bcid =
-        type === 6 && symbology.segments
-          ? "databarexpandedstacked"
-          : dataBarTypes[type - 1];
+      const text = dataBarText(data, type);
+      let symbol = matrix(dataBarTypes[type - 1], text);
+      if (type === 6 && symbology.segments) {
+        // Stacked rows start a module further in than a single row, so
+        // segments that fit one row keep the single row's spacing
+        const stacked = matrix("databarexpandedstacked", text, [
+          `segments=${symbology.segments}`,
+        ]);
+        const rows = (m: typeof symbol) => m.modules.length / m.columns;
+        if (rows(stacked) > rows(symbol)) symbol = stacked;
+      }
       return {
         kind: "matrix",
-        ...matrix(bcid, dataBarText(data, type), options),
+        ...symbol,
         moduleSize: symbology.magnification ?? dataBarMagnification(dpmm),
       };
     }

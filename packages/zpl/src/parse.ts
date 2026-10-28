@@ -34,11 +34,12 @@ class Params {
   ) {}
 
   get length(): number {
-    return this.values.filter((value) => value !== "").length;
+    return this.values.filter((value) => value.trim() !== "").length;
   }
 
+  /** A parameter, without the spaces printers ignore around it */
   string(index: number): string | undefined {
-    const value = this.values[index];
+    const value = this.values[index]?.trim();
     return value === undefined || value === "" ? undefined : value;
   }
 
@@ -52,16 +53,18 @@ class Params {
     return value;
   }
 
-  number(index: number, name: string, float = false): number | undefined {
+  /**
+   * A number, which can have decimals: printers round positions and sizes
+   * to the nearest dot, and ^MU makes them millimeters or inches
+   */
+  number(index: number, name: string): number | undefined {
     const value = this.string(index);
 
     if (value === undefined) {
       return undefined;
     }
 
-    const pattern = float ? /^-?\d+(\.\d+)?$/ : /^-?\d+$/;
-
-    if (!pattern.test(value)) {
+    if (!/^-?\d+(\.\d+)?$/.test(value)) {
       throw new ParamError(
         `${this.code}: ${name} must be a number, got '${value}'`
       );
@@ -214,9 +217,72 @@ const parsers: Record<string, CommandParser> = {
     x: p.requiredNumber(0, "x", 0),
     y: p.requiredNumber(1, "y", 0),
   })),
+  "^LS": withParams("^LS", (p) => ({
+    type: "LabelShift",
+    shift: p.number(0, "shift"),
+  })),
+  "^LT": withParams("^LT", (p) => ({
+    type: "LabelTop",
+    offset: p.number(0, "offset"),
+  })),
+  "^IM": withParams("^IM", (p) => {
+    const value = p.requiredString(0, "object");
+    const match = /^(?:([REBA]):)?([^.:]+)(?:\.(\w+))?$/.exec(value);
+    if (!match) {
+      throw new ParamError(
+        `^IM: expected an object like R:NAME.GRF, got '${value}'`
+      );
+    }
+    // Only graphics can be moved onto a label
+    if (match[3] && match[3].toUpperCase() !== "GRF") return null;
+    return {
+      type: "ImageMove",
+      device: match[1] as (typeof devices)[number] | undefined,
+      name: match[2],
+      extension: match[3],
+    };
+  }),
+  "^FC": withParams("^FC", (p) => ({
+    type: "FieldClock",
+    primary: p.string(0),
+    secondary: p.string(1),
+    third: p.string(2),
+  })),
+  "^TB": withParams("^TB", (p) => ({
+    type: "TextBlock",
+    orientation: p.oneOf(0, "orientation", orientations),
+    width: p.number(1, "width"),
+    height: p.number(2, "height"),
+  })),
+  "^FP": withParams("^FP", (p) => ({
+    type: "FieldParameter",
+    direction: p.oneOf(0, "direction", ["H", "V", "R"] as const),
+    gap: p.number(1, "gap"),
+  })),
+  "^SN": withParams("^SN", (p) => ({
+    type: "SerialNumber",
+    start: p.string(0),
+    increment: p.number(1, "increment"),
+    leadingZeros: p.yesNo(2, "leadingZeros"),
+  })),
+  "^SF": withParams("^SF", (p) => ({
+    type: "SerializationField",
+    mask: p.string(0),
+    increment: p.string(1),
+  })),
+  "^MU": withParams("^MU", (p) => ({
+    type: "MeasurementUnits",
+    unit: p.oneOf(0, "unit", ["D", "I", "M"] as const),
+    baseDpi: p.number(1, "base resolution"),
+    targetDpi: p.number(2, "desired resolution"),
+  })),
   "^LR": withParams("^LR", (p) => {
     const reverse = p.yesNo(0, "reverse");
     return reverse === undefined ? null : { type: "LabelReverse", reverse };
+  }),
+  "^PM": withParams("^PM", (p) => {
+    const mirror = p.yesNo(0, "mirror");
+    return mirror === undefined ? null : { type: "PrintMirror", mirror };
   }),
   "^CI": withParams("^CI", (p) =>
     // Character remapping (^CIa,s1,d1,...) has no typed node
@@ -315,6 +381,13 @@ const parsers: Record<string, CommandParser> = {
     thickness: p.number(1, "thickness"),
     color: p.oneOf(2, "color", colors),
   })),
+  "^GE": withParams("^GE", (p) => ({
+    type: "GraphicEllipse",
+    width: p.number(0, "width"),
+    height: p.number(1, "height"),
+    thickness: p.number(2, "thickness"),
+    color: p.oneOf(3, "color", colors),
+  })),
   "^GD": withParams("^GD", (p) => ({
     type: "GraphicDiagonal",
     width: p.number(0, "width"),
@@ -357,7 +430,7 @@ const parsers: Record<string, CommandParser> = {
   "^BY": withParams("^BY", (p) => ({
     type: "BarcodeDefaults",
     moduleWidth: p.number(0, "moduleWidth"),
-    ratio: p.number(1, "ratio", true),
+    ratio: p.number(1, "ratio"),
     height: p.number(2, "height"),
   })),
   "^B1": withParams("^B1", (p) => {
@@ -552,7 +625,7 @@ const parsers: Record<string, CommandParser> = {
   })),
   "^MD": withParams("^MD", (p) => ({
     type: "MediaDarkness",
-    darkness: p.number(0, "darkness", true),
+    darkness: p.number(0, "darkness"),
   })),
   "^BX": withParams("^BX", (p) =>
     // The aspect ratio parameter has no typed node

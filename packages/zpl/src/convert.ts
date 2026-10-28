@@ -5,6 +5,7 @@
  * makes the same label.
  */
 import Label from "./Label.js";
+import { measuredFields } from "./measured.js";
 import { parse } from "./parse.js";
 import { serialize, serializeCommand } from "./serialize.js";
 import type { Command } from "./ast.js";
@@ -49,6 +50,8 @@ type Part =
 const elements: Record<string, string> = {
   text: "Text",
   box: "Box",
+  ellipse: "Ellipse",
+  circle: "Circle",
   graphic: "Graphic",
   storedGraphic: "StoredGraphic",
   field: "Field",
@@ -123,6 +126,8 @@ const decodeData = (data: string, indicator: string | undefined) => {
 /** Values printers use for parameters left out, where the builder writes them */
 const defaults: Record<string, Record<string, unknown>> = {
   GraphicBox: { color: "B", rounding: 0 },
+  GraphicEllipse: { color: "B" },
+  GraphicCircle: { color: "B" },
   RecallGraphic: { magnificationX: 1, magnificationY: 1 },
   QrCode: { orientation: "N", model: 2 },
 };
@@ -370,16 +375,41 @@ const plan = (zpl: string, options: Required<ConvertOptions>): Part[] => {
     let indicator: string | undefined;
     const middle: Command[] = [];
     const data: string[] = [];
+    let serial: Record<string, unknown> | undefined;
+    // ^FP, ^FC and ^FB, which only text takes
+    const textOptions: Record<string, unknown> = {};
     for (const command of field.slice(1, -1)) {
       if (command.type === "FieldHexIndicator") {
         indicator = command.indicator ?? "_";
       } else if (command.type === "FieldData" && !command.variable) {
         data.push(decodeData(command.data, indicator));
         indicator = undefined;
+      } else if (command.type === "SerialNumber") {
+        data.push(command.start ?? "1");
+        serial = defined({
+          increment: command.increment === 1 ? undefined : command.increment,
+          leadingZeros: command.leadingZeros === false ? false : undefined,
+        });
+      } else if (command.type === "FieldParameter") {
+        const directions = { H: undefined, V: "vertical", R: "reverse" };
+        textOptions.direction = directions[command.direction ?? "H"];
+        textOptions.letterSpacing = length(command.gap);
+      } else if (command.type === "FieldClock") {
+        textOptions.clock = true;
+      } else if (command.type === "FieldBlock") {
+        const aligns = { L: "left", C: "center", R: "right", J: "justify" };
+        textOptions.block = defined({
+          width: length(command.width),
+          lines: command.maxLines,
+          lineSpacing: length(command.lineSpacing),
+          align: command.justification && aligns[command.justification],
+          indent: length(command.hangingIndent),
+        });
       } else {
         middle.push(command);
       }
     }
+    const hasTextOptions = Object.keys(textOptions).length > 0;
 
     const candidates: Step[] = [];
     const call = (method: string, callOptions: Record<string, unknown>) =>
@@ -401,6 +431,8 @@ const plan = (zpl: string, options: Required<ConvertOptions>): Part[] => {
               orientation: first.orientation,
             })
           : undefined,
+        ...textOptions,
+        serial,
       });
     }
     if (
@@ -418,6 +450,8 @@ const plan = (zpl: string, options: Required<ConvertOptions>): Part[] => {
           width: length(first.width),
           orientation: first.orientation,
         }),
+        ...textOptions,
+        serial,
       });
     }
     if (
@@ -432,6 +466,31 @@ const plan = (zpl: string, options: Required<ConvertOptions>): Part[] => {
         thickness: length(first.thickness),
         color: first.color,
         rounding: first.rounding,
+      });
+    }
+    if (
+      middle.length === 1 &&
+      data.length === 0 &&
+      first.type === "GraphicEllipse"
+    ) {
+      call("ellipse", {
+        position,
+        width: length(first.width),
+        height: length(first.height),
+        thickness: length(first.thickness),
+        color: first.color,
+      });
+    }
+    if (
+      middle.length === 1 &&
+      data.length === 0 &&
+      first.type === "GraphicCircle"
+    ) {
+      call("circle", {
+        position,
+        diameter: length(first.diameter),
+        thickness: length(first.thickness),
+        color: first.color,
       });
     }
     if (
@@ -464,7 +523,7 @@ const plan = (zpl: string, options: Required<ConvertOptions>): Part[] => {
             : { x: first.magnificationX ?? 1, y: first.magnificationY ?? 1 },
       });
     }
-    if (middle.length === 1 && data.length === 1) {
+    if (middle.length === 1 && data.length === 1 && !hasTextOptions) {
       const barcode = barcodeCall(first, length);
       if (barcode?.method === "qrCode") {
         // The builder adds the error correction level and A for automatic
@@ -478,7 +537,12 @@ const plan = (zpl: string, options: Required<ConvertOptions>): Part[] => {
           });
         }
       } else if (barcode) {
-        call(barcode.method, { ...barcode.options, position, data: data[0] });
+        call(barcode.method, {
+          ...barcode.options,
+          position,
+          data: data[0],
+          serial,
+        });
       }
     }
     // Any other command, as written
@@ -580,12 +644,43 @@ const plan = (zpl: string, options: Required<ConvertOptions>): Part[] => {
   const parts: Part[] = [];
   let setup: Step[] = [];
   let label: Command[] | undefined;
+  // ^MU, kept between labels
+  let units: "D" | "I" | "M" = "D";
   for (const command of commands) {
     if (command.type === "StartFormat") {
       if (setup.length) parts.push({ kind: "setup", steps: setup });
       setup = [];
       label = [];
     } else if (command.type === "EndFormat" && label) {
+      // Lengths in millimeters or inches (^MU), or with decimals, aren't
+      // dots, so the label is kept as it is
+      let measuredIn: "D" | "I" | "M" = units;
+      let notDots = units !== "D";
+      for (const c of label) {
+        if (c.type !== "MeasurementUnits") continue;
+        measuredIn = c.unit ?? measuredIn;
+        if (measuredIn !== "D") notDots = true;
+      }
+      notDots ||= label.some((c) =>
+        (measuredFields[c.type] ?? []).some((key) => {
+          const value = (c as Record<string, unknown>)[key];
+          return typeof value === "number" && !Number.isInteger(value);
+        })
+      );
+      units = measuredIn;
+      if (notDots) {
+        parts.push({
+          kind: "setup",
+          steps: [
+            {
+              kind: "raw",
+              zpl: serialize([{ type: "StartFormat" }, ...label, command]),
+            },
+          ],
+        });
+        label = undefined;
+        continue;
+      }
       const { options: labelOptionsValue, rest } = labelOptions(label);
       const steps: Step[] = [];
       for (let i = 0; i < rest.length; i++) {
@@ -649,6 +744,7 @@ const code = (value: unknown, key = "", indent = ""): string => {
     if ("mm" in value) return `mm(${(value as { mm: number }).mm})`;
     if ("dots" in value) return `dots(${(value as { dots: number }).dots})`;
     const entries = Object.entries(value);
+    if (!entries.length) return "{}";
     const inner = entries.map(([k, v]) => `${k}: ${code(v, k, indent + "  ")}`);
     const line = `{ ${inner.join(", ")} }`;
     if (line.length + indent.length <= 72) return line;

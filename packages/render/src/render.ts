@@ -1,8 +1,10 @@
 import { parse } from "@zplkit/core";
 import { Raster, fillPath } from "./raster.js";
-import { boxPath, circlePath, diagonalPath } from "./shapes.js";
+import { boxPath, circlePath, diagonalPath, ellipsePath } from "./shapes.js";
+import { countCopies } from "./copies.js";
+import { expandFormats } from "./formats.js";
 import { layout } from "./layout.js";
-import { drawText } from "./text.js";
+import { drawText, textWidth } from "./text.js";
 import { drawBarcode, drawPlaceholder } from "./barcode.js";
 import { drawSymbol } from "./symbols.js";
 import type { Command } from "@zplkit/core";
@@ -31,6 +33,55 @@ type RenderOptions = {
    * open-licensed stand-in, like the printer's own if you have a license
    */
   font0?: Uint8Array;
+  /**
+   * Render only the first labels, counting each different copy, for
+   * previews of many serialized labels
+   */
+  limit?: number;
+  /**
+   * The printer's clock, for dates and times in ^FC fields, read in local
+   * time. Now if not given.
+   */
+  clock?: Date;
+};
+
+type TextElement = Extract<Element, { kind: "text" }>;
+
+const textOptions = (element: TextElement, dpmm: number) => ({
+  x: element.x,
+  y: element.y,
+  fromBottom: element.fromBottom,
+  font: element.font,
+  height: element.height,
+  width: element.width,
+  typeface: element.typeface,
+  font0: element.font0,
+  orientation: element.orientation,
+  block: element.block,
+  direction: element.direction,
+  dpmm,
+});
+
+/**
+ * A right-justified element moved to end just before its x: text by its
+ * laid-out width, anything else by where its dots end, found by drawing it
+ * once at the left edge
+ */
+const justified = (element: Element, raster: Raster, dpmm: number): Element => {
+  if (!element.right) return element;
+  if (element.kind === "text") {
+    return {
+      ...element,
+      x: element.x - textWidth(element.text, textOptions(element, dpmm)),
+    };
+  }
+  const trial = new Raster(raster.width, raster.height, raster.sampling);
+  draw(trial, { ...element, x: 0 }, dpmm);
+  let end = 0;
+  for (let i = 0; i < trial.ink.length; i++) {
+    if (trial.ink[i] > 0) end = Math.max(end, (i % trial.width) + 1);
+  }
+  return { ...element, x: element.x - end };
 };
 
 /** Draw an element in the given color, ignoring reverse printing */
@@ -64,6 +115,13 @@ const draw = (
         element.color === "W" ? "W" : color
       );
       break;
+    case "ellipse":
+      fillPath(
+        raster,
+        ellipsePath(x, y, element.width, element.height, element.thickness),
+        element.color === "W" ? "W" : color
+      );
+      break;
     case "diagonal":
       fillPath(
         raster,
@@ -79,24 +137,7 @@ const draw = (
       );
       break;
     case "text":
-      drawText(
-        raster,
-        element.text,
-        {
-          x,
-          y,
-          fromBottom: element.fromBottom,
-          font: element.font,
-          height: element.height,
-          width: element.width,
-          typeface: element.typeface,
-          font0: element.font0,
-          orientation: element.orientation,
-          block: element.block,
-          dpmm,
-        },
-        color
-      );
+      drawText(raster, element.text, textOptions(element, dpmm), color);
       break;
     case "barcode":
       drawBarcode(raster, element, dpmm, color);
@@ -154,6 +195,12 @@ const drawReversed = (raster: Raster, element: Element, dpmm: number): void => {
 const MAX_DOTS = 100_000_000;
 
 /**
+ * Most different labels to render without a limit, so ^PQ with ^SN can't
+ * ask for millions of images by accident
+ */
+const MAX_LABELS = 10_000;
+
+/**
  * Render each label in ZPL (or parsed commands) to a raster of ink coverage.
  * Labels without ^PW use the full width; narrower print widths are centered,
  * like printers do.
@@ -172,33 +219,56 @@ const renderLabels = (
     );
   }
 
-  return layout(commands, { fonts: options.fonts, font0: options.font0 }).map(
-    (label) => {
-      const printWidth = Math.min(width, label.printWidth ?? width);
-      const printed = new Raster(printWidth, height, sampling);
-
-      for (const element of label.elements) {
-        if (element.reverse) drawReversed(printed, element, options.dpmm);
-        else draw(printed, element, options.dpmm);
-      }
-
-      // Upside down: turning the print area half a turn reverses its dots
-      if (label.inverted) printed.ink.reverse();
-
-      if (printWidth === width) return printed;
-
-      // Center the printed area on the label
-      const raster = new Raster(width, height, sampling);
-      const offset = Math.floor((width - printWidth) / 2);
-      for (let y = 0; y < height; y++) {
-        raster.ink.set(
-          printed.ink.subarray(y * printWidth, (y + 1) * printWidth),
-          y * width + offset
-        );
-      }
-      return raster;
+  if (options.limit === undefined) {
+    const { labels } = countCopies(expandFormats(commands));
+    if (labels > MAX_LABELS) {
+      throw new RangeError(
+        `The ZPL prints ${labels} different labels, more than ${MAX_LABELS} at once. Pass a limit to render the first ones.`
+      );
     }
-  );
+  }
+
+  return layout(commands, {
+    fonts: options.fonts,
+    font0: options.font0,
+    dpmm: options.dpmm,
+    limit: options.limit,
+    clock: options.clock,
+  }).map((label) => {
+    const printWidth = Math.min(width, label.printWidth ?? width);
+    const printed = new Raster(printWidth, height, sampling);
+
+    for (const given of label.elements) {
+      const element = justified(given, printed, options.dpmm);
+      if (element.reverse) drawReversed(printed, element, options.dpmm);
+      else draw(printed, element, options.dpmm);
+    }
+
+    // Mirrored: each row of the print area runs the other way
+    if (label.mirrored) {
+      for (let y = 0; y < height; y++) {
+        printed.ink.subarray(y * printWidth, (y + 1) * printWidth).reverse();
+      }
+    }
+
+    // Upside down: turning the print area half a turn reverses its dots
+    if (label.inverted) printed.ink.reverse();
+
+    printed.copies = label.copies;
+    if (printWidth === width) return printed;
+
+    // Center the printed area on the label
+    const raster = new Raster(width, height, sampling);
+    const offset = Math.floor((width - printWidth) / 2);
+    for (let y = 0; y < height; y++) {
+      raster.ink.set(
+        printed.ink.subarray(y * printWidth, (y + 1) * printWidth),
+        y * width + offset
+      );
+    }
+    raster.copies = label.copies;
+    return raster;
+  });
 };
 
 export type { RenderOptions };

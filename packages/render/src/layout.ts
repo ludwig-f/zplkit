@@ -6,12 +6,16 @@
  */
 import { decodeObjectData } from "./data.js";
 import { FontFiles, parseFontFile } from "./font-files.js";
+import { formatClock } from "./clock.js";
+import { expandCopies } from "./copies.js";
 import { expandFormats } from "./formats.js";
+import { hasUncountedMask } from "./serial.js";
 import { decodeGraphicData } from "./graphics.js";
+import { measuredFields } from "@zplkit/core/internal";
 import type { Command } from "@zplkit/core";
 import type { Font } from "./font.js";
 import type { FontPath } from "./font-files.js";
-import type { Orientation, TextBlockOptions } from "./text.js";
+import type { Orientation, TextBlockOptions, TextDirection } from "./text.js";
 
 type Common = {
   x: number;
@@ -20,6 +24,8 @@ type Common = {
   reverse: boolean;
   /** Indices of the commands that produced the element */
   commands: number[];
+  /** Right-justified: the element ends just before x instead of starting at it */
+  right?: boolean;
 };
 
 type Element = Common &
@@ -33,6 +39,13 @@ type Element = Common &
         rounding: number;
       }
     | { kind: "circle"; diameter: number; thickness: number; color: "B" | "W" }
+    | {
+        kind: "ellipse";
+        width: number;
+        height: number;
+        thickness: number;
+        color: "B" | "W";
+      }
     | {
         kind: "diagonal";
         width: number;
@@ -58,6 +71,8 @@ type Element = Common &
         fromBottom: boolean;
         /** ^FB wraps the text in a block */
         block?: TextBlockOptions;
+        /** ^FP runs the characters down or right to left, or spaces them */
+        direction?: TextDirection;
       }
     | {
         kind: "barcode";
@@ -113,6 +128,10 @@ type LabelLayout = {
   printWidth?: number;
   /** ^POI: the label prints upside down */
   inverted?: boolean;
+  /** ^PMY: the label prints as its mirror image */
+  mirrored?: boolean;
+  /** How many times the label prints in a row, from ^PQ */
+  copies: number;
   elements: Element[];
   /** Commands that were understood but aren't drawn yet */
   unsupported: number[];
@@ -172,11 +191,18 @@ type Field = {
   /** ^FT positions the bottom-left corner instead of the top-left */
   fromBottom: boolean;
   reverse: boolean;
+  /** ^FO, ^FT or ^FW justification 1: the field ends at x */
+  right?: boolean;
   /** Font set with ^A for this field only */
   font?: FontSetting;
   /** ^FH: the character that starts a hex escape in the field data */
   hexIndicator?: string;
+  /** ^FC: the characters that start clock codes in the data */
+  clock?: string[];
   block?: TextBlockOptions;
+  /** ^TB's orientation, which turns the field's text */
+  blockOrientation?: Orientation;
+  direction?: TextDirection;
   /** ^GS: the field data picks a graphic symbol */
   symbol?: { height?: number; width?: number; orientation?: Orientation };
   /** The barcode the field data goes into, or the code of one we can't draw */
@@ -288,8 +314,36 @@ type LayoutOptions = {
    * open-licensed stand-in, like the printer's own if you have a license
    */
   font0?: Uint8Array;
+  /** Dots per millimeter, for ^MU's millimeters and inches. 8 if not given. */
+  dpmm?: number;
+  /** Lay out only the first labels, counting each different copy */
+  limit?: number;
+  /** The printer's clock, for ^FC dates and times. Now if not given. */
+  clock?: Date;
 };
 
+/**
+ * A command with its positions and sizes in whole dots: converted from
+ * ^MU's millimeters or inches, and rounded to the nearest dot as printers do
+ */
+const inDots = <T extends Command>(command: T, dotsPerUnit: number): T => {
+  const fields = measuredFields[command.type];
+  if (!fields) return command;
+  const converted: Record<string, unknown> = { ...command };
+  for (const field of fields) {
+    const value = converted[field];
+    if (typeof value === "number") {
+      converted[field] = Math.round(value * dotsPerUnit);
+    }
+  }
+  return converted as T;
+};
+
+/**
+ * Where everything on each label goes, without drawing it: one layout per
+ * different label, with its elements and the commands that made them, and
+ * the commands that aren't drawn yet. renderLabels draws these.
+ */
 const layout = (
   commands: readonly Command[],
   options: LayoutOptions = {}
@@ -305,11 +359,22 @@ const layout = (
   const identifiers = new Map<string, FontPath>();
   let label: LabelLayout | undefined;
   let home = { x: 0, y: 0 };
+  /** ^LS, ^LT and ^PM, kept between labels like the printer settings they are */
+  let shift = 0;
+  let top = 0;
+  let mirror = false;
+  let unit: "D" | "I" | "M" = "D";
+  const dpmm = options.dpmm ?? 8;
+  const clock = options.clock ?? new Date();
+  // ^MU's inches are 25 mm, so 200 dots at 8 dpmm
+  const dotsPerUnit = { D: 1, M: dpmm, I: 25 * dpmm };
   let labelReverse = false;
   let field = newField();
 
   let defaultFont = initialFont;
   let orientation: Orientation = "N";
+  /** ^FW's justification for fields that don't give one */
+  let justification: 0 | 1 | 2 = 0;
   let utf8 = false;
   let barcodeDefaults = initialBarcodeDefaults;
 
@@ -332,7 +397,17 @@ const layout = (
     return typeface ? { ...setting, typeface } : { ...setting, font: "0" };
   };
 
-  for (const { command, index } of expandFormats(commands)) {
+  const { items, copies } = expandCopies(
+    expandFormats(commands),
+    options.limit
+  );
+  for (const { command: written, index } of items) {
+    if (written.type === "MeasurementUnits") {
+      unit = written.unit ?? unit;
+      continue;
+    }
+    const command = inDots(written, dotsPerUnit[unit]);
+
     if (command.type === "DownloadFont") {
       // Bounded fonts are converted to Zebra's own format, which we can't read
       if (!command.bounded) fontFiles.download(command, command.data);
@@ -375,12 +450,17 @@ const layout = (
     }
 
     if (command.type === "StartFormat") {
-      label = { elements: [], unsupported: [] };
+      label = {
+        elements: [],
+        unsupported: [],
+        copies: copies[labels.length] ?? 1,
+      };
       labels.push(label);
       home = { x: 0, y: 0 };
       labelReverse = false;
       defaultFont = initialFont;
       orientation = "N";
+      justification = 0;
       utf8 = false;
       field = newField();
       barcodeDefaults = initialBarcodeDefaults;
@@ -394,10 +474,19 @@ const layout = (
       y: field.y,
       reverse: field.reverse || labelReverse,
       commands: field.commands,
+      ...(field.right && { right: true }),
     });
 
     switch (command.type) {
       case "EndFormat":
+        // ^LT moves every field down, or up as far as the label's top edge,
+        // wherever it is in the format
+        if (top) {
+          for (const element of label.elements) {
+            element.y = Math.max(0, element.y + top);
+          }
+        }
+        if (mirror) label.mirrored = true;
         label = undefined;
         break;
       case "PrintWidth":
@@ -424,23 +513,46 @@ const layout = (
       case "LabelHome":
         home = { x: command.x, y: command.y };
         break;
+      case "LabelShift":
+        if (command.shift !== undefined && Math.abs(command.shift) <= 9999) {
+          shift = command.shift;
+        }
+        break;
+      case "LabelTop":
+        // Printers ignore offsets beyond their range
+        if (command.offset !== undefined && Math.abs(command.offset) <= 120) {
+          top = command.offset;
+        }
+        break;
       case "LabelReverse":
         labelReverse = command.reverse;
+        break;
+      case "PrintMirror":
+        mirror = command.mirror;
+        break;
+      case "SerializationField":
+        // Letters aren't counted yet
+        if (command.mask && hasUncountedMask(command.mask)) {
+          label.unsupported.push(index);
+        }
         break;
       case "FieldOrigin":
         field = {
           ...newField(),
-          x: home.x + command.x,
+          // ^LS can't move a field past the label's left edge
+          x: Math.max(0, home.x + command.x - shift),
           y: home.y + command.y,
+          right: (command.justification ?? justification) === 1,
           commands: [index],
         };
         break;
       case "FieldTypeset":
         field = {
           ...newField(),
-          x: home.x + (command.x ?? 0),
+          x: Math.max(0, home.x + (command.x ?? 0) - shift),
           y: home.y + (command.y ?? 0),
           fromBottom: true,
+          right: (command.justification ?? justification) === 1,
           commands: [index],
         };
         break;
@@ -497,6 +609,7 @@ const layout = (
       }
       case "FieldOrientation":
         orientation = command.orientation;
+        justification = command.justification ?? justification;
         break;
       case "GraphicSymbol":
         field.symbol = {
@@ -514,11 +627,38 @@ const layout = (
           hangingIndent: command.hangingIndent ?? 0,
         };
         break;
+      case "TextBlock":
+        field.block = {
+          width: command.width ?? 0,
+          maxLines: 1,
+          lineSpacing: 0,
+          justification: "L",
+          hangingIndent: 0,
+          height: command.height ?? 0,
+        };
+        field.blockOrientation = command.orientation;
+        break;
+      case "FieldParameter":
+        field.direction = {
+          direction: command.direction ?? "H",
+          gap: command.gap ?? 0,
+        };
+        break;
+      case "FieldClock":
+        field.clock = [
+          command.primary ?? "%",
+          ...(command.secondary ? [command.secondary] : []),
+          ...(command.third ? [command.third] : []),
+        ];
+        break;
       case "FieldHexIndicator":
         field.hexIndicator = command.indicator ?? "_";
         break;
       case "FieldData": {
-        const data = decodeFieldData(command.data, field.hexIndicator, utf8);
+        const decoded = decodeFieldData(command.data, field.hexIndicator, utf8);
+        const data = field.clock
+          ? formatClock(decoded, field.clock, clock)
+          : decoded;
         if (field.symbol) {
           // Sizes in 24-dot steps; a missing one takes the other's, and
           // without either, the default font's
@@ -603,9 +743,11 @@ const layout = (
           width: font.width,
           typeface: font.typeface,
           font0,
-          orientation: font.orientation ?? orientation,
+          orientation:
+            field.blockOrientation ?? font.orientation ?? orientation,
           fromBottom: field.fromBottom,
           block: field.block,
+          direction: field.direction,
         });
         break;
       }
@@ -638,6 +780,21 @@ const layout = (
             color: command.color ?? "B",
           },
           diameter
+        );
+        break;
+      }
+      case "GraphicEllipse": {
+        const height = command.height ?? 3;
+        add(
+          {
+            ...common(),
+            kind: "ellipse",
+            width: command.width ?? 3,
+            height,
+            thickness: command.thickness ?? 1,
+            color: command.color ?? "B",
+          },
+          height
         );
         break;
       }
@@ -691,6 +848,24 @@ const layout = (
             magnificationY,
           },
           graphic.rows * magnificationY
+        );
+        break;
+      }
+      case "ImageMove": {
+        // Without a device, the printer looks on each
+        const graphic = command.device
+          ? stored.get(`${command.device}:${command.name}`)
+          : [...stored].find(([key]) => key.endsWith(`:${command.name}`))?.[1];
+        if (!graphic) break;
+        add(
+          {
+            ...common(),
+            kind: "bitmap",
+            ...graphic,
+            magnificationX: 1,
+            magnificationY: 1,
+          },
+          graphic.rows
         );
         break;
       }

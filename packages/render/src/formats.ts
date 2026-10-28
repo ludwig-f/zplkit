@@ -138,4 +138,4 @@ const expandFormats = (commands: readonly Command[]): Indexed[] => {
 };
 
 export type { Indexed };
-export { expandFormats };
+export { expandFormats, labelsOf };

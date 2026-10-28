@@ -81,6 +81,8 @@ const decode = (data: string, indicator: string) =>
 /** Values printers use for parameters left out, which the builder writes */
 const defaults: Record<string, Record<string, unknown>> = {
   GraphicBox: { color: "B", rounding: 0 },
+  GraphicEllipse: { color: "B" },
+  GraphicCircle: { color: "B" },
   RecallGraphic: { magnificationX: 1, magnificationY: 1 },
   QrCode: { orientation: "N", model: 2 },
 };
@@ -250,9 +252,9 @@ const label = new Label({ width: mm(50), height: mm(25), dpmm: 8 })
   });
 
   test("falls back to field() for commands without an element", () => {
-    const code = convert("^XA^FO10,10^GC80,4^FS^XZ", { style: "builder" });
+    const code = convert("^XA^FO10,10^GD80,40,4^FS^XZ", { style: "builder" });
     expect(code).toContain(
-      '.field({ position: { x: mm(1.25), y: mm(1.25) }, command: "^GC80,4" })'
+      '.field({ position: { x: mm(1.25), y: mm(1.25) }, command: "^GD80,40,4" })'
     );
   });
 
@@ -264,6 +266,37 @@ const label = new Label({ width: mm(50), height: mm(25), dpmm: 8 })
   test("turns comments into code comments", () => {
     expect(convert("^XA^FXTop section^FO10,10^GB50,50,50^FS^XZ")).toContain(
       "{/* Top section */}"
+    );
+  });
+
+  test("writes shapes, copies, serial numbers and text options as code", async () => {
+    const zpl =
+      "^XA^PW456^LL203^LRN^CI28^LH0,0^PQ10" +
+      "^FO20,20^GE100,50,3,B^FS^FO20,80^GC60,2,W^FS" +
+      "^FO150,20^FPV,2^FDUp^FS^FO150,60^FC%^FB200,,,R^FD%d.%m.%Y^FS" +
+      "^FO150,100^SN001,1,Y^FS^FO150,140^BC^SN0005,5,Y^FS^XZ";
+    await expectSame(zpl);
+    const code = convert(zpl, { style: "builder", units: "dots" });
+    for (const part of [
+      ".ellipse(",
+      ".circle(",
+      'direction: "vertical"',
+      "clock: true",
+      'align: "right"',
+      "serial: {}",
+      "serial: { increment: 5 }",
+    ]) {
+      expect(code).toContain(part);
+    }
+    expect(code).not.toContain(".field(");
+    expect(code).not.toContain(".raw(");
+  });
+
+  test("keeps labels in millimeters or inches, or with decimals, as ZPL", async () => {
+    await expectSame("^XA^MUM^FO5,5^GB10,5,0.5^FS^FO5,12^A0N,4,4^FDmm^FS^XZ");
+    await expectSame("^XA^PW400^FO10.5,10^GB50,20,2^FS^XZ");
+    expect(convert("^XA^MUM^FO5,5^GB10,5,0.5^FS^XZ")).toContain(
+      "^MUM^FO5,5^GB10,5,0.5^FS"
     );
   });
 

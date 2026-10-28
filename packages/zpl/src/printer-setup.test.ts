@@ -14,6 +14,27 @@ suite("PrinterSetup", () => {
     });
   });
 
+  describe("label position and mirroring", () => {
+    test("should shift and move every label, and mirror it", () => {
+      const setup = new PrinterSetup()
+        .setLabelShift(20)
+        .setLabelTop(-6)
+        .setMirror(true);
+      expect(setup.toZPL()).toStrictEqual("^XA^LS20^XZ^XA^LT-6^XZ^XA^PMY^XZ");
+    });
+
+    test("should turn mirroring off", () => {
+      expect(new PrinterSetup().setMirror(false).toZPL()).toStrictEqual(
+        "^XA^PMN^XZ"
+      );
+    });
+
+    test("should throw if the label moves more than 120 dots", () => {
+      expect(() => new PrinterSetup().setLabelTop(121)).toThrow(ZplError);
+      expect(() => new PrinterSetup().setLabelShift(1.5)).toThrow(ZplError);
+    });
+  });
+
   describe("storeGraphic", () => {
     test("should download a graphic to the printer", () => {
       const setup = new PrinterSetup().storeGraphic({

@@ -4,7 +4,7 @@ description: Render ZPL to images in Node or the browser.
 ---
 
 ```ts
-import { renderZpl, renderLabels, encodePng } from "@zplkit/render";
+import { renderZpl, renderPrinted, renderLabels, countLabels, encodePng } from "@zplkit/render";
 ```
 
 [Rendering](/docs/rendering) explains how the renderer draws labels.
@@ -15,9 +15,25 @@ import { renderZpl, renderLabels, encodePng } from "@zplkit/render";
 renderZpl(zpl: string, options: RenderZplOptions): Promise<string[]>
 ```
 
-Renders ZPL to one base64-encoded PNG per label. It's what `<zpl-preview>` uses, and can be passed to its `configure({ render })`.
+Renders ZPL to one base64-encoded PNG per different label. Copies printed with `^PQ` that are all the same are one PNG; serialized ones (`^SN`, `^SF`) are one per copy. It can be passed to `<zpl-preview>`'s `configure({ render })`.
 
 <auto-type-table cwd path="../../packages/render/src/index.ts" name="RenderZplOptions" />
+
+## renderPrinted
+
+```ts
+renderPrinted(zpl: string, options: RenderZplOptions): Promise<PrintedLabel[]>
+```
+
+Like `renderZpl`, with how many times each label prints in a row: `{ png, copies }`. `^XA^FO50,50^A0,40^FDBox^FS^PQ3^XZ` is one PNG with `copies: 3`, and `^PQ5,0,2` with a serial number is three, with copies 2, 2 and 1. It's what `<zpl-preview>` uses.
+
+## countLabels
+
+```ts
+countLabels(zpl: string): { labels: number; printed: number }
+```
+
+How many different labels ZPL renders to, and how many labels it prints, without drawing any. With `limit` in the options, a preview can draw the first few and say how many more there are.
 
 ## renderLabels
 
@@ -25,7 +41,9 @@ Renders ZPL to one base64-encoded PNG per label. It's what `<zpl-preview>` uses,
 renderLabels(zpl: string, options: RenderOptions): Raster[]
 ```
 
-Renders ZPL to one `Raster` per label: its `width` and `height` in dots, and `ink`, a `Float32Array` with one value per dot from 0 (blank) to 1 (printed), row by row. Use it to process the dots yourself.
+Renders ZPL to one `Raster` per different label: its `width` and `height` in dots, `ink`, a `Float32Array` with one value per dot from 0 (blank) to 1 (printed), row by row, and `copies`, how many times it prints in a row. Use it to process the dots yourself.
+
+Without a `limit`, ZPL that prints more than 10,000 different labels throws a `RangeError`.
 
 <auto-type-table cwd path="../../packages/render/src/render.ts" name="RenderOptions" />
 

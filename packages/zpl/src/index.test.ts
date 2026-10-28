@@ -4,6 +4,7 @@ import * as image from "./image.js";
 import * as jsx from "./jsx.js";
 import * as jsxRuntime from "./jsx-runtime.js";
 import * as jsxDevRuntime from "./jsx-dev-runtime.js";
+import * as internal from "./internal.js";
 
 suite("entry points", () => {
   test("the main entry exports the builder, units and serializer", () => {
@@ -25,6 +26,10 @@ suite("entry points", () => {
     ]);
   });
 
+  test("the internal entry is for zplkit's own packages", () => {
+    expect(Object.keys(internal)).toStrictEqual(["measuredFields"]);
+  });
+
   test("the image converter has its own Node-only entry", () => {
     expect(Object.keys(image)).toStrictEqual(["ImageConverter"]);
   });
@@ -33,6 +38,7 @@ suite("entry points", () => {
     expect(Object.keys(jsx).sort()).toStrictEqual([
       "Aztec",
       "Box",
+      "Circle",
       "Codabar",
       "Code11",
       "Code128",
@@ -42,6 +48,7 @@ suite("entry points", () => {
       "DefaultFont",
       "EAN13",
       "EAN8",
+      "Ellipse",
       "Field",
       "FieldOrientation",
       "Fragment",

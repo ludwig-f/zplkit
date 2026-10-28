@@ -32,6 +32,7 @@ const jsx = <P>(
   key: key === undefined ? null : String(key),
 });
 
+/** Groups elements without adding anything, as `<>…</>` */
 const Fragment = (props: { children?: ZplNode }): ZplElement =>
   jsx(Fragment, props);
 

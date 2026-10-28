@@ -452,9 +452,9 @@
       "code": "^FC",
       "name": "Field Clock (or Real Time Clock)",
       "category": "Fields",
-      "support": "no",
-      "drawn": false,
-      "note": ""
+      "support": "yes",
+      "drawn": true,
+      "note": "Days and months in English; the renderer's clock option sets the time"
     },
     {
       "code": "^FD",
@@ -500,8 +500,8 @@
       "code": "^FP",
       "name": "Field Parameter",
       "category": "Fields",
-      "support": "no",
-      "drawn": false,
+      "support": "yes",
+      "drawn": true,
       "note": ""
     },
     {
@@ -580,8 +580,8 @@
       "code": "^GE",
       "name": "Graphic Ellipse",
       "category": "Graphics and images",
-      "support": "no",
-      "drawn": false,
+      "support": "yes",
+      "drawn": true,
       "note": ""
     },
     {
@@ -724,8 +724,8 @@
       "code": "^IM",
       "name": "Image Move",
       "category": "Graphics and images",
-      "support": "no",
-      "drawn": false,
+      "support": "yes",
+      "drawn": true,
       "note": ""
     },
     {
@@ -980,16 +980,16 @@
       "code": "^LS",
       "name": "Label Shift",
       "category": "Labels and formats",
-      "support": "no",
-      "drawn": false,
+      "support": "yes",
+      "drawn": true,
       "note": ""
     },
     {
       "code": "^LT",
       "name": "Label Top",
       "category": "Labels and formats",
-      "support": "no",
-      "drawn": false,
+      "support": "yes",
+      "drawn": true,
       "note": ""
     },
     {
@@ -1060,9 +1060,9 @@
       "code": "^MU",
       "name": "Set Units of Measurement",
       "category": "Labels and formats",
-      "support": "no",
-      "drawn": false,
-      "note": ""
+      "support": "yes",
+      "drawn": true,
+      "note": "Converting between resolutions (b and c) isn't applied"
     },
     {
       "code": "^MW",
@@ -1140,8 +1140,8 @@
       "code": "^PM",
       "name": "Printing Mirror Image of Label",
       "category": "Labels and formats",
-      "support": "no",
-      "drawn": false,
+      "support": "yes",
+      "drawn": true,
       "note": ""
     },
     {
@@ -1173,8 +1173,8 @@
       "name": "Print Quantity",
       "category": "Printer and media",
       "support": "yes",
-      "drawn": false,
-      "note": ""
+      "drawn": true,
+      "note": "Copies that are all the same are drawn once, with their count"
     },
     {
       "code": "^PR",
@@ -1244,9 +1244,9 @@
       "code": "^SF",
       "name": "Serialization Field (with a standard ^FD String)",
       "category": "Fields",
-      "support": "no",
-      "drawn": false,
-      "note": ""
+      "support": "partial",
+      "drawn": true,
+      "note": "Decimal, octal and hex masks count; letter masks don't yet"
     },
     {
       "code": "^SL",
@@ -1260,8 +1260,8 @@
       "code": "^SN",
       "name": "Serialization Data",
       "category": "Fields",
-      "support": "no",
-      "drawn": false,
+      "support": "yes",
+      "drawn": true,
       "note": ""
     },
     {
@@ -1335,6 +1335,14 @@
       "support": "no",
       "drawn": false,
       "note": ""
+    },
+    {
+      "code": "^TB",
+      "name": "Text Blocks",
+      "category": "Text and fonts",
+      "support": "yes",
+      "drawn": true,
+      "note": "Drawn as Zebra's guide describes, without reference renders to compare with"
     },
     {
       "code": "^TO",

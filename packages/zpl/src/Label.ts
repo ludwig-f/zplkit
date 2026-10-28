@@ -11,6 +11,9 @@ import type { Length } from "./units.js";
 import type {
   AztecOptions,
   BoxOptions,
+  CircleOptions,
+  EllipseOptions,
+  SerialOptions,
   Code11Options,
   Code128Options,
   Code39Options,
@@ -143,6 +146,24 @@ class Label extends ZplContent {
       : [{ type: "FieldData", data }];
   }
 
+  /**
+   * The field's data: as ^SN, counting up on each copy, or as field data
+   */
+  private data(data: string, serial: SerialOptions | undefined): Command[] {
+    if (serial === undefined) return this.fieldData(data);
+    if (/[\^~]/.test(data)) {
+      throw new ZplError(`A serial number can't contain ^ or ~, got '${data}'`);
+    }
+    return [
+      {
+        type: "SerialNumber",
+        start: data,
+        increment: serial.increment ?? 1,
+        leadingZeros: serial.leadingZeros ?? true,
+      },
+    ];
+  }
+
   private optionalDots(length: Length | undefined): number | undefined {
     return length === undefined ? undefined : this.dots(length);
   }
@@ -162,7 +183,8 @@ class Label extends ZplContent {
   }
 
   /**
-   * Set the default font of the label
+   * Set the font (^CF) of the text fields after it in this label that don't
+   * give one
    */
   public setDefaultFont(options: DefaultFontOptions): this {
     return this.add({
@@ -195,6 +217,35 @@ class Label extends ZplContent {
         thickness: this.dots(options.thickness),
         color,
         rounding,
+      },
+    ]);
+  }
+
+  /**
+   * Draw an ellipse on the label
+   */
+  public ellipse(options: EllipseOptions): this {
+    return this.addField(options.position, [
+      {
+        type: "GraphicEllipse",
+        width: this.dots(options.width),
+        height: this.dots(options.height),
+        thickness: this.dots(options.thickness),
+        color: options.color ?? "B",
+      },
+    ]);
+  }
+
+  /**
+   * Draw a circle on the label
+   */
+  public circle(options: CircleOptions): this {
+    return this.addField(options.position, [
+      {
+        type: "GraphicCircle",
+        diameter: this.dots(options.diameter),
+        thickness: this.dots(options.thickness),
+        color: options.color ?? "B",
       },
     ]);
   }
@@ -271,7 +322,46 @@ class Label extends ZplContent {
       });
     }
 
-    return this.addField(position, [...commands, ...this.fieldData(text)]);
+    if (
+      options.direction !== undefined ||
+      options.letterSpacing !== undefined
+    ) {
+      const directions = {
+        horizontal: "H",
+        vertical: "V",
+        reverse: "R",
+      } as const;
+      commands.push({
+        type: "FieldParameter",
+        direction: directions[options.direction ?? "horizontal"],
+        gap: this.optionalDots(options.letterSpacing),
+      });
+    }
+    if (options.clock) {
+      commands.push({ type: "FieldClock", primary: "%" });
+    }
+    if (options.block) {
+      const { block } = options;
+      const aligns = {
+        left: "L",
+        center: "C",
+        right: "R",
+        justify: "J",
+      } as const;
+      commands.push({
+        type: "FieldBlock",
+        width: this.dots(block.width),
+        maxLines: block.lines,
+        lineSpacing: this.optionalDots(block.lineSpacing),
+        justification: block.align && aligns[block.align],
+        hangingIndent: this.optionalDots(block.indent),
+      });
+    }
+
+    return this.addField(position, [
+      ...commands,
+      ...this.data(text, options.serial),
+    ]);
   }
 
   /**
@@ -287,7 +377,7 @@ class Label extends ZplContent {
         interpretationLine: options.printHri,
         interpretationLineAbove: options.printHriAbove,
       },
-      ...this.fieldData(options.data),
+      ...this.data(options.data, options.serial),
     ]);
   }
 
@@ -305,7 +395,7 @@ class Label extends ZplContent {
         uccCheckDigit: options.useUcc,
         mode: options.mode,
       },
-      ...this.fieldData(options.data),
+      ...this.data(options.data, options.serial),
     ]);
   }
 
@@ -322,7 +412,7 @@ class Label extends ZplContent {
         interpretationLine: options.printHri,
         interpretationLineAbove: options.printHriAbove,
       },
-      ...this.fieldData(options.data),
+      ...this.data(options.data, options.serial),
     ]);
   }
 
@@ -339,7 +429,7 @@ class Label extends ZplContent {
         interpretationLineAbove: options.printHriAbove,
         checkDigit: options.checkDigit,
       },
-      ...this.fieldData(options.data),
+      ...this.data(options.data, options.serial),
     ]);
   }
 
@@ -357,7 +447,7 @@ class Label extends ZplContent {
         rows: options.rows,
         truncate: options.truncate,
       },
-      ...this.fieldData(options.data),
+      ...this.data(options.data, options.serial),
     ]);
   }
 
@@ -372,7 +462,7 @@ class Label extends ZplContent {
         magnification: this.optionalDots(options.moduleSize),
         errorControl: options.errorControl,
       },
-      ...this.fieldData(options.data),
+      ...this.data(options.data, options.serial),
     ]);
   }
 
@@ -382,7 +472,7 @@ class Label extends ZplContent {
   public maxiCode(options: MaxiCodeOptions): this {
     return this.addField(options.position, [
       { type: "MaxiCode", mode: options.mode },
-      ...this.fieldData(options.data),
+      ...this.data(options.data, options.serial),
     ]);
   }
 
@@ -398,7 +488,7 @@ class Label extends ZplContent {
         interpretationLine: options.printHri,
         interpretationLineAbove: options.printHriAbove,
       },
-      ...this.fieldData(options.data),
+      ...this.data(options.data, options.serial),
     ]);
   }
 
@@ -414,7 +504,7 @@ class Label extends ZplContent {
         interpretationLine: options.printHri,
         interpretationLineAbove: options.printHriAbove,
       },
-      ...this.fieldData(options.data),
+      ...this.data(options.data, options.serial),
     ]);
   }
 
@@ -431,7 +521,7 @@ class Label extends ZplContent {
         interpretationLineAbove: options.printHriAbove,
         printCheckDigit: options.printCheckDigit,
       },
-      ...this.fieldData(options.data),
+      ...this.data(options.data, options.serial),
     ]);
   }
 
@@ -448,7 +538,7 @@ class Label extends ZplContent {
         interpretationLineAbove: options.printHriAbove,
         printCheckDigit: options.printCheckDigit,
       },
-      ...this.fieldData(options.data),
+      ...this.data(options.data, options.serial),
     ]);
   }
 
@@ -464,7 +554,7 @@ class Label extends ZplContent {
         interpretationLine: options.printHri,
         interpretationLineAbove: options.printHriAbove,
       },
-      ...this.fieldData(options.data),
+      ...this.data(options.data, options.serial),
     ]);
   }
 
@@ -481,7 +571,7 @@ class Label extends ZplContent {
         interpretationLineAbove: options.printHriAbove,
         printCheckDigit: options.printCheckDigit,
       },
-      ...this.fieldData(options.data),
+      ...this.data(options.data, options.serial),
     ]);
   }
 
@@ -499,7 +589,7 @@ class Label extends ZplContent {
         start: options.start,
         stop: options.stop,
       },
-      ...this.fieldData(options.data),
+      ...this.data(options.data, options.serial),
     ]);
   }
 
@@ -515,7 +605,7 @@ class Label extends ZplContent {
         interpretationLine: options.printHri,
         interpretationLineAbove: options.printHriAbove,
       },
-      ...this.fieldData(options.data),
+      ...this.data(options.data, options.serial),
     ]);
   }
 
@@ -531,7 +621,7 @@ class Label extends ZplContent {
         interpretationLine: options.printHri,
         interpretationLineAbove: options.printHriAbove,
       },
-      ...this.fieldData(options.data),
+      ...this.data(options.data, options.serial),
     ]);
   }
 
@@ -546,7 +636,7 @@ class Label extends ZplContent {
         height: this.optionalDots(options.height),
         postalType: 3,
       },
-      ...this.fieldData(options.data),
+      ...this.data(options.data, options.serial),
     ]);
   }
 
@@ -574,7 +664,7 @@ class Label extends ZplContent {
         separatorHeight: options.separatorHeight,
         segments: options.segments,
       },
-      ...this.fieldData(options.data),
+      ...this.data(options.data, options.serial),
     ]);
   }
 
@@ -589,7 +679,7 @@ class Label extends ZplContent {
         rowHeight: this.optionalDots(options.rowHeight),
         mode: options.mode,
       },
-      ...this.fieldData(options.data),
+      ...this.data(options.data, options.serial),
     ]);
   }
 
@@ -605,7 +695,7 @@ class Label extends ZplContent {
         interpretationLine: options.printHri,
         interpretationLineAbove: options.printHriAbove,
       },
-      ...this.fieldData(options.data),
+      ...this.data(options.data, options.serial),
     ]);
   }
 
@@ -621,7 +711,7 @@ class Label extends ZplContent {
         interpretationLine: options.printHri,
         interpretationLineAbove: options.printHriAbove,
       },
-      ...this.fieldData(options.data),
+      ...this.data(options.data, options.serial),
     ]);
   }
 
@@ -636,7 +726,7 @@ class Label extends ZplContent {
         height: this.optionalDots(options.height),
         interpretationLineAbove: options.printHriAbove,
       },
-      ...this.fieldData(options.data),
+      ...this.data(options.data, options.serial),
     ]);
   }
 
@@ -654,7 +744,7 @@ class Label extends ZplContent {
         checkDigits: options.checkDigits,
         printCheckDigit: options.printCheckDigit,
       },
-      ...this.fieldData(options.data),
+      ...this.data(options.data, options.serial),
     ]);
   }
 
@@ -671,7 +761,7 @@ class Label extends ZplContent {
         interpretationLineAbove: options.printHriAbove,
         printCheckDigit: options.printCheckDigit,
       },
-      ...this.fieldData(options.data),
+      ...this.data(options.data, options.serial),
     ]);
   }
 
@@ -690,7 +780,7 @@ class Label extends ZplContent {
         formatId: options.formatId,
         escapeCharacter: options.escapeCharacter,
       },
-      ...this.fieldData(options.data),
+      ...this.data(options.data, options.serial),
     ]);
   }
 

@@ -60,6 +60,19 @@ suite("parse", () => {
       ]);
     });
 
+    test("ignores spaces around parameters, as printers do", () => {
+      expect(
+        parseCommands("^FW R^FO 100, 100^A0 N,30 ,30^GB 50,30,30^FD a b ^FS")
+      ).toStrictEqual([
+        { type: "FieldOrientation", orientation: "R" },
+        { type: "FieldOrigin", x: 100, y: 100 },
+        { type: "Font", font: "0", orientation: "N", height: 30, width: 30 },
+        { type: "GraphicBox", width: 50, height: 30, thickness: 30 },
+        { type: "FieldData", data: " a b " },
+        { type: "FieldSeparator" },
+      ]);
+    });
+
     test("ignores text before the first command", () => {
       expect(parseCommands("garbage\n^XA")).toStrictEqual([
         { type: "StartFormat" },

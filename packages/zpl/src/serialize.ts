@@ -47,8 +47,36 @@ const serializeCommand = (command: Command): string => {
       return `^LL${command.length}`;
     case "LabelHome":
       return `^LH${params(command.x, command.y)}`;
+    case "LabelShift":
+      return `^LS${params(command.shift)}`;
+    case "LabelTop":
+      return `^LT${params(command.offset)}`;
     case "LabelReverse":
       return `^LR${yn(command.reverse)}`;
+    case "FieldClock":
+      return `^FC${params(command.primary, command.secondary, command.third)}`;
+    case "ImageMove":
+      return `^IM${command.device ? `${command.device}:` : ""}${command.name}${
+        command.extension ? `.${command.extension}` : ""
+      }`;
+    case "TextBlock":
+      return `^TB${params(command.orientation, command.width, command.height)}`;
+    case "FieldParameter":
+      return `^FP${params(command.direction, command.gap)}`;
+    case "SerialNumber":
+      return `^SN${params(
+        command.start,
+        command.increment,
+        command.leadingZeros === undefined
+          ? undefined
+          : yn(command.leadingZeros)
+      )}`;
+    case "SerializationField":
+      return `^SF${params(command.mask, command.increment)}`;
+    case "MeasurementUnits":
+      return `^MU${params(command.unit, command.baseDpi, command.targetDpi)}`;
+    case "PrintMirror":
+      return `^PM${yn(command.mirror)}`;
     case "ChangeEncoding":
       return `^CI${command.charset}`;
     case "DefaultFont":
@@ -111,6 +139,13 @@ const serializeCommand = (command: Command): string => {
       )}`;
     case "GraphicCircle":
       return `^GC${params(command.diameter, command.thickness, command.color)}`;
+    case "GraphicEllipse":
+      return `^GE${params(
+        command.width,
+        command.height,
+        command.thickness,
+        command.color
+      )}`;
     case "GraphicDiagonal":
       return `^GD${params(
         command.width,

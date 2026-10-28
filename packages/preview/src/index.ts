@@ -17,15 +17,29 @@ type RenderOptions = {
   fonts?: Record<string, Uint8Array>;
   /** A font file to draw font 0 with instead of the open-licensed stand-in */
   font0?: Uint8Array;
+  /** Render only the first labels; a renderer may render all of them */
+  limit?: number;
 };
 
-/** Renders ZPL to one base64-encoded PNG per label */
-type Render = (zpl: string, options: RenderOptions) => Promise<string[]>;
+/** A rendered label, and how many times it prints in a row */
+type PrintedLabel = { png: string; copies: number };
+
+/**
+ * Renders ZPL to one base64-encoded PNG per label, or per different label
+ * with how many times each prints
+ */
+type Render = (
+  zpl: string,
+  options: RenderOptions
+) => Promise<(string | PrintedLabel)[]>;
+
+/** Counts different labels and labels printed, to say how many aren't shown */
+type CountLabels = (zpl: string) => { labels: number; printed: number };
 
 /** Anything with a toZPL() method, such as a zplkit Label */
 type ZplSource = string | { toZPL(): string };
 
-let renderer: Promise<Render> | undefined;
+let renderer: Promise<{ render: Render; count?: CountLabels }> | undefined;
 
 /** Options for `configure()` */
 type ConfigureOptions = {
@@ -39,13 +53,18 @@ type ConfigureOptions = {
 /** Change how previews are rendered */
 const configure = (options: ConfigureOptions): void => {
   if (options.render) {
-    renderer = Promise.resolve(options.render);
+    renderer = Promise.resolve({ render: options.render });
   }
 };
 
 // The renderer is only loaded once something is rendered
-const loadRenderer = (): Promise<Render> =>
-  (renderer ??= import("@zplkit/render").then((module) => module.renderZpl));
+const loadRenderer = () =>
+  (renderer ??= import("@zplkit/render").then((module) => ({
+    render: module.renderPrinted,
+    count: module.countLabels,
+  })));
+
+const DEFAULT_MAX_LABELS = 20;
 
 const DEFAULT_SMOOTHING = 0.4;
 
@@ -70,7 +89,14 @@ const template = `
 <style>
   :host { display: inline-block; }
   [part="labels"] { display: flex; flex-direction: column; gap: 8px; }
+  [part="item"] { position: relative; }
   img { display: block; max-width: 100%; height: auto; background: #fff; }
+  [part="copies"] {
+    position: absolute; top: 6px; right: 6px; padding: 2px 8px;
+    border-radius: 999px; background: rgb(0 0 0 / 0.72); color: #fff;
+    font: 600 12px/1.5 system-ui, sans-serif;
+  }
+  [part="more"] { margin: 0; color: #555; font: 13px/1.4 system-ui, sans-serif; }
   /* With fade, labels fade in when they first appear, not on every change */
   @keyframes zpl-fade { from { opacity: 0; } }
   :host([fade]) [data-entering] img {
@@ -98,15 +124,26 @@ const Base = (
  * Attributes: `zpl`, `width` and `height` (label size in millimeters, taken
  * from ^PW and ^LL when left out), `dpmm` (dots per millimeter, default 8)
  * `smoothing` (0 for the printer's exact dots to 1 for fully anti-aliased
- * edges, default 0.4) and `fade` (fade labels in when they first appear).
+ * edges, default 0.4), `max-labels` (labels to show before saying how many
+ * more there are, default 20) and `fade` (fade labels in when they first
+ * appear). Copies printed with ^PQ that are all the same show once, marked
+ * with how many more print.
  * Properties `fonts` and `font0` take font files, as for @zplkit/render.
  *
  * Events: `zpl-render-start` when a render starts, `zpl-render` with
- * `detail.images` (PNG data URLs), the size and resolution used and how long
- * it took, and `zpl-error` with `detail.error`.
+ * `detail.images` (PNG data URLs), `detail.copies` (how many times each
+ * prints), the size and resolution used and how long it took, and
+ * `zpl-error` with `detail.error`.
  */
 class ZplPreview extends Base {
-  static observedAttributes = ["zpl", "width", "height", "dpmm", "smoothing"];
+  static observedAttributes = [
+    "zpl",
+    "width",
+    "height",
+    "dpmm",
+    "smoothing",
+    "max-labels",
+  ];
   // fade only changes the styles, so it isn't observed
 
   #zpl: ZplSource = "";
@@ -215,6 +252,21 @@ class ZplPreview extends Base {
     this.#setNumber("smoothing", value);
   }
 
+  /**
+   * How many labels to show. Past that, a line says how many more there
+   * are. Defaults to 20.
+   */
+  get maxLabels(): number {
+    const value = this.#number("max-labels");
+    return value === undefined || !(value >= 1)
+      ? DEFAULT_MAX_LABELS
+      : Math.floor(value);
+  }
+
+  set maxLabels(value: number) {
+    this.#setNumber("max-labels", value);
+  }
+
   connectedCallback(): void {
     this.#schedule();
   }
@@ -262,6 +314,7 @@ class ZplPreview extends Base {
       this.#show([], undefined);
       return;
     }
+    const maxLabels = this.maxLabels;
 
     const dpmm = this.dpmm ?? 8;
     const smoothing = this.smoothing;
@@ -280,36 +333,58 @@ class ZplPreview extends Base {
     );
 
     try {
-      const render = await loadRenderer();
-      const pngs = await render(zpl, {
+      const { render, count } = await loadRenderer();
+      // One more than shown, to know whether there are more
+      const rendered = await render(zpl, {
         widthMm: width,
         heightMm: height,
         dpmm,
         grayscale: smoothing > 0,
         ...(this.#fonts && { fonts: this.#fonts }),
         ...(this.#font0 && { font0: this.#font0 }),
+        limit: maxLabels + 1,
       });
-      if (!pngs.length) {
+      if (!rendered.length) {
         throw new Error(
           "No labels parsed: labels start with ^XA and end with ^XZ"
         );
       }
+      const labels = rendered
+        .slice(0, maxLabels)
+        .map((label) =>
+          typeof label === "string" ? { png: label, copies: 1 } : label
+        );
       const images = await Promise.all(
-        pngs.map((png) =>
+        labels.map(({ png }) =>
           smoothing > 0 && smoothing < 1
             ? smoothPng(png, smoothing)
             : `data:image/png;base64,${png}`
         )
       );
+      const copies = labels.map((label) => label.copies);
+      const totals = count?.(zpl);
+      const more = totals
+        ? totals.labels - labels.length
+        : rendered.length > maxLabels
+        ? Infinity
+        : 0;
 
       // A newer render started while this one was running
       if (id !== this.#renderId) return;
 
-      this.#show(images, undefined);
+      this.#show(images, undefined, copies, more);
       const duration = Math.round(performance.now() - started);
       this.dispatchEvent(
         new CustomEvent("zpl-render", {
-          detail: { images, width, height, dpmm, duration },
+          detail: {
+            images,
+            copies,
+            ...totals,
+            width,
+            height,
+            dpmm,
+            duration,
+          },
         })
       );
     } catch (thrown) {
@@ -322,24 +397,51 @@ class ZplPreview extends Base {
     }
   }
 
-  #show(images: string[], error: Error | undefined): void {
+  /**
+   * Show the labels, each marked with how many more identical copies print,
+   * and how many more labels there are (Infinity when unknown)
+   */
+  #show(
+    images: string[],
+    error: Error | undefined,
+    copies: number[] = [],
+    more = 0
+  ): void {
     // Only labels appearing where there were none fade in
     this.#labels.toggleAttribute(
       "data-entering",
       images.length > 0 && this.#labels.childElementCount === 0
     );
-    this.#labels.replaceChildren(
-      ...images.map((src, index) => {
-        const image = document.createElement("img");
-        image.src = src;
-        image.setAttribute("part", "label");
-        image.alt =
-          images.length === 1
-            ? "Label"
-            : `Label ${index + 1} of ${images.length}`;
-        return image;
-      })
-    );
+    const total = images.length + (Number.isFinite(more) ? more : 0);
+    const items: HTMLElement[] = images.map((src, index) => {
+      const item = document.createElement("div");
+      item.setAttribute("part", "item");
+      const image = document.createElement("img");
+      image.src = src;
+      image.setAttribute("part", "label");
+      const count = copies[index] ?? 1;
+      image.alt =
+        (total === 1 ? "Label" : `Label ${index + 1} of ${total}`) +
+        (count > 1 ? `, printed ${count} times` : "");
+      item.append(image);
+      if (count > 1) {
+        const badge = document.createElement("span");
+        badge.setAttribute("part", "copies");
+        badge.setAttribute("aria-hidden", "true");
+        badge.textContent = `+${count - 1} identical`;
+        item.append(badge);
+      }
+      return item;
+    });
+    if (more > 0) {
+      const note = document.createElement("p");
+      note.setAttribute("part", "more");
+      note.textContent = Number.isFinite(more)
+        ? `${more} more ${more === 1 ? "label" : "labels"}`
+        : "More labels";
+      items.push(note);
+    }
+    this.#labels.replaceChildren(...items);
     this.#error.textContent = error ? error.message : "";
     this.#error.hidden = !error;
   }
@@ -358,6 +460,14 @@ type RenderStartDetail = { zpl: string };
 /** `zpl-render`: the labels as PNG data URLs, and how they were rendered */
 type RenderDetail = {
   images: string[];
+  /** How many times each label prints in a row, from ^PQ */
+  copies: number[];
+  /**
+   * Different labels and labels printed in all, with the default renderer.
+   * More than `images` when there are more than `max-labels`.
+   */
+  labels?: number;
+  printed?: number;
   /** Label width and height in millimeters */
   width: number;
   height: number;
@@ -383,6 +493,7 @@ declare global {
 export type {
   ZplSource,
   Render,
+  PrintedLabel,
   RenderOptions,
   ConfigureOptions,
   RenderStartDetail,
