@@ -87,6 +87,10 @@ type Active = {
   drag?: Drag;
   /** The selection the drag works on */
   selection: Selection;
+  /** The selection a click without dragging picks from */
+  clickFrom: Selection;
+  /** Whether the drag selects `selection` once it starts, e.g. after an alt press */
+  selectOnStart: boolean;
   /** Whether a click without dragging picks with clickAt on pointer up */
   click: boolean;
   started: boolean;
@@ -303,6 +307,7 @@ export default function DesignOverlay({
     const press = pressAt(design, selection, label, at, {
       handle,
       shift: event.shiftKey,
+      alt: event.altKey,
     });
     if (press.selection !== selection) onSelect(press.selection);
 
@@ -315,8 +320,16 @@ export default function DesignOverlay({
       kind: press.kind.kind,
       drag: touch
         ? undefined
-        : startDrag(design, press.selection, label, at, press.kind),
-      selection: press.selection,
+        : startDrag(
+            design,
+            press.moves ?? press.selection,
+            label,
+            at,
+            press.kind
+          ),
+      selection: press.moves ?? press.selection,
+      clickFrom: press.selection,
+      selectOnStart: press.moves !== undefined,
       click: press.clickOnUp,
       started: false,
     };
@@ -340,7 +353,7 @@ export default function DesignOverlay({
     if (!drag.started) {
       if (drag.click && !cancelled) {
         onSelect(
-          clickAt(design, drag.selection, drag.label, drag.at.x, drag.at.y, {
+          clickAt(design, drag.clickFrom, drag.label, drag.at.x, drag.at.y, {
             shift: mods.shiftKey,
             alt: mods.altKey,
           })
@@ -401,6 +414,7 @@ export default function DesignOverlay({
     if (!drag.started) {
       drag.started = true;
       onHover(undefined);
+      if (drag.selectOnStart) onSelect(drag.selection);
       // Before the first edit, so the preview keeps the ZPL from before
       if (drag.kind !== "box") onDrag(true);
     }

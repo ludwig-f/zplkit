@@ -150,20 +150,50 @@ const redesigned = (
     : carried;
 };
 
+/** Every field under a point on a label, topmost first */
+const hitsAt = (
+  design: Design,
+  label: number,
+  x: number,
+  y: number
+): DesignField[] => {
+  const at = design.labels[label];
+  const hits: DesignField[] = [];
+  let hit = at && fieldAt(at, x, y);
+  while (at && hit && !hits.includes(hit)) {
+    hits.push(hit);
+    hit = fieldAt(at, x, y, hit);
+  }
+  return hits;
+};
+
 /**
  * A press on a label at a point in dots: what it starts and the selection
  * it works on. A handle of the one selected field resizes; empty space draws
- * a selection box; a selected field moves with the others selected, and a
- * press without dragging picks on pointer up (`clickOnUp`); any other field
- * is picked right away, with shift adding it, and moves.
+ * a selection box; a press over a selected field, even one covered by
+ * others, moves the selection, and a press without dragging picks on pointer
+ * up (`clickOnUp`). With alt, a press on unselected fields picks on pointer
+ * up too, keeping the selection meanwhile; a drag from it moves `moves`, the
+ * topmost field, which clickAt would pick. Any other field is picked right
+ * away, with shift adding it, and moves.
  */
 const pressAt = (
   design: Design,
   selection: Selection,
   label: number,
   at: { x: number; y: number },
-  { handle, shift }: { handle?: Handle; shift: boolean }
-): { kind: DragKind; selection: Selection; clickOnUp: boolean } => {
+  {
+    handle,
+    shift,
+    alt = false,
+  }: { handle?: Handle; shift: boolean; alt?: boolean }
+): {
+  kind: DragKind;
+  selection: Selection;
+  clickOnUp: boolean;
+  /** What a drag moves when it isn't `selection`; selected once the drag starts */
+  moves?: Selection;
+} => {
   const fields = design.labels[label]?.fields ?? [];
   const selected =
     selection.label === label
@@ -172,12 +202,18 @@ const pressAt = (
   if (handle && selected.length === 1) {
     return { kind: { kind: "resize", handle }, selection, clickOnUp: false };
   }
-  const hit = design.labels[label]
-    ? fieldAt(design.labels[label], at.x, at.y)
-    : undefined;
-  if (!hit) return { kind: { kind: "box" }, selection, clickOnUp: true };
-  if (selected.some((f) => f.key === hit.key)) {
+  const hits = hitsAt(design, label, at.x, at.y);
+  if (!hits.length)
+    return { kind: { kind: "box" }, selection, clickOnUp: true };
+  if (hits.some((hit) => selected.includes(hit))) {
     return { kind: { kind: "move" }, selection, clickOnUp: true };
+  }
+  if (alt) {
+    const moves = clickAt(design, selection, label, at.x, at.y, {
+      shift,
+      alt: true,
+    });
+    return { kind: { kind: "move" }, selection, clickOnUp: true, moves };
   }
   return {
     kind: { kind: "move" },

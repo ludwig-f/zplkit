@@ -1,5 +1,6 @@
-import { ChangeSet, Text } from "@codemirror/state";
+import { ChangeSet, EditorState, Text } from "@codemirror/state";
 import { describe, expect, test } from "vitest";
+import { startDrag } from "./drag";
 import { designFor } from "./fields";
 import { moveFields } from "./move";
 import {
@@ -240,6 +241,82 @@ describe("selection", () => {
         { shift: true }
       );
       expect(added.selection.keys).toEqual([a.key, b.key]);
+    });
+
+    test("repeated alt-clicks on stacked fields cycle top, middle, bottom, top", () => {
+      const stacked = designFor(
+        "^XA^FO10,10^GB100,100,100^FS^FO30,30^GB100,100,100^FS^FO50,50^GB100,100,100^FS^XZ",
+        options
+      );
+      const [bottom, middle, top] = stacked.labels[0].fields;
+      const alt = { shift: false, alt: true };
+      let selection: { keys: number[]; label: number } = none;
+      const picked: number[][] = [];
+      for (let i = 0; i < 4; i++) {
+        // As the overlay does: press, then click on release when asked
+        const press = pressAt(stacked, selection, 0, { x: 60, y: 60 }, alt);
+        expect(press.clickOnUp).toBe(true);
+        selection = press.selection;
+        selection = clickAt(stacked, selection, 0, 60, 60, alt);
+        picked.push(selection.keys);
+      }
+      expect(picked).toEqual([
+        [top.key],
+        [middle.key],
+        [bottom.key],
+        [top.key],
+      ]);
+    });
+
+    test("an alt press keeps the selection, and a drag moves the topmost", () => {
+      const stacked = designFor(
+        "^XA^FO10,10^GB100,100,100^FS^FO50,50^GB100,100,100^FS^FO300,10^GB10,10,10^FS^XZ",
+        options
+      );
+      const [, top, away] = stacked.labels[0].fields;
+      const elsewhere = { keys: [away.key], label: 0 };
+      const press = pressAt(
+        stacked,
+        elsewhere,
+        0,
+        { x: 60, y: 60 },
+        { shift: false, alt: true }
+      );
+      expect(press.selection).toBe(elsewhere);
+      expect(press.kind).toEqual({ kind: "move" });
+      expect(press.moves).toEqual({ keys: [top.key], label: 0 });
+    });
+
+    test("a press on a covered selected field moves it, keeping the selection", () => {
+      const stacked = designFor(
+        "^XA^FO10,10^GB100,100,100^FS^FO50,50^GB100,100,100^FS^XZ",
+        options
+      );
+      const [lower] = stacked.labels[0].fields;
+      const selected = { keys: [lower.key], label: 0 };
+      const pressed = pressAt(stacked, selected, 0, { x: 60, y: 60 }, press);
+      expect(pressed).toEqual({
+        kind: { kind: "move" },
+        selection: selected,
+        clickOnUp: true,
+      });
+      const step = startDrag(
+        stacked,
+        pressed.moves ?? pressed.selection,
+        0,
+        {
+          x: 60,
+          y: 60,
+        },
+        pressed.kind
+      ).moveTo({ x: 80, y: 60 }, { snap: false, pxToDots: 1 });
+      expect(step.edit).toBeDefined();
+      const text = EditorState.create({ doc: stacked.zpl })
+        .update(step.edit!)
+        .state.doc.toString();
+      expect(text).toBe(
+        "^XA^FO30,10^GB100,100,100^FS^FO50,50^GB100,100,100^FS^XZ"
+      );
     });
 
     test("a handle with several selected is a press on the field", () => {
