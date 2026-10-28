@@ -25,6 +25,11 @@
       "release-type": "node",
       "package-name": "@zplkit/cli",
       "initial-version": "0.1.0"
+    },
+    "packages/mcp": {
+      "release-type": "node",
+      "package-name": "@zplkit/mcp",
+      "initial-version": "0.1.0"
     }
   }
 }

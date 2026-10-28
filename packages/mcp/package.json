@@ -1,0 +1,59 @@
+{
+  "name": "@zplkit/mcp",
+  "version": "0.0.0",
+  "description": "An MCP server that lets AI assistants render, lint, convert and look up ZPL labels",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ludwig-f/zplkit.git",
+    "directory": "packages/mcp"
+  },
+  "keywords": [
+    "zpl",
+    "zebra",
+    "label",
+    "mcp",
+    "model-context-protocol",
+    "ai"
+  ],
+  "bin": {
+    "zplkit-mcp": "./bin/zplkit-mcp.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./build/server.d.ts",
+      "default": "./build/server.js"
+    }
+  },
+  "files": [
+    "bin",
+    "build",
+    "CHANGELOG.md",
+    "LICENSE",
+    "README.md"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest --run"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.1",
+    "@zplkit/core": "workspace:^",
+    "@zplkit/print": "workspace:^",
+    "@zplkit/render": "workspace:^",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "typescript": "~5.9.3",
+    "vitest": "^1.6.1"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
