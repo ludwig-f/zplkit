@@ -5,6 +5,16 @@ import type { Design } from "./fields";
 /** Round to 2 decimals, so floats don't leak into the ZPL */
 const round = (value: number): number => Math.round(value * 100) / 100;
 
+/** The dots in one unit of ^MU, as in effect at each command */
+const dotsPerUnit = ({ commands, dpmm }: Design): number[] => {
+  const perUnit = { D: 1, M: dpmm, I: 25 * dpmm };
+  let unit: keyof typeof perUnit = "D";
+  return commands.map((command) => {
+    if (command.type === "MeasurementUnits") unit = command.unit ?? unit;
+    return perUnit[unit];
+  });
+};
+
 /**
  * Move fields by a distance on screen, in dots: their ^FO or ^FT changes,
  * or a ^FO is added to a field that has neither
@@ -15,15 +25,9 @@ const moveFields = (
   dx: number,
   dy: number
 ): TextChange[] => {
-  const { zpl, commands, dpmm, labels } = design;
+  const { zpl, commands, labels } = design;
 
-  // The dots in one unit of ^MU, before each command
-  const dotsPerUnit = { D: 1, M: dpmm, I: 25 * dpmm };
-  let unit: keyof typeof dotsPerUnit = "D";
-  const dots = commands.map((command) => {
-    if (command.type === "MeasurementUnits") unit = command.unit ?? unit;
-    return dotsPerUnit[unit];
-  });
+  const dots = dotsPerUnit(design);
 
   const changes: TextChange[] = [];
   for (const key of new Set(keys)) {
@@ -68,4 +72,4 @@ const moveFields = (
   return changes.sort((a, b) => a.from - b.from);
 };
 
-export { moveFields };
+export { dotsPerUnit, moveFields, round };
