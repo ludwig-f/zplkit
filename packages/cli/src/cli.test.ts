@@ -183,6 +183,16 @@ describe("lint", () => {
     expect(await run(["lint", "warn.zpl", "--strict"], fake.io)).toBe(1);
   });
 
+  test("reports parameters the printer can't read", async () => {
+    const fake = fakeIo({
+      "label.zpl": "^XA\n^FX Six copies (^PQ6)\n^FO20,20^FDHi^FS\n^XZ",
+    });
+    expect(await run(["lint", "label.zpl"], fake.io)).toBe(0);
+    expect(fake.out).toEqual([
+      "label.zpl:2:17  warning  ^PQ: quantity must be a number, got '6)'  invalid-parameter",
+    ]);
+  });
+
   test("says when there's nothing to fix", async () => {
     const fake = fakeIo({ "label.zpl": label });
     expect(await run(["lint", "label.zpl"], fake.io)).toBe(0);

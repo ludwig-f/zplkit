@@ -264,6 +264,17 @@ const position = (text: string, offset: number) => {
   return `${before.length}:${before[before.length - 1].length + 1}`;
 };
 
+/**
+ * What the parser couldn't read, like a parameter that isn't a number, and
+ * what lint() found, in the order they come in the ZPL
+ */
+const problemsIn = (zpl: string) => {
+  const { commands, diagnostics } = parse(zpl);
+  return [...diagnostics, ...lint(commands)].sort(
+    (a, b) => (a.span?.start ?? 0) - (b.span?.start ?? 0)
+  );
+};
+
 const lintFiles = async (io: Io, args: string[]) => {
   const { values, positionals } = parseArgs({
     args,
@@ -278,7 +289,7 @@ const lintFiles = async (io: Io, args: string[]) => {
   let failed = false;
   for (const file of positionals) {
     const zpl = await read(io, file);
-    const diagnostics = lint(parse(zpl).commands);
+    const diagnostics = problemsIn(zpl);
     if (!diagnostics.length) {
       io.stdout(`${file}: no problems`);
       continue;
