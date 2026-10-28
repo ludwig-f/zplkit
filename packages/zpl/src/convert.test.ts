@@ -267,6 +267,14 @@ const label = new Label({ width: mm(50), height: mm(25), dpmm: 8 })
     );
   });
 
+  test("keeps labels in millimeters or inches, or with decimals, as ZPL", async () => {
+    await expectSame("^XA^MUM^FO5,5^GB10,5,0.5^FS^FO5,12^A0N,4,4^FDmm^FS^XZ");
+    await expectSame("^XA^PW400^FO10.5,10^GB50,20,2^FS^XZ");
+    expect(convert("^XA^MUM^FO5,5^GB10,5,0.5^FS^XZ")).toContain(
+      "^MUM^FO5,5^GB10,5,0.5^FS"
+    );
+  });
+
   test("puts printer setup and several labels in a print job", () => {
     const code = convert(
       "~SD20^XA^FO10,10^GB50,50,50^FS^XZ^XA^FO10,10^GB60,60,60^FS^XZ",
