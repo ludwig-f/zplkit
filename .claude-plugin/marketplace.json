@@ -1,0 +1,15 @@
+{
+  "name": "zplkit",
+  "description": "zplkit for Claude Code: write, check and render Zebra ZPL labels",
+  "owner": {
+    "name": "Ludwig Fingal",
+    "url": "https://github.com/ludwig-f"
+  },
+  "plugins": [
+    {
+      "name": "zplkit",
+      "source": "./plugins/zplkit",
+      "description": "A skill for writing Zebra labels with zplkit, and the zplkit MCP server to render, lint and convert them"
+    }
+  ]
+}

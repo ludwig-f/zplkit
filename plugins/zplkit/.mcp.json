@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "zplkit": {
+      "command": "npx",
+      "args": ["-y", "@zplkit/mcp"]
+    }
+  }
+}

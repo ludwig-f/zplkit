@@ -1,0 +1,13 @@
+{
+  "name": "zplkit",
+  "version": "0.1.0",
+  "description": "Write Zebra ZPL labels with zplkit, and check them: render them and look at the result, lint them, convert ZPL to code and look commands up",
+  "author": {
+    "name": "Ludwig Fingal",
+    "url": "https://github.com/ludwig-f"
+  },
+  "homepage": "https://zplkit.fingal.dev/docs/mcp",
+  "repository": "https://github.com/ludwig-f/zplkit",
+  "license": "MIT",
+  "keywords": ["zpl", "zebra", "label", "barcode", "printer", "mcp"]
+}

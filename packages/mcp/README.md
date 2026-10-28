@@ -6,7 +6,15 @@ It needs Node 22 or newer, and runs with `npx`, so there's nothing else to insta
 
 ## Setup
 
-**Claude Code**
+**Claude Code plugin.** The zplkit plugin sets up this server and adds a skill that teaches Claude how to write labels with zplkit and check them:
+
+```
+/plugin install zplkit --marketplace ludwig-f/zplkit
+```
+
+The skill is also a single file, [`SKILL.md`](https://github.com/ludwig-f/zplkit/blob/main/plugins/zplkit/skills/zpl-labels/SKILL.md), which works on its own in `~/.claude/skills/zpl-labels/` or uploaded to Claude.
+
+**Claude Code**, without the plugin:
 
 ```bash
 claude mcp add zplkit -- npx -y @zplkit/mcp
