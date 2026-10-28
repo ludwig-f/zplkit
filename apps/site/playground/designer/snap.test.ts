@@ -7,11 +7,18 @@ describe("snapMove", () => {
   test("snaps to another field's left edge", () => {
     const moving = { x: 0, y: 0, width: 20, height: 20 };
     const other = { x: 100, y: 50, width: 40, height: 40 };
-    expect(snapMove(moving, 97, 0, [other], label)).toEqual({
-      dx: 100,
-      dy: 0,
-      guides: [{ axis: "x", at: 100 }],
-    });
+    const result = snapMove(moving, 97, 0, [other], label);
+    expect(result.dx).toBe(100);
+    expect(result.dy).toBe(0);
+    expect(result.guides).toContainEqual({ axis: "x", at: 100 });
+  });
+
+  test("keeps the guide when already exactly aligned", () => {
+    const moving = { x: 100, y: 0, width: 20, height: 20 };
+    const other = { x: 100, y: 50, width: 40, height: 40 };
+    const result = snapMove(moving, 0, 0, [other], label);
+    expect(result.dx).toBe(0);
+    expect(result.guides).toContainEqual({ axis: "x", at: 100 });
   });
 
   test("snaps centers", () => {

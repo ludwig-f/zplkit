@@ -12,32 +12,42 @@ const lines = (start: number, size: number): number[] => [
 
 /**
  * The smallest shift that puts one of `own` on one of `targets`, within the
- * threshold; a line already on a target wins with a shift of 0
+ * threshold (0 when a line is already on a target), and every target the
+ * shifted lines then sit on
  */
 const snapAxis = (
   own: number[],
   targets: number[],
   threshold: number
-): { shift: number; at: number } | undefined => {
-  let best: { shift: number; at: number } | undefined;
+): { shift: number; at: number[] } | undefined => {
+  let shift: number | undefined;
   for (const line of own) {
-    for (const at of targets) {
-      const shift = at - line;
+    for (const target of targets) {
+      const candidate = target - line;
       if (
-        Math.abs(shift) <= threshold &&
-        (!best || Math.abs(shift) < Math.abs(best.shift))
+        Math.abs(candidate) <= threshold &&
+        (shift === undefined || Math.abs(candidate) < Math.abs(shift))
       ) {
-        best = { shift, at };
+        shift = candidate;
       }
     }
   }
-  return best;
+  if (shift === undefined) return undefined;
+
+  const at = new Set<number>();
+  for (const line of own) {
+    for (const target of targets) {
+      if (target - line === shift) at.add(target);
+    }
+  }
+  return { shift, at: [...at] };
 };
 
 /**
  * Adjust a move so the moving rect's left, center or right lines up with
  * another rect's left, center or right, or the label's edges and center,
- * within `threshold` dots; the same for top, middle and bottom
+ * within `threshold` dots; the same for top, middle and bottom. `others`
+ * must not include the moving rect
  */
 const snapMove = (
   moving: Rect,
@@ -59,9 +69,8 @@ const snapMove = (
 
   const x = snapAxis(lines(moving.x + dx, moving.width), targetsX, threshold);
   const y = snapAxis(lines(moving.y + dy, moving.height), targetsY, threshold);
-  // A line that was already in place didn't snap, so it has no guide
-  if (x?.shift) guides.push({ axis: "x", at: x.at });
-  if (y?.shift) guides.push({ axis: "y", at: y.at });
+  for (const at of x?.at ?? []) guides.push({ axis: "x", at });
+  for (const at of y?.at ?? []) guides.push({ axis: "y", at });
 
   // Moves are whole dots, so a half dot from an odd-sized center rounds
   return {
