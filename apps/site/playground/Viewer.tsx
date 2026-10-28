@@ -6,7 +6,8 @@ import "./styles.css";
 import { PopoverClose } from "fumadocs-ui/components/ui/popover";
 import Editor from "./Editor";
 import ProblemList from "./ProblemList";
-import { Code, FileArchive, ImageDown, Link2 } from "lucide-react";
+import { Code, FileArchive, ImageDown, Link2, WrapText } from "lucide-react";
+import { format } from "@zplkit/core";
 import { convert } from "@zplkit/core/convert";
 import type { ConvertOptions } from "@zplkit/core/convert";
 import Bench from "./Bench";
@@ -404,6 +405,17 @@ export default function Viewer() {
     }
   };
 
+  /** One field or setting per line; undo brings the old text back */
+  const formatZpl = () => {
+    const formatted = format(zpl);
+    if (formatted === zpl) {
+      setNotice("Already formatted");
+    } else {
+      update({ zpl: formatted });
+      setNotice("Formatted");
+    }
+  };
+
   const selectProblem = (problem: Problem) => {
     setTab("Editor");
     // Let the editor show again on phones before selecting
@@ -582,6 +594,22 @@ export default function Viewer() {
 
       <div className="workspace">
         <section className="code" aria-label="ZPL editor">
+          <div className="status">
+            <span>
+              {zpl.split("\n").length} line
+              {zpl.split("\n").length === 1 ? "" : "s"}
+            </span>
+            <span className="spacer" />
+            <button
+              type="button"
+              className="view-button"
+              onClick={formatZpl}
+              title="One field or setting per line"
+            >
+              <WrapText aria-hidden="true" />
+              Format
+            </button>
+          </div>
           <Editor
             ref={editor}
             value={zpl}

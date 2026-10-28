@@ -7,7 +7,7 @@ import { createRequire } from "node:module";
 import { deflateRawSync } from "node:zlib";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { lint, parse, serializeCommand } from "@zplkit/core";
+import { format, lint, parse, serializeCommand } from "@zplkit/core";
 import { convert } from "@zplkit/core/convert";
 import { countLabels, encodePng, layout, renderLabels } from "@zplkit/render";
 import { reference } from "./reference.js";
@@ -376,12 +376,13 @@ const createServer = (options: ServerOptions = {}): McpServer => {
     {
       title: "Link to the ZPL viewer",
       description:
-        "A link that opens ZPL in the zplkit web viewer, where people can see and edit it. The ZPL is in the link after #, so it isn't uploaded.",
+        "A link that opens ZPL in the zplkit web viewer, where people can see and edit it, with one field or setting per line. The ZPL is in the link after #, so it isn't uploaded.",
       inputSchema: { zpl: zplInput, dpi: dpiInput },
       annotations: { readOnlyHint: true },
     },
     safely(({ zpl, dpi = 203 }) => {
-      const state = [zpl, null, null, dpmmByDpi[dpi], 0.4];
+      // Formatted, so it's easy to read and edit in the viewer
+      const state = [format(zpl), null, null, dpmmByDpi[dpi], 0.4];
       const hash = deflateRawSync(JSON.stringify(state))
         .toString("base64")
         .replace(/\+/g, "-")

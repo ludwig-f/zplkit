@@ -17,6 +17,7 @@ suite("entry points", () => {
       "ZplError",
       "dots",
       "escapeFieldData",
+      "format",
       "inches",
       "lint",
       "mm",
