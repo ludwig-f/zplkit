@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/ludwig-f/zplkit/compare/cli-v0.1.0...cli-v0.2.0) (2026-10-28)
+
+
+### Features
+
+* **cli:** zplkit format, and formatted viewer links ([f9c2f5c](https://github.com/ludwig-f/zplkit/commit/f9c2f5ccdf6a6a1d72e343335e5eedcf17c179bd))
+
 ## 0.1.0 (2026-10-28)
 
 
