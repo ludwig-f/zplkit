@@ -98,6 +98,11 @@ describe("designLabels", () => {
     expect(labels[0]).toMatchObject({ width: 400, height: 200 });
   });
 
+  test("labels know where their ^XA is", () => {
+    const labels = design("^XA^XZ^XA^FO0,0^A0N,30^SN001,1,Y^FS^PQ2^XZ");
+    expect(labels.map((label) => label.start)).toEqual([0, 2, 2]);
+  });
+
   test("copies share a key", () => {
     const labels = design("^XA^FO0,0^A0N,30^SN001,1,Y^FS^PQ2^XZ");
     expect(labels).toHaveLength(2);

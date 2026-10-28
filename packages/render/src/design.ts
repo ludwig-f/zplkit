@@ -20,6 +20,8 @@ type DesignField = {
 };
 
 type DesignLabel = {
+  /** Index of the label's ^XA in the parsed commands; copies share it */
+  start: number;
   width: number;
   height: number;
   inverted: boolean;
@@ -121,6 +123,7 @@ const designLabels = (
     }
 
     return {
+      start: label.start,
       width,
       height,
       inverted: label.inverted ?? false,
