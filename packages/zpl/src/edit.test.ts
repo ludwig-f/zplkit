@@ -1,6 +1,6 @@
 import { suite, test, expect } from "vitest";
 import { parse } from "./parse.js";
-import { editParameters } from "./edit.js";
+import { changesDelimiter, editParameters } from "./edit.js";
 import ZplError from "./ZplError.js";
 import type { Command } from "./ast.js";
 
@@ -89,5 +89,14 @@ suite("editParameters", () => {
     expect(() =>
       edit("^XA^\nCD;^FO20;30^FS^XZ", "FieldOrigin", { 0: 25 })
     ).toThrow(ZplError);
+  });
+});
+
+suite("changesDelimiter", () => {
+  test("finds ^CD, following prefixes ^CC changed", () => {
+    expect(changesDelimiter("^XA^CD;^XZ")).toBe(true);
+    expect(changesDelimiter("^XA^CC#\n#CD;#XZ")).toBe(true);
+    expect(changesDelimiter("^XA^CC#^CD;#XZ")).toBe(false);
+    expect(changesDelimiter("^XA^FO1,1^FS^XZ")).toBe(false);
   });
 });

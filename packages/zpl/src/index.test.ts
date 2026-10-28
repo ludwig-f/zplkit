@@ -29,6 +29,7 @@ suite("entry points", () => {
 
   test("the internal entry is for zplkit's own packages", () => {
     expect(Object.keys(internal)).toStrictEqual([
+      "changesDelimiter",
       "editParameters",
       "measuredFields",
     ]);

@@ -97,4 +97,4 @@ const editParameters = (
 };
 
 export type { TextChange };
-export { editParameters };
+export { changesDelimiter, editParameters };
