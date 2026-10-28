@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/ludwig-f/zplkit/compare/cli-v0.2.0...cli-v0.2.1) (2026-10-28)
+
+
+### Bug Fixes
+
+* **cli:** lint reports parameters the printer can't read ([3956583](https://github.com/ludwig-f/zplkit/commit/3956583a307f16ebde857c7e7f99d7d0769c5324))
+
 ## [0.2.0](https://github.com/ludwig-f/zplkit/compare/cli-v0.1.0...cli-v0.2.0) (2026-10-28)
 
 
