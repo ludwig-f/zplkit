@@ -183,7 +183,8 @@ class Label extends ZplContent {
   }
 
   /**
-   * Set the default font of the label
+   * Set the font (^CF) of the text fields after it in this label that don't
+   * give one
    */
   public setDefaultFont(options: DefaultFontOptions): this {
     return this.add({

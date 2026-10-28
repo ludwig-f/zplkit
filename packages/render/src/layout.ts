@@ -339,6 +339,11 @@ const inDots = <T extends Command>(command: T, dotsPerUnit: number): T => {
   return converted as T;
 };
 
+/**
+ * Where everything on each label goes, without drawing it: one layout per
+ * different label, with its elements and the commands that made them, and
+ * the commands that aren't drawn yet. renderLabels draws these.
+ */
 const layout = (
   commands: readonly Command[],
   options: LayoutOptions = {}

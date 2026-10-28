@@ -23,6 +23,10 @@ type Color = "B" | "W";
 
 type Sampling = "center" | "coverage";
 
+/**
+ * A rendered label: how much ink each dot gets, from 0 (blank) to 1
+ * (printed), row by row
+ */
 class Raster {
   /** Ink per dot from 0 to 1, row by row */
   readonly ink: Float32Array;
