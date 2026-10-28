@@ -82,11 +82,13 @@ const editParameters = (
   const last = Math.max(...indexes);
   let from = start + bodyStart;
   for (let i = 0; i < first; i++) from += original[i].length + 1;
-  const edited = parameters
-    .slice(first, last + 1)
-    .map((parameter, i) =>
-      first + i in changes ? String(changes[first + i]) : parameter
-    );
+  const edited = parameters.slice(first, last + 1).map((parameter, i) => {
+    if (!(first + i in changes)) return parameter;
+    // Keep the spaces around the value as written
+    const lead = /^\s*/.exec(parameter)?.[0] ?? "";
+    const trail = /\s*$/.exec(parameter.slice(lead.length))?.[0] ?? "";
+    return lead + String(changes[first + i]) + trail;
+  });
   const replaced = original.slice(first, last + 1).join(",");
 
   // Past the last parameter, the change runs to the end of the command

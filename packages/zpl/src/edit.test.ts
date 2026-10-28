@@ -29,6 +29,14 @@ suite("editParameters", () => {
     );
   });
 
+  test("keeps the spaces around changed parameters", () => {
+    const zpl = "^XA^FO 20 , 30 ^FS^XZ";
+    expect(edit(zpl, "FieldOrigin", { 0: 25, 1: 35 })).toBe(
+      "^XA^FO 25 , 35 ^FS^XZ"
+    );
+    expect(edit(zpl, "FieldOrigin", { 0: 25 })).toBe("^XA^FO 25 , 30 ^FS^XZ");
+  });
+
   test("adds missing parameters", () => {
     expect(edit("^XA^FO20^FS^XZ", "FieldOrigin", { 1: 30 })).toBe(
       "^XA^FO20,30^FS^XZ"
