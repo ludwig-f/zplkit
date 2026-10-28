@@ -106,6 +106,25 @@ const examples: {
 ^FO420,20^A0,30^FDOff the label^FS
 ^XZ`,
   },
+  {
+    name: "Numbered boxes",
+    width: undefined,
+    height: undefined,
+    dpmm: 8,
+    zpl: `^XA
+^PW406^LL203
+^FX Six copies with PQ, each counting up from the one before.
+^FX SN counts the number at the end: BOX-001, BOX-002 and on.
+^FO20,16^A0,24^FDBox^FS
+^FO20,42^A0,56^SNBOX-001,1,Y^FS
+^BY2
+^FO20,110^BCN,60,N,N^SNBOX-001,1,Y^FS
+^FX SF counts through a mask, where A counts letters: A, B, C.
+^FO300,16^A0,24^FDShelf^FS
+^FO300,42^A0,56^FDA^SFA,B^FS
+^PQ6
+^XZ`,
+  },
 ];
 
 export default examples;

@@ -78,6 +78,21 @@ export default new PrintJob(
 );
 `;
 
+const numberedBoxes = `import { Label, Text, Code128, build, inches, mm } from "@zplkit/core/jsx";
+
+// One label, printed 6 times. serial counts the number at the end up on
+// each copy, so the printer prints BOX-001 to BOX-006.
+const label = build(
+  <Label width={inches(2)} height={inches(1)} dpmm={8} copies={6}>
+    <Text x={mm(2.5)} y={mm(2)} height={mm(3)}>Box</Text>
+    <Text x={mm(2.5)} y={mm(5.5)} height={mm(7)} serial={{}}>BOX-001</Text>
+    <Code128 x={mm(2.5)} y={mm(14)} height={mm(7.5)} serial={{}}>BOX-001</Code128>
+  </Label>
+);
+
+export default label;
+`;
+
 const helloLabel = `import { Label, Text, Box, build, inches, mm, dots } from "@zplkit/core/jsx";
 
 // Change the code and the label redraws. Lengths take mm(), inches() or dots().
@@ -107,6 +122,7 @@ export default label;
 const codeExamples: CodeExample[] = [
   { name: "Shipping label", code: shippingLabel },
   { name: "Product labels", code: productLabels },
+  { name: "Numbered boxes", code: numberedBoxes },
   { name: "Hello", code: helloLabel },
 ];
 
