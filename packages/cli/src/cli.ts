@@ -7,7 +7,7 @@ import { createRequire } from "node:module";
 import { join } from "node:path";
 import { deflateRawSync } from "node:zlib";
 import { parseArgs } from "node:util";
-import { lint, parse } from "@zplkit/core";
+import { format, lint, parse } from "@zplkit/core";
 import { convert } from "@zplkit/core/convert";
 import { countLabels, encodePng, renderLabels } from "@zplkit/render";
 import type { Command } from "@zplkit/core";
@@ -42,6 +42,7 @@ Commands:
   zplkit preview <file>  Render labels and open them in your image viewer
   zplkit lint <file...>  List problems the printer won't report
   zplkit convert <file>  Turn ZPL into zplkit code
+  zplkit format <file>   Put each field and setting on its own line
   zplkit view <file>     Open labels in the web viewer
   zplkit print <file>    Send labels to a network printer
   zplkit status          Ask a network printer how it's doing
@@ -62,6 +63,7 @@ Options:
   --strict               lint: fail on warnings too
   --style jsx|builder    convert: the code to write (default jsx)
   --units mm|dots        convert: lengths in millimeters where exact, or dots
+  --write                format: rewrite the files instead of printing
   --no-open              view: print the link without opening it
   --printer <host:port>  print, status: the printer's address (port 9100)
   --no-check             print: send without asking the printer's status first
@@ -317,6 +319,31 @@ const convertFile = async (io: Io, args: string[]) => {
   return 0;
 };
 
+const formatFiles = async (io: Io, args: string[]) => {
+  const { values, positionals } = parseArgs({
+    args,
+    allowPositionals: true,
+    options: { write: { type: "boolean" } },
+  });
+  if (!values.write) {
+    io.stdout(
+      format(await read(io, onlyFile(positionals, "format"))).trimEnd()
+    );
+    return 0;
+  }
+  if (!positionals.length || positionals.includes("-")) {
+    throw new UsageError("zplkit format --write takes files to rewrite");
+  }
+  for (const file of positionals) {
+    const zpl = await read(io, file);
+    const formatted = format(zpl);
+    if (formatted === zpl) continue;
+    await io.writeFile(file, new TextEncoder().encode(formatted));
+    io.stdout(file);
+  }
+  return 0;
+};
+
 /** A label size in a viewer link: millimeters, or inches as given */
 const linkLength = (value: string | undefined, name: string, dpmm: number) => {
   if (value === undefined) return null;
@@ -340,7 +367,7 @@ const view = async (io: Io, args: string[]) => {
   const { dpmm } = resolution(values.dpi);
   // The viewer's share links: the label and its settings, deflated
   const state = [
-    zpl,
+    format(zpl),
     linkLength(values.width, "width", dpmm),
     linkLength(values.height, "height", dpmm),
     dpmm,
@@ -450,6 +477,7 @@ const commands: Record<string, (io: Io, args: string[]) => Promise<number>> = {
   preview,
   lint: lintFiles,
   convert: convertFile,
+  format: formatFiles,
   view,
   print,
   status,

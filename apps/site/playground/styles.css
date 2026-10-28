@@ -577,6 +577,16 @@
   background: var(--panel);
 }
 
+/* The viewer's editor has a bar with its line count and Format */
+.playground[data-tool="viewer"] .code {
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+/* At the right also on phones, which hide the spacer */
+.playground .code .status .view-button {
+  margin-left: auto;
+}
+
 .playground .editor {
   min-height: 0;
   overflow: hidden;
@@ -855,6 +865,10 @@
 
   .playground .code .problems {
     display: none;
+  }
+
+  .playground[data-tool="viewer"] .code {
+    grid-template-rows: auto minmax(0, 1fr);
   }
 
   .playground .problems-tab {

@@ -11,6 +11,7 @@ export type { Graphic, Position } from "./types.js";
 export type * from "./options.js";
 export type * from "./ast.js";
 export { parse } from "./parse.js";
+export { format } from "./format.js";
 export type { Diagnostic, ParseResult } from "./parse.js";
 export { lint } from "./lint.js";
 export type { LintDiagnostic, LintMedia, LintRule } from "./lint.js";

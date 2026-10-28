@@ -1,4 +1,5 @@
 import { describe, test, expect } from "vitest";
+import { inflateRawSync } from "node:zlib";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { createServer } from "./server.js";
@@ -162,9 +163,14 @@ describe("lookup_command", () => {
 });
 
 describe("viewer_link", () => {
-  test("links to the viewer with the ZPL in the link", async () => {
+  test("links to the viewer with the formatted ZPL in the link", async () => {
     const { text } = await call(await connect(), "viewer_link", { zpl: label });
     expect(text).toMatch(/^https:\/\/zplkit\.fingal\.dev\/viewer#[\w-]+$/);
+    const hash = text.split("#")[1].replace(/-/g, "+").replace(/_/g, "/");
+    const [zpl] = JSON.parse(
+      inflateRawSync(Buffer.from(hash, "base64")).toString()
+    );
+    expect(zpl).toBe("^XA\n^PW406\n^LL203\n^FO20,20^A0N,40^FDHi^FS\n^XZ\n");
   });
 });
 
