@@ -135,13 +135,13 @@ describe("preview", () => {
     expect(fake.out).toEqual([join("/tmp/zplkit-test", "label.png")]);
   });
 
-  test("opens the first 20 labels, or --limit", async () => {
+  test("opens the first 5 labels, or --limit", async () => {
     const serial = "^XA^PW406^LL203^FO20,20^A0N,40^SN001,1,Y^FS^PQ50^XZ";
     const fake = fakeIo({ "box.zpl": serial });
     await run(["preview", "box.zpl"], fake.io);
-    expect(fake.opened).toHaveLength(20);
+    expect(fake.opened).toHaveLength(5);
     expect(fake.err).toEqual([
-      "Showing the first 20 of 50 different labels; --limit shows more or fewer",
+      "Showing the first 5 of 50 different labels; --limit shows more or fewer",
     ]);
 
     const limited = fakeIo({ "box.zpl": serial });
