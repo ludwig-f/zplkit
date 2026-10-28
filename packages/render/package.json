@@ -1,6 +1,6 @@
 {
   "name": "@zplkit/render",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Render ZPL labels to images in pure TypeScript, in Node and the browser",
   "type": "module",
   "license": "MIT",

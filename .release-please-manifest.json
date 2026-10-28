@@ -1,6 +1,6 @@
 {
-  "packages/zpl": "2.0.0",
-  "packages/render": "0.1.0",
-  "packages/preview": "0.1.0",
+  "packages/zpl": "2.1.0",
+  "packages/render": "0.2.0",
+  "packages/preview": "0.2.0",
   "packages/print": "0.1.0"
 }
