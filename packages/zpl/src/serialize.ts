@@ -53,6 +53,8 @@ const serializeCommand = (command: Command): string => {
       return `^LT${params(command.offset)}`;
     case "LabelReverse":
       return `^LR${yn(command.reverse)}`;
+    case "FieldClock":
+      return `^FC${params(command.primary, command.secondary, command.third)}`;
     case "ImageMove":
       return `^IM${command.device ? `${command.device}:` : ""}${command.name}${
         command.extension ? `.${command.extension}` : ""

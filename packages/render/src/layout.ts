@@ -6,6 +6,7 @@
  */
 import { decodeObjectData } from "./data.js";
 import { FontFiles, parseFontFile } from "./font-files.js";
+import { formatClock } from "./clock.js";
 import { expandCopies } from "./copies.js";
 import { expandFormats } from "./formats.js";
 import { hasUncountedMask } from "./serial.js";
@@ -196,6 +197,8 @@ type Field = {
   font?: FontSetting;
   /** ^FH: the character that starts a hex escape in the field data */
   hexIndicator?: string;
+  /** ^FC: the characters that start clock codes in the data */
+  clock?: string[];
   block?: TextBlockOptions;
   /** ^TB's orientation, which turns the field's text */
   blockOrientation?: Orientation;
@@ -315,6 +318,8 @@ type LayoutOptions = {
   dpmm?: number;
   /** Lay out only the first labels, counting each different copy */
   limit?: number;
+  /** The printer's clock, for ^FC dates and times. Now if not given. */
+  clock?: Date;
 };
 
 /**
@@ -355,6 +360,7 @@ const layout = (
   let mirror = false;
   let unit: "D" | "I" | "M" = "D";
   const dpmm = options.dpmm ?? 8;
+  const clock = options.clock ?? new Date();
   // ^MU's inches are 25 mm, so 200 dots at 8 dpmm
   const dotsPerUnit = { D: 1, M: dpmm, I: 25 * dpmm };
   let labelReverse = false;
@@ -633,11 +639,21 @@ const layout = (
           gap: command.gap ?? 0,
         };
         break;
+      case "FieldClock":
+        field.clock = [
+          command.primary ?? "%",
+          ...(command.secondary ? [command.secondary] : []),
+          ...(command.third ? [command.third] : []),
+        ];
+        break;
       case "FieldHexIndicator":
         field.hexIndicator = command.indicator ?? "_";
         break;
       case "FieldData": {
-        const data = decodeFieldData(command.data, field.hexIndicator, utf8);
+        const decoded = decodeFieldData(command.data, field.hexIndicator, utf8);
+        const data = field.clock
+          ? formatClock(decoded, field.clock, clock)
+          : decoded;
         if (field.symbol) {
           // Sizes in 24-dot steps; a missing one takes the other's, and
           // without either, the default font's
