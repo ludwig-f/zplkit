@@ -108,8 +108,69 @@ describe("serializedField", () => {
     expect(copies(3, (step) => serializedField("07", "oo", "1", step))).toEqual(
       ["07", "10", "11"]
     );
-    expect(copies(2, (step) => serializedField("0F", "hh", "1", step))).toEqual(
+    expect(copies(2, (step) => serializedField("0F", "HH", "1", step))).toEqual(
       ["0F", "10"]
+    );
+  });
+
+  test("counts letters with A and letters after digits with N", () => {
+    expect(copies(3, (step) => serializedField("AY", "AA", "B", step))).toEqual(
+      ["AY", "AZ", "BA"]
+    );
+    expect(copies(3, (step) => serializedField("AY", "AA", "C", step))).toEqual(
+      ["AY", "BA", "BC"]
+    );
+    expect(copies(4, (step) => serializedField("A9", "NN", "1", step))).toEqual(
+      ["A9", "AA", "AB", "AC"]
+    );
+    expect(copies(3, (step) => serializedField("0Z", "NN", "1", step))).toEqual(
+      ["0Z", "10", "11"]
+    );
+    expect(copies(3, (step) => serializedField("B", "A", "-B", step))).toEqual([
+      "B",
+      "A",
+      "Z",
+    ]);
+  });
+
+  test("reads the increment in each position's digits", () => {
+    // A counts from A, so 1 isn't a digit there and adds nothing
+    expect(copies(2, (step) => serializedField("AZ", "AA", "1", step))).toEqual(
+      ["AZ", "AZ"]
+    );
+    expect(copies(3, (step) => serializedField("A0", "AN", "1", step))).toEqual(
+      ["A0", "A1", "A2"]
+    );
+    expect(copies(2, (step) => serializedField("0Y", "NN", "b", step))).toEqual(
+      ["0Y", "0Y"]
+    );
+  });
+
+  test("carries between different masks", () => {
+    expect(
+      copies(3, (step) => serializedField("AZ9", "dAd", "1", step))
+    ).toEqual(["AZ9", "AA0", "AA1"]);
+    expect(copies(3, (step) => serializedField("Ay", "Aa", "b", step))).toEqual(
+      ["Ay", "Az", "Ba"]
+    );
+  });
+
+  test("takes the case of letters from the mask", () => {
+    expect(copies(2, (step) => serializedField("09", "hh", "1", step))).toEqual(
+      ["09", "0a"]
+    );
+    expect(copies(2, (step) => serializedField("09", "HH", "1", step))).toEqual(
+      ["09", "0A"]
+    );
+    expect(copies(3, (step) => serializedField("0z", "nn", "1", step))).toEqual(
+      ["0z", "10", "11"]
+    );
+    // A letter in the other case isn't a digit, so nothing counts
+    expect(copies(2, (step) => serializedField("0F", "hh", "1", step))).toEqual(
+      ["0F", "0F"]
+    );
+    expect(copies(2, (step) => serializedField("ay", "AA", "B", step))).toEqual(
+      ["ay", "ay"]
     );
   });
 
