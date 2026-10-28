@@ -29,6 +29,14 @@ describe("addField", () => {
     );
   });
 
+  test("adds to the recalling label, not the stored format", () => {
+    const zpl =
+      "^XA^DFR:BOX.ZPL^FS^FO10,10^A0N,30^FN1^FS^XZ^XA^XFR:BOX.ZPL^FN1^FDa^FS^XZ";
+    const design = designFor(zpl, options);
+    const [change] = addField(design, 0, "box", 5, 6);
+    expect(change.from).toBe(zpl.lastIndexOf("^XZ"));
+  });
+
   test("adds to the right label", () => {
     const zpl = "^XA^FO1,1^GB10,10,10^FS^XZ^XA^FO2,2^GB10,10,10^FS^XZ";
     const design = designFor(zpl, options);
@@ -71,6 +79,14 @@ describe("deleteFields", () => {
 
   test("won't delete a field without a position", () => {
     const design = designFor("^XA^CF0,30^FDHi^FS^XZ", options);
+    expect(canRemove(design.labels[0].fields[0], design)).toBe(false);
+  });
+
+  test("won't delete a stored format's field filled by another label", () => {
+    const design = designFor(
+      "^XA^DFR:BOX.ZPL^FS^FO10,10^A0N,30^FN1^FS^XZ^XA^XFR:BOX.ZPL^FN1^FDa^FS^XZ",
+      options
+    );
     expect(canRemove(design.labels[0].fields[0], design)).toBe(false);
   });
 });

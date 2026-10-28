@@ -36,12 +36,14 @@ const rangeOf = (
 
 /** Where a label's ^XZ is, and how many dots one of its ^MU units is there */
 const endOf = (design: Design, label: number) => {
-  const index = design.commands
-    .map((command, i) => (command.type === "EndFormat" ? i : -1))
-    .filter((i) => i >= 0)[label];
-  const start = design.commands[index]?.span?.start;
-  if (index === undefined || start === undefined) return undefined;
-  return { start, perUnit: dotsPerUnit(design)[index] };
+  const start = design.labels[label]?.start;
+  if (start === undefined) return undefined;
+  const index = design.commands.findIndex(
+    (command, i) => i > start && command.type === "EndFormat"
+  );
+  const at = design.commands[index]?.span?.start;
+  if (at === undefined) return undefined;
+  return { start: at, perUnit: dotsPerUnit(design)[index] };
 };
 
 /** Put ZPL on its own line before a label's ^XZ, or right before it */
@@ -92,11 +94,18 @@ const pasteField = (
   return [insertBeforeEnd(design, end.start, pasted)];
 };
 
-/** Whether deleteFields and duplicateFields can take a field */
+/**
+ * Whether deleteFields and duplicateFields can take a field: it starts with
+ * ^FO or ^FT, ends with ^FS, and its commands are next to each other
+ */
 const canRemove = (field: DesignField, design: Design): boolean => {
-  const first = design.commands[field.commands[0]];
+  const { commands } = field;
+  const first = design.commands[commands[0]];
+  const last = design.commands[commands[commands.length - 1]];
   return (
     (first?.type === "FieldOrigin" || first?.type === "FieldTypeset") &&
+    last?.type === "FieldSeparator" &&
+    commands.every((index, i) => index === commands[0] + i) &&
     rangeOf(design, field) !== undefined
   );
 };
