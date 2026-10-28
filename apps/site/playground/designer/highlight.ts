@@ -5,6 +5,7 @@ import {
   type EditorState,
   type Extension,
   type Range,
+  type Transaction,
 } from "@codemirror/state";
 import {
   Decoration,
@@ -36,12 +37,24 @@ class BarMarker extends GutterMarker {
 }
 const bar = new BarMarker();
 
+/** Whether a transaction replaces the whole document in one change */
+const replacesAll = (tr: Transaction) => {
+  let all = false;
+  tr.changes.iterChanges((from, to) => {
+    if (from === 0 && to === tr.startState.doc.length) all = true;
+  });
+  return all;
+};
+
 /** The highlighted ranges, kept in place through edits */
 const highlightState = StateField.define<Highlight>({
   create: () => ({ selected: [], hovered: [] }),
   update: (value, tr) => {
     let next = value;
-    if (tr.docChanged) {
+    if (tr.docChanged && replacesAll(tr)) {
+      // A new document, not an edit: nothing to keep in place
+      next = { selected: [], hovered: [] };
+    } else if (tr.docChanged) {
       const length = tr.newDoc.length;
       const map = (ranges: Highlight["selected"]) =>
         ranges

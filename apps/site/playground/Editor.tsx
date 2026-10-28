@@ -47,8 +47,17 @@ type EditorHandle = {
 type EditorProps = {
   value: string;
   problems: EditorProblem[];
+  /**
+   * Called with the new text and the change that made it. Handlers must not
+   * dispatch to the editor synchronously (CodeMirror throws during an
+   * update); schedule with queueMicrotask if needed.
+   */
   onChange: (value: string, changes: ChangeSet) => void;
-  /** Called with the cursor's offset after a selection the person made */
+  /**
+   * Called with the cursor's offset after a selection the person made. Like
+   * onChange, it must not dispatch to the editor synchronously (CodeMirror
+   * throws during an update); use queueMicrotask if needed.
+   */
   onCursor?: (offset: number) => void;
   /**
    * What's being edited: ZPL, or zplkit code in TypeScript and JSX
@@ -127,6 +136,8 @@ const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
   onChangeRef.current = onChange;
   const onCursorRef = useRef(onCursor);
   onCursorRef.current = onCursor;
+  /** The latest texts this editor reported, which the sync effect must not undo */
+  const emitted = useRef<string[]>([]);
 
   useEffect(() => {
     view.current = new EditorView({
@@ -161,7 +172,9 @@ const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
                 (all, tr) => all.compose(tr.changes),
                 ChangeSet.empty(update.startState.doc.length)
               );
-              onChangeRef.current(update.state.doc.toString(), changes);
+              const text = update.state.doc.toString();
+              emitted.current = [...emitted.current, text].slice(-8);
+              onChangeRef.current(text, changes);
             }
             // Only selections the person made, not edits or apply()
             if (
@@ -179,10 +192,17 @@ const Editor = forwardRef<EditorHandle, EditorProps>(function Editor(
     // The editor is created once; later values are synced below
   }, []);
 
-  // Replace the text when it changes from outside, e.g. picking an example
+  // Replace the text when it changes from outside, e.g. picking an example.
+  // Texts the editor reported itself are skipped: a passive effect can run
+  // after apply() has moved on, and replacing the document then would undo it.
   useEffect(() => {
     const current = view.current;
-    if (current && current.state.doc.toString() !== value) {
+    if (!current) return;
+    const own = emitted.current.includes(value);
+    // A stale value this editor reported itself, e.g. mid-drag, is not news
+    if (current.state.doc.toString() === value) emitted.current = [];
+    else if (!own) {
+      emitted.current = [];
       current.dispatch({
         changes: { from: 0, to: current.state.doc.length, insert: value },
       });

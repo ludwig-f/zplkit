@@ -55,4 +55,14 @@ describe("highlightField", () => {
     }).state;
     expect(highlightedLines(state)).toEqual({ selected: [], hovered: [] });
   });
+
+  it("drops the highlight when the whole document is replaced", () => {
+    let state = start().update({
+      effects: setHighlight.of({ selected: [line2], hovered: [line2] }),
+    }).state;
+    state = state.update({
+      changes: { from: 0, to: doc.length, insert: "^XA\n^FDA^FS\n^XZ" },
+    }).state;
+    expect(highlightedLines(state)).toEqual({ selected: [], hovered: [] });
+  });
 });
