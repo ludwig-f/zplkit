@@ -5,6 +5,30 @@ import ZplError from "./ZplError.js";
 type TextChange = { from: number; to: number; insert: string };
 
 /**
+ * Whether the text has a ^CD command, tracking the prefixes ^CC and ~CT
+ * changed, the way the parser does
+ */
+const changesDelimiter = (text: string): boolean => {
+  let caret = "^";
+  let tilde = "~";
+  let i = 0;
+  while (i < text.length) {
+    const char = text.charAt(i);
+    if (char !== caret && char !== tilde) {
+      i++;
+      continue;
+    }
+    const code = text.slice(i + 1, i + 3);
+    if (code === "CD") return true;
+    if (code === "CC") caret = text.charAt(i + 3);
+    if (code === "CT") tilde = text.charAt(i + 3);
+    // Skip the new prefix character itself
+    i += code === "CC" || code === "CT" ? 4 : 1;
+  }
+  return false;
+};
+
+/**
  * Replace parameters of a parsed command, by position, keeping every other
  * character of the command as written. The change covers only the
  * parameters from the first changed one to the last.
@@ -20,7 +44,7 @@ const editParameters = (
   const { start, end } = command.span;
 
   // A changed delimiter would make the commas below mean something else
-  if (/[\^~]CD/.test(zpl.slice(0, start))) {
+  if (changesDelimiter(zpl.slice(0, start))) {
     throw new ZplError(
       "Can't edit parameters after a ^CD changed the delimiter"
     );

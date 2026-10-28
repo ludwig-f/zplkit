@@ -67,4 +67,10 @@ suite("editParameters", () => {
       edit("^XA^CD;^FO20;30^FS^XZ", "FieldOrigin", { 0: 25 })
     ).toThrow(ZplError);
   });
+
+  test("won't edit with a delimiter changed under a changed prefix", () => {
+    expect(() =>
+      edit("^XA^CC#\n#CD;#FO20;30#FS#XZ", "FieldOrigin", { 0: 25 })
+    ).toThrow(ZplError);
+  });
 });
