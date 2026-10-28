@@ -724,8 +724,8 @@
       "code": "^IM",
       "name": "Image Move",
       "category": "Graphics and images",
-      "support": "no",
-      "drawn": false,
+      "support": "yes",
+      "drawn": true,
       "note": ""
     },
     {

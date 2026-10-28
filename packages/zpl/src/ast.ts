@@ -210,6 +210,15 @@ type RecallGraphic = Node<
   }
 >;
 
+/**
+ * `^IMd:o.x`: draws a stored graphic at the field origin, at its size. The
+ * device and the .GRF extension can be left out.
+ */
+type ImageMove = Node<
+  "ImageMove",
+  { device?: StorageDevice; name: string; extension?: string }
+>;
+
 /** `^BYw,r,h` */
 type BarcodeDefaults = Node<
   "BarcodeDefaults",
@@ -662,6 +671,7 @@ type Command =
   | SerialNumber
   | FieldParameter
   | TextBlock
+  | ImageMove
   | SerializationField
   | ChangeEncoding
   | DefaultFont
@@ -745,6 +755,7 @@ export type {
   SerialNumber,
   FieldParameter,
   TextBlock,
+  ImageMove,
   SerializationField,
   ChangeEncoding,
   DefaultFont,

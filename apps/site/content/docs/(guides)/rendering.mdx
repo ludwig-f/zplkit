@@ -37,7 +37,7 @@ const png = await encodePng(raster);
 ## What it draws
 
 - Boxes, circles, ellipses and diagonal lines (`^GB`, `^GC`, `^GE`, `^GD`), with rounded corners and white lines
-- Images (`^GF`, `~DG` or `~DY` with `^XG`), in hex with Zebra's compression or base64 (`:B64:`, `:Z64:`)
+- Images (`^GF`, `~DG` or `~DY` with `^XG` or `^IM`), in hex with Zebra's compression or base64 (`:B64:`, `:Z64:`)
 - Text in font 0 and the bitmap fonts A to H (`^A`, `^CF`), rotated (`^FW`), wrapped in blocks (`^FB`, `^TB`), and printed down, right to left or spaced out (`^FP`). `^TB` follows Zebra's programming guide, as there are no reference renders of it to compare with: text wraps like `^FB`, and lines that don't fit its height are left out.
 - Text in TrueType fonts downloaded with `~DU` or `~DY` (hex, `:B64:` or `:Z64:`), called with `^A@` or `^CW`
 - Code 128, Code 39, LOGMARS, Code 93, Code 11, Codabar, MSI, Plessey, and Interleaved, Industrial and Standard 2 of 5, with interpretation lines (`^BY`, `^BC`, `^B3`, `^BL`, `^BA`, `^B1`, `^BK`, `^BM`, `^BP`, `^B2`, `^BI`, `^BJ`)

@@ -225,6 +225,23 @@ const parsers: Record<string, CommandParser> = {
     type: "LabelTop",
     offset: p.number(0, "offset"),
   })),
+  "^IM": withParams("^IM", (p) => {
+    const value = p.requiredString(0, "object");
+    const match = /^(?:([REBA]):)?([^.:]+)(?:\.(\w+))?$/.exec(value);
+    if (!match) {
+      throw new ParamError(
+        `^IM: expected an object like R:NAME.GRF, got '${value}'`
+      );
+    }
+    // Only graphics can be moved onto a label
+    if (match[3] && match[3].toUpperCase() !== "GRF") return null;
+    return {
+      type: "ImageMove",
+      device: match[1] as (typeof devices)[number] | undefined,
+      name: match[2],
+      extension: match[3],
+    };
+  }),
   "^TB": withParams("^TB", (p) => ({
     type: "TextBlock",
     orientation: p.oneOf(0, "orientation", orientations),

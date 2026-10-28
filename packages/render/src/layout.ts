@@ -830,6 +830,24 @@ const layout = (
         );
         break;
       }
+      case "ImageMove": {
+        // Without a device, the printer looks on each
+        const graphic = command.device
+          ? stored.get(`${command.device}:${command.name}`)
+          : [...stored].find(([key]) => key.endsWith(`:${command.name}`))?.[1];
+        if (!graphic) break;
+        add(
+          {
+            ...common(),
+            kind: "bitmap",
+            ...graphic,
+            magnificationX: 1,
+            magnificationY: 1,
+          },
+          graphic.rows
+        );
+        break;
+      }
       case "BarcodeDefaults":
         // Values that aren't given keep their previous ones
         barcodeDefaults = {

@@ -57,6 +57,7 @@ const renderedCommands: readonly string[] = [
   "~DG",
   "~DY",
   "^XG",
+  "^IM",
   "^IL",
   // Barcodes
   "^BY",
