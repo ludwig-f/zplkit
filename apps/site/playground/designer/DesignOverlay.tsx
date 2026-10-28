@@ -449,9 +449,31 @@ export default function DesignOverlay({
     finish(drag, event, true);
   };
 
+  /** Escape mid-drag: put the text back as it was before the drag, with no click */
+  const cancel = (drag: Active) => {
+    active.current = undefined;
+    setShown(undefined);
+    const edit = drag.drag?.cancel();
+    if (edit) apply(edit);
+    // An alt press selected what it dragged only once the drag started
+    if (drag.started && drag.selectOnStart) onSelect(drag.clickFrom);
+    if (root.current?.hasPointerCapture(drag.pointer)) {
+      root.current.releasePointerCapture(drag.pointer);
+    }
+    if (drag.started && drag.kind !== "box") onDrag(false);
+  };
+
   const keyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    // Other keys wait for the drag to end
+    if (active.current) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        cancel(active.current);
+      }
+      return;
+    }
     // Keys on the align bar's buttons are theirs
-    if (event.target !== event.currentTarget || active.current) return;
+    if (event.target !== event.currentTarget) return;
     const mod = event.metaKey || event.ctrlKey;
     const key = event.key.toLowerCase();
     if (mod && (key === "z" || key === "y")) {

@@ -1,5 +1,5 @@
 import { EditorState, type TransactionSpec } from "@codemirror/state";
-import { undo } from "@codemirror/commands";
+import { isolateHistory, undo } from "@codemirror/commands";
 import { describe, expect, test } from "vitest";
 import { startDrag } from "./drag";
 import { designFor } from "./fields";
@@ -167,6 +167,52 @@ describe("startDrag move", () => {
     expect(applied(state, step.edit).doc.toString()).toBe(
       "^XA^POI^FO15,30^GB10,10,10^FS^XZ"
     );
+  });
+});
+
+describe("Drag.cancel", () => {
+  test("applying the steps then the cancel gives the original text, with no visible undo step", () => {
+    const text = "^XA^FO20,30^GB10,10,10^FS^XZ";
+    // An edit before the drag, for undo to reach
+    let state = setup(text).state.update({
+      changes: { from: text.length - 3, insert: "^FX hi^FS" },
+      annotations: [isolateHistory.of("full")],
+    }).state;
+    const before = state.doc.toString();
+    const { design, selection } = setup(before);
+    const drag = startDrag(
+      design,
+      selection,
+      0,
+      { x: 0, y: 0 },
+      { kind: "move" }
+    );
+    for (const x of [10, 40, 70]) {
+      state = applied(state, drag.moveTo({ x, y: 5 }, move).edit);
+    }
+    expect(state.doc.toString()).not.toBe(before);
+    state = applied(state, drag.cancel());
+    expect(state.doc.toString()).toBe(before);
+    // The drag's step is left changing nothing, then the edit before it
+    const undone: string[] = [];
+    for (let i = 0; i < 2; i++) {
+      undo({ state, dispatch: (tr) => (state = tr.state) });
+      undone.push(state.doc.toString());
+    }
+    expect(undone).toEqual([before, text]);
+  });
+
+  test("a drag that never edited has nothing to cancel", () => {
+    const { design, selection } = setup("^XA^FO20,30^GB10,10,10^FS^XZ");
+    const drag = startDrag(
+      design,
+      selection,
+      0,
+      { x: 0, y: 0 },
+      { kind: "move" }
+    );
+    drag.moveTo({ x: 1, y: 0 }, move);
+    expect(drag.cancel()).toBeUndefined();
   });
 });
 

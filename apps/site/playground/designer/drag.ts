@@ -34,6 +34,8 @@ type Drag = {
   ) => Step;
   /** Whether the pointer moved past the threshold; a drag that never started is a click */
   started: () => boolean;
+  /** The edit that undoes the steps applied so far, in the drag's own undo step, or undefined when there's nothing to undo */
+  cancel: () => TransactionSpec | undefined;
 };
 
 /** How far the pointer moves before a drag starts, in screen px */
@@ -241,7 +243,14 @@ const startDrag = (
     return { started, dx, dy, guides, readout, bounds, edit };
   };
 
-  return { moveTo, started: () => started };
+  const cancel: Drag["cancel"] = () => {
+    const undo = inverted;
+    inverted = undefined;
+    if (!undo || undo.empty) return undefined;
+    return { ...designerEdit([], { drag: id }), changes: undo };
+  };
+
+  return { moveTo, started: () => started, cancel };
 };
 
 export { startDrag };
