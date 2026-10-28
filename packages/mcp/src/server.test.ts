@@ -147,7 +147,7 @@ describe("lookup_command", () => {
 
   test("says how zplkit supports it", async () => {
     const { text } = await call(await connect(), "lookup_command", {
-      command: "^SF",
+      command: "^BR",
     });
     expect(text).toContain("Partly supported by zplkit");
   });
