@@ -1,6 +1,6 @@
 # @zplkit/cli
 
-Render, lint, convert, view and print ZPL labels from the command line.
+Render, preview, lint, convert, view and print ZPL labels from the command line.
 
 ```bash
 npx @zplkit/cli render label.zpl
@@ -27,7 +27,15 @@ zplkit render label.zpl --width 4in --height 2in
 cat label.zpl | zplkit render - -o label.png # from standard input
 ```
 
-Labels with serial numbers (`^SN`, `^SF`) render one PNG per copy, like `label-1.png`, `label-2.png`; `--limit 10` renders the first ten. Copies that are all the same render once. `--clock 2026-10-28T08:00` sets the time for `^FC` dates.
+Labels with serial numbers (`^SN`, `^SF`) render one PNG per copy, like `label-1.png`, `label-2.png`; `--limit 10` renders the first ten. Copies that are all the same render once. `--clock 2026-10-28T08:00` sets the time for `^FC` dates, and `--smooth` smooths edges instead of drawing the printer's exact dots.
+
+### preview
+
+Renders the labels into a temporary folder and opens them in your image viewer, like Preview on macOS or Photos on Windows, without a browser or a network connection. It takes the same options as `render`, and opens the first 20 different labels unless `--limit` says otherwise.
+
+```bash
+zplkit preview label.zpl --dpi 300
+```
 
 ### lint
 

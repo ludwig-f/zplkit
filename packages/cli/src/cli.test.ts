@@ -1,4 +1,5 @@
 import { describe, test, expect } from "vitest";
+import { join } from "node:path";
 import { inflateRawSync } from "node:zlib";
 import { run } from "./cli.js";
 import type { Io } from "./cli.js";
@@ -22,6 +23,7 @@ const fakeIo = (files: Record<string, string> = {}, stdin = "") => {
     writeFile: async (path, data) => {
       written.set(path, data);
     },
+    tempDir: async () => "/tmp/zplkit-test",
     open: async (url) => {
       opened.push(url);
     },
@@ -119,6 +121,45 @@ describe("render", () => {
     await run(["render", "a.zpl", "--clock", "2026-10-28T08:00"], fake.io);
     await run(["render", "b.zpl"], fake.io);
     expect(fake.written.get("a.png")).toEqual(fake.written.get("b.png"));
+  });
+});
+
+describe("preview", () => {
+  test("renders into a temporary folder and opens the PNG", async () => {
+    const fake = fakeIo({ "label.zpl": label });
+    expect(await run(["preview", "label.zpl"], fake.io)).toBe(0);
+    expect([...fake.written.keys()]).toEqual([
+      join("/tmp/zplkit-test", "label.png"),
+    ]);
+    expect(fake.opened).toEqual([join("/tmp/zplkit-test", "label.png")]);
+    expect(fake.out).toEqual([join("/tmp/zplkit-test", "label.png")]);
+  });
+
+  test("opens the first 20 labels, or --limit", async () => {
+    const serial = "^XA^PW406^LL203^FO20,20^A0N,40^SN001,1,Y^FS^PQ50^XZ";
+    const fake = fakeIo({ "box.zpl": serial });
+    await run(["preview", "box.zpl"], fake.io);
+    expect(fake.opened).toHaveLength(20);
+    expect(fake.err).toEqual([
+      "Showing the first 20 of 50 different labels; --limit shows more or fewer",
+    ]);
+
+    const limited = fakeIo({ "box.zpl": serial });
+    await run(["preview", "box.zpl", "--limit", "3"], limited.io);
+    expect(limited.opened).toEqual([
+      join("/tmp/zplkit-test", "box-1.png"),
+      join("/tmp/zplkit-test", "box-2.png"),
+      join("/tmp/zplkit-test", "box-3.png"),
+    ]);
+  });
+
+  test("smooths edges with --smooth, in render too", async () => {
+    const fake = fakeIo({ "label.zpl": label });
+    await run(["render", "label.zpl", "-o", "sharp.png"], fake.io);
+    await run(["render", "label.zpl", "-o", "smooth.png", "--smooth"], fake.io);
+    expect(fake.written.get("smooth.png")).not.toEqual(
+      fake.written.get("sharp.png")
+    );
   });
 });
 
