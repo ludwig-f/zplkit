@@ -17,6 +17,8 @@
     "@codemirror/state": "^6.7.6",
     "@codemirror/view": "^6.43.15",
     "@lezer/highlight": "^1.2.5",
+    "@vercel/analytics": "^2.0.1",
+    "@vercel/speed-insights": "^2.0.0",
     "@zplkit/core": "workspace:*",
     "@zplkit/preview": "workspace:*",
     "@zplkit/render": "workspace:*",
